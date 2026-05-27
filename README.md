@@ -1,5 +1,7 @@
 # Skills
 
+[![skills.sh](https://skills.sh/b/mlhiter/skills)](https://skills.sh/mlhiter/skills)
+
 Reusable agent skills for practical writing, workflow packaging, Codex goal drafting, and Codex app run actions.
 
 ## Skills
@@ -28,6 +30,19 @@ Preview the repository first:
 
 ```bash
 npx skills add mlhiter/skills --list
+```
+
+## Repository layout
+
+Skills are published under the canonical `skills/<skill-name>/SKILL.md` structure used by `skills.sh`:
+
+```text
+skills/
+  logseq-writer/SKILL.md
+  workflow-packager/SKILL.md
+  codex-goal-builder/SKILL.md
+  codex-runner-creator/SKILL.md
+  screenshot-interaction/SKILL.md
 ```
 
 ## Safety
