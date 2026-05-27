@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Goal Builder"
+  short_description: "Expand rough objectives into evidence-based Codex Goals"
+  default_prompt: "Use $codex-goal-builder to turn my rough objective into a strong Codex Goal, ask the few missing questions, and prepare the final /goal command."

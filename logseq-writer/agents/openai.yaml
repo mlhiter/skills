@@ -1,0 +1,4 @@
+interface:
+  display_name: "Logseq Writer"
+  short_description: "Write practical Logseq-style tutorial articles"
+  default_prompt: "Use $logseq-writer to turn this topic or draft into a structured, step-by-step Logseq tutorial."

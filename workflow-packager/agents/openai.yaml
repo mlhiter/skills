@@ -1,0 +1,4 @@
+interface:
+  display_name: "Workflow Packager"
+  short_description: "扫描近期会话记忆和自动化记录并沉淀最小可复用流程资产"
+  default_prompt: "Use $workflow-packager to review recent sessions, recommend reusable workflow assets, and wait for confirmation before creating anything."

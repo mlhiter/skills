@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Runner Creator"
+  short_description: "Create Codex project run actions"
+  default_prompt: "Use $codex-runner-creator to create a runnable .codex/environments/environment.toml for this project."
