@@ -8,6 +8,7 @@ Reusable agent skills for practical writing, workflow packaging, Codex goal draf
 - `workflow-packager` - reviews recent work evidence and recommends minimal reusable workflow assets.
 - `codex-goal-builder` - turns rough objectives into evidence-based Codex Goals.
 - `codex-runner-creator` - creates or repairs `.codex/environments/environment.toml` run actions.
+- `screenshot-interaction` - infers UI behavior and missing states from screenshots before implementation.
 
 ## Install
 

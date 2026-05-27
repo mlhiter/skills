@@ -1,0 +1,4 @@
+interface:
+  display_name: "Screenshot Interaction"
+  short_description: "Infer UI behavior from screenshots."
+  default_prompt: "Use $screenshot-interaction to analyze this UI screenshot as an interactive state model before implementing it."
