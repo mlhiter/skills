@@ -1,0 +1,232 @@
+{
+  "default_repo": "labring-sigs/sealos-issues",
+  "default_project": {
+    "owner": "labring-sigs",
+    "number": null,
+    "title": null
+  },
+  "title_format": "{product}: {summary}",
+  "image_uploader": {
+    "strategy": "piclist_server_then_picgo_cli",
+    "command": null,
+    "piclist_config": "~/Library/Application Support/piclist/data.json",
+    "picgo_config": null
+  },
+  "products": [
+    {
+      "name": "GPU Maestro",
+      "aliases": [
+        "gpu maestro",
+        "maestro",
+        "gpu",
+        "沙箱",
+        "任务",
+        "vscode",
+        "vs code"
+      ]
+    },
+    {
+      "name": "Devbox",
+      "aliases": [
+        "devbox",
+        "dev box",
+        "开发环境"
+      ]
+    },
+    {
+      "name": "AppLaunchpad",
+      "aliases": [
+        "applaunchpad",
+        "app launchpad",
+        "应用管理",
+        "应用",
+        "部署应用",
+        "pvc",
+        "公网地址"
+      ]
+    },
+    {
+      "name": "对象存储",
+      "aliases": [
+        "对象存储",
+        "objectstorage",
+        "object storage",
+        "bucket",
+        "桶",
+        "密钥"
+      ]
+    },
+    {
+      "name": "镜像同步",
+      "aliases": [
+        "镜像同步",
+        "镜像缓存",
+        "image sync",
+        "image cache"
+      ]
+    }
+  ],
+  "environments": [
+    {
+      "name": "10.70",
+      "aliases": [
+        "10.70",
+        "192.168.10.70",
+        "192.168.10.70.nip.io"
+      ]
+    },
+    {
+      "name": "12.38",
+      "aliases": [
+        "12.38",
+        "192.168.12.38",
+        "192.168.12.38.nip.io"
+      ]
+    },
+    {
+      "name": "bja",
+      "aliases": [
+        "bja",
+        "bja.sealos.run",
+        "Test-Launchpad",
+        "Test-launchpad"
+      ]
+    },
+    {
+      "name": "public cloud",
+      "aliases": [
+        "public cloud",
+        "公有云",
+        "sealos.run"
+      ]
+    },
+    {
+      "name": "209 集群",
+      "aliases": [
+        "209 集群",
+        "209",
+        "192.168.13.209",
+        "192.168.13.209.nip.io"
+      ]
+    }
+  ],
+  "milestones": [
+    "Offline-v5.1",
+    "public cloud",
+    "v5.1.2"
+  ],
+  "labels": {
+    "allowed_on_create": [
+      "功能相关",
+      "部署脚本"
+    ],
+    "status_only": [
+      "待测试"
+    ],
+    "never_add": [
+      "P0",
+      "P1",
+      "P2"
+    ]
+  },
+  "project_fields": {
+    "priority": [
+      "Priority",
+      "优先级"
+    ],
+    "type": [
+      "Type",
+      "类型"
+    ],
+    "effort": [
+      "Effort",
+      "工作量"
+    ],
+    "product": [
+      "Product",
+      "产品",
+      "Module",
+      "模块"
+    ],
+    "environment": [
+      "Environment",
+      "环境"
+    ],
+    "status": [
+      "Status",
+      "状态"
+    ]
+  },
+  "field_options": {
+    "priority": [
+      "P0",
+      "P1",
+      "P2"
+    ],
+    "github_priority": [
+      "Urgent",
+      "High",
+      "Medium",
+      "Low"
+    ],
+    "priority_to_github": {
+      "P0": "Urgent",
+      "P1": "High",
+      "P2": "Low"
+    },
+    "type": [
+      "Bug",
+      "Feature",
+      "Task"
+    ],
+    "effort": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "effort_to_github": {
+      "S": "Low",
+      "M": "Medium",
+      "L": "High",
+      "XL": "High"
+    }
+  },
+  "priority_rules": {
+    "P0": [
+      "阻塞",
+      "主流程不可用",
+      "无法创建",
+      "无法部署",
+      "无法连接",
+      "连接超时",
+      "数据丢失",
+      "误删除",
+      "崩溃",
+      "白屏",
+      "完全不可用"
+    ],
+    "P1": [
+      "500",
+      "失败",
+      "报错",
+      "错误",
+      "无法",
+      "不一致",
+      "删除失败",
+      "影响功能",
+      "缺少",
+      "异常"
+    ],
+    "P2": [
+      "样式",
+      "文案",
+      "不美观",
+      "中文",
+      "布局",
+      "小屏",
+      "兼容",
+      "提示"
+    ]
+  }
+}

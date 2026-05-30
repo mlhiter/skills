@@ -1,0 +1,4 @@
+interface:
+  display_name: "Issue Creator"
+  short_description: "Create high-quality QA GitHub issues from terse tester notes"
+  default_prompt: "Use $issue-creator to turn my tester note into a complete GitHub issue draft, infer fields, run gh preflight checks, and create it only after confirmation."

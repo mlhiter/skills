@@ -11,6 +11,7 @@ Reusable agent skills for practical writing, workflow packaging, Codex goal draf
 - `codex-goal-builder` - turns rough objectives into evidence-based Codex Goals.
 - `codex-runner-creator` - creates or repairs `.codex/environments/environment.toml` run actions.
 - `screenshot-interaction` - infers UI behavior and missing states from screenshots before implementation.
+- `issue-creator` - turns terse QA notes into structured GitHub issues with gh preflight, safe metadata, and sensitive-info checks.
 
 ## Install
 
@@ -43,6 +44,7 @@ skills/
   codex-goal-builder/SKILL.md
   codex-runner-creator/SKILL.md
   screenshot-interaction/SKILL.md
+  issue-creator/SKILL.md
 ```
 
 ## Safety

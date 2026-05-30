@@ -19,6 +19,13 @@
       ]
     },
     {
+      "title": "QA",
+      "description": "Skills for creating high-signal testing and issue-tracking artifacts.",
+      "skills": [
+        "issue-creator"
+      ]
+    },
+    {
       "title": "Design",
       "description": "Skills for interpreting screenshots as interactive UI contracts.",
       "skills": [
