@@ -10,7 +10,7 @@ Reusable agent skills for practical writing, workflow packaging, Codex goal draf
 - `workflow-packager` - reviews recent work evidence and recommends minimal reusable workflow assets.
 - `codex-goal-builder` - turns rough objectives into evidence-based Codex Goals.
 - `codex-runner-creator` - creates or repairs `.codex/environments/environment.toml` run actions.
-- `git-commit` - creates session-scoped Conventional Commits with clean logical grouping.
+- `git-commit` - creates session-scoped Conventional Commits with clean logical grouping and safe push follow-through.
 - `screenshot-interaction` - infers UI behavior and missing states from screenshots before implementation.
 - `issue-creator` - turns terse QA notes into structured GitHub issues with gh preflight, safe metadata, and sensitive-info checks.
 

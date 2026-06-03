@@ -1,6 +1,6 @@
 ---
 name: git-commit
-description: 'Execute git commits with conventional commit message analysis, session-scoped staging, and logical change grouping. Use when the user asks to commit changes, create a git commit, or mentions "/commit". Supports auto-detecting type/scope, generating conventional commit messages from diffs, avoiding unrelated dirty worktree changes, and splitting independent work into multiple clean commits.'
+description: 'Execute git commits with conventional commit message analysis, session-scoped staging, logical change grouping, and safe post-commit push when possible. Use when the user asks to commit changes, create a git commit, push committed work, or mentions "/commit". Supports auto-detecting type/scope, generating conventional commit messages from diffs, avoiding unrelated dirty worktree changes, splitting independent work into multiple clean commits, and pushing to the tracked remote branch when safety checks pass.'
 license: MIT
 allowed-tools: Bash
 ---
@@ -145,10 +145,53 @@ EOF
 )"
 ```
 
+### 7. Push When Safe
+
+After all session-scoped commits are created, push them automatically when the repository has a clear upstream and the push can be done without destructive or surprising behavior.
+
+Before pushing, inspect the current branch and upstream:
+
+```bash
+git status --short --branch
+git branch --show-current
+git branch -vv
+```
+
+Push automatically only when all of these are true:
+
+- The user did not explicitly say not to push.
+- The current branch has a configured upstream, or the push target is obvious from the user's request.
+- The push is a normal fast-forward publication of the commits just created.
+- The command does not require force, lease-force, deleting refs, changing remotes, changing git config, or bypassing hooks.
+- There are no uncommitted in-scope changes left from the current session.
+
+Use the tracked upstream when it exists:
+
+```bash
+git push
+```
+
+If the branch has no upstream but the intended remote is obvious and safe, set the upstream while pushing:
+
+```bash
+git push -u origin "$(git branch --show-current)"
+```
+
+If `git push` fails because the remote has new commits, try the safe update path once:
+
+```bash
+git fetch origin "$(git branch --show-current)"
+git rebase "origin/$(git branch --show-current)"
+git push
+```
+
+Stop and report the blocker instead of pushing when the branch has diverged, rebase conflicts occur, the target branch is protected, credentials are unavailable, the remote is ambiguous, or the push would require force. Never force-push unless the user explicitly asks for that exact operation.
+
 ## Best Practices
 
 - Default to committing only the current session's attributable changes in dirty shared worktrees.
 - Default to multiple decoupled commits when multiple logical changes are present.
+- After committing, default to pushing the new commit(s) when the safe-push checks pass.
 - Present tense: "add" not "added".
 - Imperative mood: "fix bug" not "fixes bug".
 - Reference issues when relevant, such as `Closes #123` or `Refs #456`.
@@ -160,4 +203,5 @@ EOF
 - Never run destructive commands such as `--force` or hard reset without explicit request.
 - Never skip hooks with `--no-verify` unless the user asks.
 - Never force-push to `main` or `master`.
+- Never push when the target remote or branch is ambiguous.
 - If commit fails due to hooks, fix the issue and create a new commit instead of amending by default.
