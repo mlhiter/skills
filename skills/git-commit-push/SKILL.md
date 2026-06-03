@@ -1,13 +1,13 @@
 ---
-name: git-commit
-description: 'Execute git commits with conventional commit message analysis, session-scoped staging, logical change grouping, and safe post-commit push when possible. Use when the user asks to commit changes, create a git commit, push committed work, or mentions "/commit". Supports auto-detecting type/scope, generating conventional commit messages from diffs, avoiding unrelated dirty worktree changes, splitting independent work into multiple clean commits, and pushing to the tracked remote branch when safety checks pass.'
+name: git-commit-push
+description: 'Execute git commit-and-push workflows with conventional commit message analysis, session-scoped staging, logical change grouping, and safe publication to the tracked remote branch. Use when the user asks to commit changes, commit and push, push committed work, publish local changes, or mentions "/commit". Supports auto-detecting type/scope, generating conventional commit messages from diffs, avoiding unrelated dirty worktree changes, splitting independent work into multiple clean commits, and pushing after commit when safety checks pass.'
 license: MIT
 allowed-tools: Bash
 ---
 
-# Git Commit with Conventional Commits
+# Git Commit and Push with Conventional Commits
 
-Create standardized, semantic git commits using the Conventional Commits specification. Analyze the actual diff to determine appropriate type, scope, and message.
+Create standardized, semantic git commits using the Conventional Commits specification, then publish the new commit(s) to the tracked remote branch when the safe-push checks pass. Analyze the actual diff to determine appropriate type, scope, and message.
 
 ## Conventional Commit Format
 
@@ -147,7 +147,7 @@ EOF
 
 ### 7. Push When Safe
 
-After all session-scoped commits are created, push them automatically when the repository has a clear upstream and the push can be done without destructive or surprising behavior.
+After all session-scoped commits are created, push them automatically when the repository has a clear upstream and the push can be done without destructive or surprising behavior. Treat a commit-only result as incomplete unless the user explicitly asked not to push or a safety blocker prevents publication.
 
 Before pushing, inspect the current branch and upstream:
 

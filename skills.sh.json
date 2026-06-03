@@ -15,7 +15,7 @@
       "skills": [
         "codex-goal-builder",
         "codex-runner-creator",
-        "git-commit",
+        "git-commit-push",
         "workflow-packager"
       ]
     },
