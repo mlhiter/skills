@@ -4,6 +4,8 @@
 
 Reusable agent skills for practical writing, workflow packaging, Codex goal drafting, and Codex app run actions.
 
+This repository also includes a sanitized root `AGENTS.md` derived from my global Codex instructions, with private registry and cluster details replaced by placeholders.
+
 ## Skills
 
 - `logseq-writer` - turns topics, drafts, and notes into practical Logseq-style tutorial articles.
@@ -36,9 +38,10 @@ npx skills add mlhiter/skills --list
 
 ## Repository layout
 
-Skills are published under the canonical `skills/<skill-name>/SKILL.md` structure used by `skills.sh`:
+Skills are published under the canonical `skills/<skill-name>/SKILL.md` structure used by `skills.sh`. The root `AGENTS.md` documents the shared agent operating rules for this repository:
 
 ```text
+AGENTS.md
 skills/
   logseq-writer/SKILL.md
   workflow-packager/SKILL.md
