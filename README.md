@@ -13,6 +13,7 @@ This repository also includes a sanitized root `AGENTS.md` derived from my globa
 - `codex-goal-builder` - turns rough objectives into evidence-based Codex Goals.
 - `codex-runner-creator` - creates or repairs `.codex/environments/environment.toml` run actions.
 - `git-commit-push` - creates session-scoped Conventional Commits and safely pushes the new commit(s) to the tracked remote branch.
+- `pr-creator` - creates pull requests with template compliance and explicit fork/upstream head safety.
 - `screenshot-interaction` - infers UI behavior and missing states from screenshots before implementation.
 - `issue-creator` - turns terse QA notes into structured GitHub issues with gh preflight, safe metadata, and sensitive-info checks.
 
@@ -48,6 +49,7 @@ skills/
   codex-goal-builder/SKILL.md
   codex-runner-creator/SKILL.md
   git-commit-push/SKILL.md
+  pr-creator/SKILL.md
   screenshot-interaction/SKILL.md
   issue-creator/SKILL.md
 ```
