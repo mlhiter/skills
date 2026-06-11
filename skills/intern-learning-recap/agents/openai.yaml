@@ -1,0 +1,4 @@
+interface:
+  display_name: "Intern Learning Recap"
+  short_description: "Turn completed work into intern-friendly lessons"
+  default_prompt: "Use $intern-learning-recap to explain the completed task as vivid learning blocks for interns."
