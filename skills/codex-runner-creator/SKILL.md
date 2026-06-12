@@ -11,9 +11,10 @@ Create a local Codex environment action file that lets the user start the projec
 
 1. Inspect the project before writing.
 2. Reuse existing run commands and documented local workflows.
-3. Write the smallest useful `.codex/environments/environment.toml`.
-4. Make multi-process commands reliable enough for repeated clicks.
-5. Validate TOML syntax, required fields, and local-only git hygiene.
+3. Choose a Codex App-stable command shape.
+4. Write the smallest useful `.codex/environments/environment.toml`.
+5. Make multi-process commands reliable enough for repeated clicks.
+6. Validate TOML syntax, required fields, runtime behavior, and local-only git hygiene.
 
 ## First Moves
 
@@ -61,11 +62,16 @@ Rules:
 ## Command Design
 
 - Prefer one existing project script when it already starts the desired workflow.
-- Use multiline shell only when the workflow needs `cd`, environment variables, background processes, port-forwarding, or cleanup.
+- Use multiline TOML shell only for simple `cd` plus one foreground command.
+- For complex commands with shell functions, traps, loops, health checks, background processes, Kubernetes port-forwarding, process substitution, or repeated quoting, create a local wrapper script under `.codex/environments/*.sh` and make `environment.toml` call it with a single absolute command such as `/bin/bash /abs/path/.codex/environments/run-dev.sh`.
+- Codex App environment actions may run in a non-login, non-interactive shell and may not load `~/.zshrc`, `~/.bashrc`, nvm, pnpm home, Homebrew paths, or other user shell customizations. Wrapper scripts should explicitly export the required `PATH` or use absolute tool paths before calling `pnpm`, `bun`, `node`, `kubectl`, `go`, etc.
+- If a user reports that clicking an action briefly opens a command and the terminal closes/crashes, suspect the action command shape first: convert complex multiline TOML into a one-line wrapper script, add durable logging, and keep failures visible instead of silently exiting.
 - Use absolute project paths when the command changes directories across subprojects or may run from an uncertain working directory.
 - Use `bash -lc`, `set -e`, cleanup traps, and health checks when background services must be stopped together or one process depends on another.
+- Prefer wrapper-script cleanup traps over deeply quoted `bash -lc '...'` blocks once the command grows past a few lines.
 - Install dependencies only when the project's normal dev workflow requires it, and prefer idempotent checks such as `[ -d node_modules ] || pnpm install`.
 - Keep command output interactive: run the foreground server last so logs remain visible.
+- For fragile local app actions, write logs to a temp file such as `${TMPDIR:-/tmp}/<project>-codex-run.log` and print that path on failure.
 
 ## Action Design
 
@@ -81,6 +87,7 @@ Rules:
 - Do not put secrets in the file unless they are already local development placeholders or explicitly required by the existing local workflow.
 - Prefer local development ports and test kubeconfig paths over production targets.
 - Treat `.codex/environments/` as a local Codex artifact. Do not add it to repo `.gitignore` by default; prefer the user's global git ignore policy when cleanup is needed.
+- If adding wrapper scripts under `.codex/environments/`, keep them local-only with the environment file unless the user explicitly wants project-owned run scripts.
 
 ## Validation
 
@@ -95,10 +102,16 @@ After editing:
 2. If the file is in a git repo, verify it is ignored or intentionally untracked:
 
    ```bash
-   git check-ignore -v .codex/environments/environment.toml
+   git check-ignore -v .codex/environments/environment.toml .codex/environments/*.sh
    ```
 
-3. If the user asked for runtime proof, run the command or the safest narrower smoke test. Avoid long-running servers unless the user wants the environment started.
+3. For wrapper scripts, validate them from a minimal non-login environment so missing `PATH` assumptions are caught before the user clicks the Codex App action:
+
+   ```bash
+   env -i HOME="$HOME" PATH="/usr/bin:/bin:/usr/sbin:/sbin" SHELL=/bin/sh /bin/bash .codex/environments/run-dev.sh
+   ```
+
+4. If the user asked for runtime proof, run the command or the safest narrower smoke test. Avoid leaving long-running servers active unless the user wants the environment started.
 
 ## References
 
