@@ -71,7 +71,22 @@ the PR head/base unambiguous.
    - Do not treat tracking config (`branch.<branch>.remote` or
      `branch.<branch>.merge`) as the PR base.
 
-7. **Push Only to the Intended Head Remote**: Verify both refs, then push the
+7. **Run PR-Preflight Code Review**: Before creating the PR, invoke the
+   `check` skill against the exact final diff that will appear in the PR. Use
+   the resolved target repository, base branch, and head branch as the review
+   range. If `check` finds real issues introduced by the current work, fix them
+   and rerun the relevant verification before continuing.
+
+   Do not create the PR when PR-preflight review is blocked by unresolved
+   verification failures, ambiguous dirty work ownership, unsafe base/head
+   selection, secrets, missing generated artifacts, or issues that require
+   product or architecture approval. If the same final diff and same base/head
+   were already reviewed by `check` in this session and neither HEAD nor
+   worktree state changed, reuse that review result instead of rerunning it.
+   If the user explicitly requests a draft/WIP PR without review, create it
+   only if safe and state that PR-preflight review was intentionally skipped.
+
+8. **Push Only to the Intended Head Remote**: Verify both refs, then push the
    current branch to the chosen head remote.
    ```bash
    git ls-remote --heads <target-remote> <base>
@@ -81,7 +96,7 @@ the PR head/base unambiguous.
    Use `-u` only when binding local tracking to this same intended head is safe
    and explicit.
 
-8. **Create PR with an Owner-Qualified Head**: Write the body to a temporary
+9. **Create PR with an Owner-Qualified Head**: Write the body to a temporary
    file, scan the title/body for unintended Chinese/CJK text, then create the
    PR with explicit `--repo`, `--head`, and `--base`.
    ```bash
@@ -117,7 +132,7 @@ the PR head/base unambiguous.
    exact branch, use an owner-qualified `--head <upstream-owner>:<branch>`, and
    verify the PR head after creation.
 
-9. **Verify PR Head/Base**: After creation, confirm the PR points at the
+10. **Verify PR Head/Base**: After creation, confirm the PR points at the
    intended owner/ref before reporting success.
    ```bash
    gh pr view <number-or-url> \

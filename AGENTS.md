@@ -35,6 +35,14 @@ Stop the closeout flow and report the blocker instead of guessing when ownership
 
 The final response after closeout should include the verification performed, documentation/memory sync result, commit hash(es), and any intentionally uncommitted or out-of-scope changes.
 
+## Pull Request Creation Preflight
+
+Before creating a pull request, ensure the PR creation workflow invokes the `check` skill for a PR-preflight code review of the final diff that will appear in the PR. Resolve the intended base/head before review, and review against that exact PR range. If `check` finds real issues introduced by the current work, fix them and rerun the relevant verification before calling `gh pr create`.
+
+Do not create the PR when PR-preflight review is blocked by unresolved verification failures, ambiguous dirty work ownership, unsafe base/head selection, secrets, missing generated artifacts, or issues that require product/architecture approval.
+
+If the same final diff and same base/head were already reviewed by `check` in this session and neither HEAD nor worktree state changed, reuse that review result instead of rerunning it. When using `pr-creator`, its workflow owns this preflight and must not skip it. If the user explicitly requests a draft/WIP PR without review, create it only if safe and state that PR-preflight review was intentionally skipped.
+
 <!-- context7 -->
 Use the `ctx7` CLI to fetch current documentation whenever the user asks about a library, framework, SDK, API, CLI tool, or cloud service -- even well-known ones like React, Next.js, Prisma, Express, Tailwind, Django, or Spring Boot. This includes API syntax, configuration, version migration, library-specific debugging, setup instructions, and CLI tool usage. Use even when you think you know the answer -- your training data may not reflect recent changes. Prefer this over web search for library docs.
 

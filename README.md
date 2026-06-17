@@ -14,7 +14,7 @@ This repository also includes a sanitized root `AGENTS.md` derived from my globa
 - `codex-runner-creator` - creates or repairs `.codex/environments/environment.toml` run actions.
 - `git-commit-push` - creates session-scoped Conventional Commits and safely pushes the new commit(s) to the tracked remote branch.
 - `intern-learning-recap` - turns completed work into intern-friendly learning recaps while avoiding repeated explanations via a local knowledge ledger.
-- `pr-creator` - creates pull requests with template compliance and explicit fork/upstream head safety.
+- `pr-creator` - creates pull requests with PR-preflight review, template compliance, and explicit fork/upstream head safety.
 - `screenshot-interaction` - infers UI behavior and missing states from screenshots before implementation.
 - `issue-creator` - turns terse QA notes into structured GitHub issues with gh preflight, safe metadata, and sensitive-info checks.
 
