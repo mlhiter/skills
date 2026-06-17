@@ -38,6 +38,12 @@ the PR head/base unambiguous.
    - `.github/PULL_REQUEST_TEMPLATE/*`
 
 4. **Draft Description**: Fill the template faithfully.
+   - Write the PR title and all PR-facing text in English by default, even when
+     the conversation with the user is in another language.
+   - This includes the title, body, template answers, checklist notes,
+     verification notes, and any public PR comments or follow-up text.
+   - Do not include Chinese/CJK text in the PR unless the user or repository
+     explicitly requires a different public language.
    - Keep the template headings.
    - Mark checklist items only when they are actually complete.
    - Include concise summaries, test results, and related issues when relevant.
@@ -76,7 +82,21 @@ the PR head/base unambiguous.
    and explicit.
 
 8. **Create PR with an Owner-Qualified Head**: Write the body to a temporary
-   file, then create the PR with explicit `--repo`, `--head`, and `--base`.
+   file, scan the title/body for unintended Chinese/CJK text, then create the
+   PR with explicit `--repo`, `--head`, and `--base`.
+   ```bash
+   python3 - "$title" "$body_file" <<'PY'
+   import pathlib
+   import re
+   import sys
+
+   title = sys.argv[1]
+   body = pathlib.Path(sys.argv[2]).read_text()
+   if re.search(r"[\u3400-\u9fff\uf900-\ufaff]", title + "\n" + body):
+       raise SystemExit("PR title/body contain Chinese/CJK text; rewrite them in English before creating the PR.")
+   PY
+   ```
+
    ```bash
    gh pr create \
      --repo <target-owner/repo> \
@@ -113,4 +133,6 @@ the PR head/base unambiguous.
 - Never silently switch the PR head owner or remote.
 - Always use owner-qualified `--head <owner>:<branch>` for fork/upstream PRs.
 - Never ignore the PR template.
+- Keep PR titles, descriptions, checklist text, verification notes, and public
+  PR comments in English by default.
 - Do not mark checklist items that have not been verified.
