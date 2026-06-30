@@ -6,10 +6,16 @@ Reusable agent skills for practical writing, workflow packaging, Codex goal draf
 
 This repository also includes a sanitized root `AGENTS.md` derived from my global Codex instructions, with private registry and cluster details replaced by placeholders.
 
+For maintainers, the project context lives in `PRODUCT.md`, `DESIGN.md`, `ROADMAP.md`, and `docs/`.
+
 ## Skills
 
 - `logseq-writer` - turns topics, drafts, and notes into practical Logseq-style tutorial articles.
 - `workflow-packager` - reviews recent work evidence and recommends minimal reusable workflow assets.
+- `first-principles-review` - runs a first-principles diagnosis plus adversarial stress review for plans, bugs, releases, and decisions.
+- `think` - turns rough ideas into decision-complete plans, now with a first-principles pass for non-trivial work.
+- `hunt` - finds root cause before fixing bugs, now with a first-principles root-cause gate.
+- `check` - reviews diffs and release readiness, now with functional acceptance and adversarial review gates.
 - `codex-goal-builder` - turns rough objectives into evidence-based Codex Goals.
 - `codex-runner-creator` - creates or repairs `.codex/environments/environment.toml` run actions.
 - `git-commit-push` - creates session-scoped Conventional Commits and safely pushes the new commit(s) to the tracked remote branch.
@@ -44,9 +50,21 @@ Skills are published under the canonical `skills/<skill-name>/SKILL.md` structur
 
 ```text
 AGENTS.md
+PRODUCT.md
+DESIGN.md
+ROADMAP.md
+docs/
+  architecture.md
+  ia.md
+  references.md
+  runbook.md
 skills/
   logseq-writer/SKILL.md
   workflow-packager/SKILL.md
+  first-principles-review/SKILL.md
+  think/SKILL.md
+  hunt/SKILL.md
+  check/SKILL.md
   codex-goal-builder/SKILL.md
   codex-runner-creator/SKILL.md
   git-commit-push/SKILL.md

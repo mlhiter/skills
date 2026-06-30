@@ -1,0 +1,4 @@
+interface:
+  display_name: "Hunt"
+  short_description: "Find root cause before fixing bugs"
+  default_prompt: "Use $hunt to diagnose this bug from first principles, prove the root cause, and only then propose or apply the fix."

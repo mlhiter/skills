@@ -15,6 +15,10 @@
       "skills": [
         "codex-goal-builder",
         "codex-runner-creator",
+        "first-principles-review",
+        "think",
+        "hunt",
+        "check",
         "git-commit-push",
         "pr-creator",
         "workflow-packager"

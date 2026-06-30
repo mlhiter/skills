@@ -1,0 +1,4 @@
+interface:
+  display_name: "Think"
+  short_description: "Turn rough ideas into decision-complete plans"
+  default_prompt: "Use $think to turn this rough idea into a first-principles plan with concrete scope, tradeoffs, and verification."

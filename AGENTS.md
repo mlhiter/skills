@@ -1,5 +1,13 @@
 # Global Instructions
 
+## Repository Rules
+
+- This repository is the durable source of truth for public, installable skills.
+- Keep published instructions public-safe: no credentials, private registry URLs, private cluster names, or personal machine paths.
+- Put skills under `skills/<skill-name>/SKILL.md`; keep bundled references, scripts, and assets inside the owning skill directory.
+- Update `README.md` and `skills.sh.json` whenever a skill is added, removed, or renamed.
+- Shared reusable rules must be bundled inside each skill that needs them unless single-skill installation is proven to include root-level shared files; do not move one-off project facts into shared rules.
+
 - Never execute database write operations unless the user explicitly asks for a database modification.
 - For production deployments, always build and publish container images for `linux/amd64` by default. Do not publish ARM images unless the user explicitly asks for ARM.
 - For test-time cloud image builds that need to be pushed to a remote registry, default to `<configured-private-registry>` because local push permissions are already configured there. Use a different registry only if the user explicitly asks for it.
@@ -20,6 +28,12 @@
 - Prefer subagents for well-scoped, independent exploration, implementation, or verification tasks that materially advance the main goal.
 - Keep work local for small tasks, urgent critical-path blockers, tightly coupled changes, overlapping write scopes, sensitive context, or cases where subagent tools are unavailable.
 - When using subagents for code changes, assign disjoint file/module ownership and integrate the results before final verification.
+
+## First-Principles and Adversarial Review
+
+- For non-trivial bugs, architecture choices, production-impacting changes, ambiguous fixes, or major plans, start from first principles: identify the invariant, source of truth, ownership boundary, causal chain, and smallest mechanism-level fix.
+- After implementation or before a risky decision ships, review adversarially: malformed or oversized input, time skew, retries, concurrency, auth or tenant boundary mistakes, path/shell/network sinks, cache/fallback behavior, package or generated-artifact drift, deploy failure, and rollback paths.
+- Use `first-principles-review` when the user asks for this thinking loop directly; otherwise let `think`/`hunt` carry the first-principles pass and `check` carry the functional acceptance and adversarial review gate.
 
 ## Automatic Task Closeout
 
