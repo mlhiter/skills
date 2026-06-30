@@ -42,7 +42,7 @@ The main engineering lifecycle is:
 
 1. `think`: plan from first principles before building.
 2. `hunt`: diagnose root cause before fixing.
-3. `check`: review the completed change with functional acceptance and adversarial gates.
+3. `check`: review the completed change by modeling feature intent and risk, then applying functional acceptance and adversarial gates.
 4. `neat-freak`: sync durable project knowledge after meaningful changes.
 5. `git-commit-push`: publish the session-scoped change safely.
 

@@ -1,8 +1,8 @@
 ---
 name: check
-description: "Reviews code diffs, PRs, issue queues, release readiness, commits, pushes, publishing, and project audits. Use when users ask review/看看代码/合并前/看看issue/PR/release/push or to implement an approved plan, with safety gates for dirty and untracked worktrees. Not for exploring ideas, debugging root causes, or prose review."
+description: "Reviews completed changes, code diffs, PRs, issue queues, release readiness, commits, pushes, publishing, and project audits. Use when users ask review/看看代码/检查一下/合并前/看看issue/PR/release/push or to implement an approved plan, with functional acceptance, dynamic risk modeling, adversarial review, and safety gates for dirty and untracked worktrees. Not for exploring ideas, debugging root causes, or prose review."
 when_to_use: "review, 看看代码, 检查一下, 有没有问题, 是否需要优化, 合并前, 继续优化, 优化代码, 看看issue, 看看PR, release, publish, push, release reaction, GitHub reaction, 发布, 提交, 关闭issue, 发布表情, release表情, close issue, issue close, review my code, check changes, before merge, before release, code review, code-review, audit, project audit, 项目体检, 项目评分, 给项目打分, 深入分析项目代码, 评估项目质量, 代码质量评分, scorecard, linus review, rate this codebase, score this project"
-dispatch_intent: "Code review, before merge, release gates, generated artifacts, safety sinks, publish/push/reaction follow-through, triage issues/PRs, project-wide code-quality audit scorecard"
+dispatch_intent: "Completed-change quality gate, code review, before merge, release gates, generated artifacts, safety sinks, dynamic feature-risk review, publish/push/reaction follow-through, triage issues/PRs, project-wide code-quality audit scorecard"
 ---
 
 # Check: Review Before You Ship
@@ -11,14 +11,15 @@ Prefix your first line with 🥷 inline, not as its own paragraph.
 
 > Note: `/review` is a built-in Anthropic plugin command for PR review. Waza uses `/check` (or the alias `code-review`) instead. Do not re-trigger `/review` from within this skill.
 
-Read the diff, find the problems, fix what can be fixed safely, ask about the rest. Done means verification ran in this session and passed.
+Read the diff, infer the feature's real intent, model the risk surface, find the problems, fix what can be fixed safely, ask about the rest. Done means the functional acceptance path, adversarial risk pass, and verification all have current evidence or explicit blockers.
 
 ## Outcome Contract
 
-- Outcome: a review, release decision, or maintainer action grounded in the current diff, project context, and live evidence.
+- Outcome: a review, release decision, or maintainer action grounded in the current diff, feature intent, project context, and live evidence.
 - Done when: findings, fixes, shipped state, or blockers are stated with the commands, artifacts, or remote state that prove them.
 - Evidence: worktree status, diff, public project docs, manifests, CI, package contents, release or registry state, and current command output.
 - Output: concise findings first, then verification and shipped-state summary when applicable.
+- Core question: "Given what this change is trying to accomplish, what could go wrong for a real user, operator, maintainer, or security boundary?"
 
 ## Worktree Safety Preflight
 
@@ -52,7 +53,7 @@ Pick the mode that matches the user's intent, then read that section in full. Mo
 | "audit", "项目体检", "项目评分", "给项目打分", "深入分析项目代码", "scorecard", "linus review" | [Project Audit](#project-audit-mode) |
 | Document, PDF, prose review | Delegate to `/write` (see [Document Review](#document-review)) |
 
-Before any mode, run [Project Context Extraction](#project-context-extraction) and (if memory is in scope) [Durable Context Preflight](#durable-context-preflight).
+Before any mode, run [Project Context Extraction](#project-context-extraction), [Feature Intent And Risk Model](#feature-intent-and-risk-model), and (if memory is in scope) [Durable Context Preflight](#durable-context-preflight).
 
 ## Project Context Extraction
 
@@ -75,6 +76,23 @@ For release or maintainer work, also fill the Release Gate 2.0 matrix from `refe
 See [references/durable-context.md](references/durable-context.md) for when to read durable context, the read-order budget, and the memory-type mapping.
 
 For `/check`, private task constraints are `decision`, `preference`, and `principle` entries; review checklists are `pattern` and `learning`. Current code, diff, public docs, CI, tests, and remote state override memory. Durable memory can explain user intent and preferred follow-through, but public project rules still come from README files, manifests, CI workflows, release docs, the diff, and explicit instructions in the current thread. Never cite private memory as a public project requirement.
+
+## Feature Intent And Risk Model
+
+This is the primary review spine for completed feature work. Do not reduce `/check` to a static checklist, and do not bind it to one domain such as Kubernetes, frontend, backend, or packaging. Start from the change's purpose, then derive the checks that matter for this exact change.
+
+Build a compact risk model before detailed findings:
+
+1. **Intent:** infer the user-visible, operator-visible, or maintainer-visible promise from the request, diff, issue, PR, or plan. If the promise is unclear, state the assumption and review against it.
+2. **Source of truth:** identify where the authoritative data, config, permission, generated artifact, or external state lives. Watch for duplicated sources, stale caches, compatibility shims, and fallback precedence.
+3. **Control path:** trace one representative path from entrypoint -> input or state -> validation -> authority or ownership check -> state change, side effect, or output -> observable behavior.
+4. **Risk surfaces:** classify only the surfaces touched by this change, but include any surface that can realistically be affected indirectly: UI, API, CLI, auth/session, tenant/workspace isolation, secrets, database, filesystem, shell, network, dependency, background worker, cache, config, deploy, packaging, generated artifacts, release, observability, or rollback.
+5. **Failure modes:** name the most plausible ways the feature can fail: wrong source of truth, missing validation, bypassed authority check, partial update, stale or hostile config, broad matcher, unsafe fallback, secret exposure, race, retry duplicate, compatibility break, generated-artifact drift, deploy skew, or user workflow dead end.
+6. **Review plan:** choose the smallest checks that can prove or falsify the risky assumptions: code trace, grep for sibling paths, targeted test, runtime smoke, artifact inspection, CLI invocation, API call, browser path, cluster/service health check, package dry-run, or manual residual-risk note.
+
+Use this model to decide which later gates get emphasis. Security is mandatory whenever the trace crosses a trust boundary, but it is not the only goal: functional correctness, deployability, operability, compatibility, and user workflow completion are equally reviewable outcomes when they are what the feature promises.
+
+Do not stop at "tests passed" when the risk model says the real failure would show up only in runtime state, a generated artifact, an operator action, a browser workflow, a permission boundary, or an external integration. Conversely, do not invent heavyweight checks for surfaces the model does not touch.
 
 ## Plan Execution Mode
 
@@ -225,7 +243,7 @@ Measure the diff and classify depth:
 |-------|----------|-----------|
 | **Quick** | Under 100 lines, 1-5 files | Base review only |
 | **Standard** | 100-500 lines, or 6-10 files | Base + conditional specialists |
-| **Deep** | 500+ lines, 10+ files, or touches auth/payments/data mutation | Base + all specialists + adversarial pass |
+| **Deep** | 500+ lines, 10+ files, or touches auth/payments/data mutation, destructive operations, deploy control, or trust boundaries | Base + all specialists + adversarial pass |
 
 State the depth before proceeding.
 
@@ -257,25 +275,29 @@ For every completed feature, bug fix, deploy-affecting change, or user-visible w
 
 Record:
 
+- Promise: the concrete behavior the feature or fix now claims to provide.
 - Happy path: the smallest path that proves the intended behavior works.
 - Negative path: the most likely invalid input, failed dependency, denied permission, or empty state.
-- Edge path: the boundary condition most likely to regress, such as large input, time skew, retry, concurrency, locale, cache fallback, or config default.
-- Residual risk: what could not be exercised and why.
+- Edge path: the boundary condition most likely to regress, chosen from the risk model rather than a generic list: large input, time skew, retry, concurrency, locale, cache fallback, config default, source-of-truth drift, permission mismatch, generated output, install/runtime mismatch, or deployment skew.
+- Evidence: command, screenshot, API result, artifact inspection, log, diff trace, or explicit "not runnable here" reason.
+- Residual risk: what could not be exercised, why, and who must verify it next.
 
 For UI, native, browser, generated artifact, packaging, CLI, API, and deployment changes, prefer runtime or artifact evidence over source-only inference. If a runtime check is impossible, say so in the sign-off and name the exact check a human should run.
 
 ## Adversarial Review Gate
 
-After checking the intended behavior, review the change as if you were trying to break the system through this diff.
+After checking the intended behavior, review the change as if you were trying to break the system through this diff. Use the risk model as the map; do not run this as a rote security checklist detached from the feature.
 
 1. Classify the touched surface: UI, API, CLI, data mutation, auth/session, tenant/workspace isolation, filesystem, shell, network, dependency, background worker, deploy, packaging, release, or generated artifact.
-2. Trace the path: entrypoint -> validation -> authority check -> state or sink -> observable behavior.
+2. Trace the path: entrypoint -> input/state -> validation -> authority or ownership check -> state or sink -> observable behavior.
 3. Attack the assumptions:
    - malformed or oversized input
    - missing, stale, or hostile config
    - time skew, retries, duplicate delivery, cancellation, and partial failure
    - concurrency, ordering, and cache fallback
    - auth, tenant, workspace, path, shell, network, and secret boundaries
+   - duplicated source-of-truth, stale local mirror, or precedence mismatch
+   - deployment, rollback, observability, and operator recovery gaps
    - generated artifact or package contents drifting from source
 4. For risky surfaces, run or describe one concrete abuse check. If the check cannot run, keep it as residual risk instead of silently approving.
 
@@ -416,6 +438,7 @@ For document, PDF, white paper, or prose review, route to `/write` (Document Rev
 files changed:    N (+X -Y)
 scope:            on target / drift: [what]
 review depth:     quick / standard / deep
+risk model:       intent/source/path/surfaces captured; top risk: [what]
 hard stops:       N found, N fixed, N deferred
 specialists:      [security, architecture] or none
 acceptance:       happy/negative/edge checked; residual risk: [none or reason]

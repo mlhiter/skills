@@ -15,7 +15,7 @@ For maintainers, the project context lives in `PRODUCT.md`, `DESIGN.md`, `ROADMA
 - `first-principles-review` - runs a first-principles diagnosis plus adversarial stress review for plans, bugs, releases, and decisions.
 - `think` - turns rough ideas into decision-complete plans, now with a first-principles pass for non-trivial work.
 - `hunt` - finds root cause before fixing bugs, now with a first-principles root-cause gate.
-- `check` - reviews diffs and release readiness, now with functional acceptance and adversarial review gates.
+- `check` - reviews completed changes with feature-intent risk modeling, functional acceptance, adversarial review, and release gates.
 - `codex-goal-builder` - turns rough objectives into evidence-based Codex Goals.
 - `codex-runner-creator` - creates or repairs `.codex/environments/environment.toml` run actions.
 - `git-commit-push` - creates session-scoped Conventional Commits and safely pushes the new commit(s) to the tracked remote branch.

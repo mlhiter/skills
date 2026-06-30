@@ -2,7 +2,7 @@
 
 ## Current Focus
 
-- Keep the Codex workflow lifecycle coherent: `think` for planning, `hunt` for root-cause diagnosis, `check` for acceptance and adversarial review, `neat-freak` for knowledge sync, and `git-commit-push` for safe publication.
+- Keep the Codex workflow lifecycle coherent: `think` for planning, `hunt` for root-cause diagnosis, `check` for feature-risk review, acceptance, and adversarial review, `neat-freak` for knowledge sync, and `git-commit-push` for safe publication.
 - Maintain this repository as the durable public source for reusable personal skills.
 - Keep install and discovery paths simple through `skills.sh.json` and `README.md`.
 

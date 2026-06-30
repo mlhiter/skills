@@ -20,7 +20,7 @@ product
 
 - Install all skills with `npx skills add mlhiter/skills --all`.
 - Install a single skill with `npx skills add mlhiter/skills --skill <name>`.
-- Use `think`, `hunt`, and `check` as a lifecycle: plan from first principles, diagnose before fixing, then review with functional acceptance and adversarial gates.
+- Use `think`, `hunt`, and `check` as a lifecycle: plan from first principles, diagnose before fixing, then review completed changes through feature-intent risk modeling, functional acceptance, and adversarial gates.
 - Use `first-principles-review` directly when the user asks for a focused first-principles plus adversarial pass.
 - Keep public repository guidance sanitized so private registries, cluster names, and local-only paths do not leak into the published catalog.
 
