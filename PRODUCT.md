@@ -4,7 +4,7 @@
 
 This repository publishes reusable agent skills for Codex-compatible environments through the `skills.sh` repository layout.
 
-The product is not an application UI. It is an installable skill catalog whose value is better agent behavior: safer git workflows, stronger planning, root-cause debugging, review gates, issue creation, screenshot interpretation, and reusable workflow packaging.
+The product is not an application UI. It is an installable skill catalog whose value is better agent behavior: safer git workflows, stronger planning, root-cause debugging, review gates, issue creation, screenshot interpretation, quarterly dashboard reporting, and reusable workflow packaging.
 
 ## Register
 
@@ -22,6 +22,7 @@ product
 - Install a single skill with `npx skills add mlhiter/skills --skill <name>`.
 - Use `think`, `hunt`, and `check` as a lifecycle: plan from first principles, diagnose before fixing, then review completed changes through feature-intent risk modeling, functional acceptance, and adversarial gates.
 - Use `first-principles-review` directly when the user asks for a focused first-principles plus adversarial pass.
+- Use `quarterly-work-dashboard` to generate a local leadership-facing HTML dashboard from read-only GitHub and Feishu quarterly evidence.
 - Keep public repository guidance sanitized so private registries, cluster names, and local-only paths do not leak into the published catalog.
 
 ## Product Decisions

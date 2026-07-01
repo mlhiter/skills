@@ -13,7 +13,7 @@
 Skills are grouped in `skills.sh.json` for discovery:
 
 - Writing: prose and publishing workflows.
-- Codex: planning, debugging, review, git, PR, and workflow packaging.
+- Codex: planning, debugging, review, git, PR, dashboard reporting, and workflow packaging.
 - QA: issue creation and testing artifacts.
 - Design: screenshot interpretation and UI contract extraction.
 

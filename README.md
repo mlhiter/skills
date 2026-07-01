@@ -2,7 +2,7 @@
 
 [![skills.sh](https://skills.sh/b/mlhiter/skills)](https://skills.sh/mlhiter/skills)
 
-Reusable agent skills for practical writing, workflow packaging, Codex goal drafting, and Codex app run actions.
+Reusable agent skills for practical writing, workflow packaging, Codex goal drafting, dashboard reporting, and Codex app run actions.
 
 This repository also includes a sanitized root `AGENTS.md` derived from my global Codex instructions, with private registry and cluster details replaced by placeholders.
 
@@ -12,6 +12,7 @@ For maintainers, the project context lives in `PRODUCT.md`, `DESIGN.md`, `ROADMA
 
 - `logseq-writer` - turns topics, drafts, and notes into practical Logseq-style tutorial articles.
 - `workflow-packager` - reviews recent work evidence and recommends minimal reusable workflow assets.
+- `quarterly-work-dashboard` - generates a leadership-facing quarterly work dashboard from read-only GitHub and Feishu evidence.
 - `first-principles-review` - runs a first-principles diagnosis plus adversarial stress review for plans, bugs, releases, and decisions.
 - `think` - turns rough ideas into decision-complete plans, now with a first-principles pass for non-trivial work.
 - `hunt` - finds root cause before fixing bugs, now with a first-principles root-cause gate.
@@ -61,6 +62,7 @@ docs/
 skills/
   logseq-writer/SKILL.md
   workflow-packager/SKILL.md
+  quarterly-work-dashboard/SKILL.md
   first-principles-review/SKILL.md
   think/SKILL.md
   hunt/SKILL.md

@@ -1,0 +1,8 @@
+name: quarterly-work-dashboard
+description: 一站式采集 GitHub 和飞书季度数据，生成 tab 切换的季度工作总面板
+model: gpt-5
+instructions: |
+  Use the quarterly-work-dashboard skill as the single entrypoint. Run the internal GitHub,
+  Feishu, and combined dashboard modules through scripts/run_quarterly_work_dashboard.py.
+  Keep all external operations read-only. Preserve GitHub and Feishu source boundaries in
+  summary.json and show permissions or methodology gaps clearly.

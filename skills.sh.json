@@ -11,7 +11,7 @@
     },
     {
       "title": "Codex",
-      "description": "Skills for Codex goals, local run actions, and reusable workflow packaging.",
+      "description": "Skills for Codex goals, local run actions, dashboard reporting, and reusable workflow packaging.",
       "skills": [
         "codex-goal-builder",
         "codex-runner-creator",
@@ -21,6 +21,7 @@
         "check",
         "git-commit-push",
         "pr-creator",
+        "quarterly-work-dashboard",
         "workflow-packager"
       ]
     },
