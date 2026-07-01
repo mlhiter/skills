@@ -1443,16 +1443,58 @@ def executive_metric_strip(summary: dict[str, Any]) -> str:
         ("项目组合", portfolio.get("confidence"), f"{fmt_num(portfolio_value.get('new_repositories'))} 新建 · {fmt_num(portfolio_value.get('newly_active_projects'))} 新启动", portfolio.get("source")),
         ("协作覆盖", collaboration.get("confidence"), f"{fmt_num(collaboration_value.get('feishu_accessible_modules'))}/3 飞书模块", collaboration.get("source")),
     ]
-    return "".join(
+    rows = "".join(
         f"""
-        <div class="trust-card">
-          <div class="trust-top"><strong>{esc(label)}</strong>{confidence_badge(str(level or 'low'))}</div>
-          <div class="trust-value">{esc(value)}</div>
-          <small>{esc(source or '')}</small>
+        <div class="signal-item">
+          <strong>{esc(label)}</strong>
+          <b>{esc(value)}</b>
+          {confidence_badge(str(level or 'low'))}
         </div>
         """
         for label, level, value, source in items
     )
+    return f'<div class="signal-rail">{rows}</div>'
+
+
+def summary_evidence_section(summary: dict[str, Any]) -> str:
+    chains = [chain for chain in (summary.get("evidence_chains") or []) if isinstance(chain, dict)]
+    chain_type = {
+        "delivery-volume": "事实",
+        "outcome-classification": "推断",
+        "theme-focus": "推断",
+        "project-portfolio": "推断",
+        "feishu-coverage": "边界",
+    }
+    chain_rows = []
+    for chain in chains[:5]:
+        evidence = chain.get("evidence") or []
+        evidence_html = evidence_chain_items(evidence, 2)
+        type_label = chain_type.get(str(chain.get("id") or ""), "证据")
+        chain_rows.append(
+            f"""
+            <article class="chain-compact">
+              <div class="chain-compact-top">
+                <span>{esc(type_label)}</span>
+                {confidence_badge(str(chain.get('confidence') or 'low'))}
+              </div>
+              <h3>{esc(chain.get('title') or '')}</h3>
+              <p>{esc(chain.get('claim') or '')}</p>
+              {evidence_html}
+              <small>{esc(chain.get('caveat') or '')}</small>
+            </article>
+            """
+        )
+    if not chain_rows:
+        chain_rows.append('<p class="empty">暂无可追溯证据链。</p>')
+    insights = "".join(f'<li>{esc(item)}</li>' for item in summary.get("insights") or [])
+    return f"""
+      <div class="summary-evidence-grid">
+        <div class="insight-panel">
+          <ol class="insights">{insights}</ol>
+        </div>
+        <div class="evidence-rail">{''.join(chain_rows)}</div>
+      </div>
+    """
 
 
 def evidence_chain_section(summary: dict[str, Any]) -> str:
@@ -1538,19 +1580,16 @@ def value_path(summary: dict[str, Any]) -> str:
         value = number(item.get("value"))
         cards.append(
             f"""
-            <div class="value-node">
-              <div class="value-index">{esc(str(idx + 1).zfill(2))}</div>
-              <div class="value-main">
-                <span>{esc(item.get('label') or '')}</span>
-                <strong>{esc(fmt_num(value))}</strong>
-                <em>{esc(item.get('unit') or '')}</em>
-              </div>
+            <div class="value-step" title="{esc(item.get('detail') or '')}">
+              <span>{esc(str(idx + 1).zfill(2))}</span>
+              <strong>{esc(item.get('label') or '')}</strong>
+              <b>{esc(fmt_num(value))}</b>
+              <em>{esc(item.get('unit') or '')}</em>
               <div class="value-bar"><b style="width:{bar_width(value, max_value)}"></b></div>
-              <small>{esc(item.get('detail') or '')}</small>
             </div>
             """
         )
-    return f'<div class="value-path">{"".join(cards)}</div>'
+    return f'<div class="value-rail">{"".join(cards)}</div>'
 
 
 def investment_lanes(summary: dict[str, Any]) -> str:
@@ -1686,19 +1725,18 @@ def data_quality_strip(summary: dict[str, Any]) -> str:
     cards = []
     for row in rows:
         value = max(0.0, min(100.0, float(number(row.get("value")))))
+        tone = STATUS_TONE.get(str(row.get("status") or ""), "idle")
         cards.append(
             f"""
-            <div class="quality-card quality-{esc(STATUS_TONE.get(str(row.get('status') or ''), 'idle'))}">
-              <div class="quality-top">
-                <strong>{esc(row.get('label') or '')}</strong>
-                {confidence_badge(str(row.get('confidence') or 'low'))}
-              </div>
+            <div class="quality-item quality-{esc(tone)}">
+              <strong>{esc(row.get('label') or '')}</strong>
               <div class="quality-meter"><span style="width:{value:.1f}%"></span></div>
-              <small>{esc(row.get('text') or '')}</small>
+              <b>{value:.0f}%</b>
+              {confidence_badge(str(row.get('confidence') or 'low'))}
             </div>
             """
         )
-    return '<div class="quality-grid">' + "".join(cards) + "</div>"
+    return '<div class="quality-rail">' + "".join(cards) + "</div>"
 
 
 def quarter_change_map(summary: dict[str, Any]) -> str:
@@ -1753,16 +1791,16 @@ def project_profile_cards(summary: dict[str, Any]) -> str:
     profiles = [row for row in (((summary.get("value_views") or {}).get("project_profiles") or [])) if isinstance(row, dict)]
     if not profiles:
         return '<p class="empty">暂无重点项目剖面。</p>'
-    cards = []
+    rows = []
     for idx, row in enumerate(profiles, start=1):
         attrs = [attr for attr in (row.get("value_attribution") or []) if isinstance(attr, dict)]
         metrics = row.get("metrics") if isinstance(row.get("metrics"), dict) else {}
         actions = row.get("actions") if isinstance(row.get("actions"), list) else []
         prs = row.get("representative_prs") if isinstance(row.get("representative_prs"), list) else []
         value_chips = "".join(f'<span>{esc(attr.get("label") or "")}</span>' for attr in attrs[:3])
-        action_html = "".join(f"<li>{esc(item)}</li>" for item in actions[:4])
+        action_html = "".join(f"<span>{esc(item)}</span>" for item in actions[:2])
         pr_html = "".join(
-            f'<li><a href="{esc(pr.get("url") or "#")}">#{esc(pr.get("number") or "")}</a><span>{esc(short_label(pr.get("title"), 58))}</span></li>'
+            f'<a href="{esc(pr.get("url") or "#")}">#{esc(pr.get("number") or "")} {esc(short_label(pr.get("title"), 42))}</a>'
             for pr in prs[:3]
             if isinstance(pr, dict)
         )
@@ -1775,11 +1813,11 @@ def project_profile_cards(summary: dict[str, Any]) -> str:
                 ("Commit", metrics.get("commits")),
             )
         )
-        impact_parts = [row.get("business_impact"), row.get("customer_value")]
-        impact_html = "".join(f"<p>{esc(part)}</p>" for part in impact_parts if part)
-        cards.append(
+        impact_parts = [str(part) for part in [row.get("business_impact"), row.get("customer_value")] if part]
+        impact_html = " · ".join(impact_parts[:2])
+        rows.append(
             f"""
-            <article class="profile-card">
+            <article class="profile-row">
               <div class="profile-index">{esc(str(idx).zfill(2))}</div>
               <div class="profile-main">
                 <div class="profile-head">
@@ -1790,16 +1828,18 @@ def project_profile_cards(summary: dict[str, Any]) -> str:
                   {confidence_badge(str(row.get('confidence') or 'medium'))}
                 </div>
                 <p>{esc(row.get('purpose') or '')}</p>
+                {f'<div class="profile-impact-line">{esc(impact_html)}</div>' if impact_html else ''}
+                {f'<div class="profile-actions">{action_html}</div>' if action_html else ''}
+                {f'<div class="profile-prs">{pr_html}</div>' if pr_html else ''}
+              </div>
+              <div class="profile-side">
                 <div class="profile-values">{value_chips}</div>
-                {f'<div class="profile-impact">{impact_html}</div>' if impact_html else ''}
-                {f'<ul class="profile-actions">{action_html}</ul>' if action_html else ''}
                 <div class="profile-metrics">{metric_html}</div>
-                {f'<ul class="profile-prs">{pr_html}</ul>' if pr_html else ''}
               </div>
             </article>
             """
         )
-    return '<div class="profile-grid">' + "".join(cards) + "</div>"
+    return '<div class="profile-list">' + "".join(rows) + "</div>"
 
 
 def confidence_table(summary: dict[str, Any]) -> str:
@@ -1906,17 +1946,7 @@ def stacked_bar_card(title: str, items: list[tuple[str, Any, str]]) -> str:
 
 def overview_chart_grid(summary: dict[str, Any]) -> str:
     github = summary["github"]
-    feishu = summary["feishu"]
     metrics = summary["metrics"]
-    portfolio_totals = (github.get("project_portfolio") or {}).get("totals") or {}
-    modules = feishu.get("modules") or {}
-    module_items = []
-    module_labels = {"docs": "文档", "messages": "消息", "calendar": "日历"}
-    for idx, key in enumerate(("docs", "messages", "calendar")):
-        status = module_status(modules.get(key) or {})
-        value = 1
-        color = "#157b50" if status == "ok" else ("#ae6817" if status in {"partial", "skipped"} else "#b83a45")
-        module_items.append((module_labels[key], value, color))
     delivery_items = [
         ("Commit", metrics.get("commits"), "#1f6feb"),
         ("合并 PR", metrics.get("prs_merged"), "#157b50"),
@@ -1928,18 +1958,11 @@ def overview_chart_grid(summary: dict[str, Any]) -> str:
         ("Bug 修复", metrics.get("bug_fixes"), "#b83a45"),
         ("Bug-like issue", metrics.get("bug_like_closed_issues"), "#ae6817"),
     ]
-    portfolio_items = [
-        ("新建仓库", portfolio_totals.get("new_repositories"), "#1f6feb"),
-        ("新启动", portfolio_totals.get("newly_active_projects"), "#157b50"),
-        ("重点线索", portfolio_totals.get("interesting_projects"), "#6750b5"),
-    ]
     return f"""
       <div class="viz-grid overview-viz">
         {donut_chart('交付构成', delivery_items)}
         {comparison_tiles(github)}
         {stacked_bar_card('成果结构', outcome_items)}
-        {stacked_bar_card('项目组合', portfolio_items)}
-        {stacked_bar_card('飞书覆盖', module_items)}
       </div>
     """
 
@@ -2639,6 +2662,10 @@ def render_html(summary: dict[str, Any]) -> str:
       --shadow: 0 18px 48px rgba(31, 41, 55, 0.10);
       --shadow-sm: 0 1px 3px rgba(31, 41, 55, 0.10);
       --radius: 8px;
+      --gap-section: 16px;
+      --gap-card: 10px;
+      --pad-section: 20px;
+      --pad-card: 12px;
     }}
     * {{ box-sizing: border-box; }}
     html {{ -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }}
@@ -2661,7 +2688,7 @@ def render_html(summary: dict[str, Any]) -> str:
     .masthead {{
       background: var(--panel);
       border-radius: var(--radius);
-      box-shadow: var(--shadow);
+      box-shadow: 0 14px 38px rgba(31, 41, 55, 0.09);
       border: 1px solid rgba(23,32,51,.10);
       padding: 24px;
     }}
@@ -2678,49 +2705,54 @@ def render_html(summary: dict[str, Any]) -> str:
     .mode-button.is-active {{ color: var(--ink); background: var(--paper); box-shadow: 0 1px 3px rgba(31,41,55,.12); }}
     .mode-button:active {{ transform: scale(.96); }}
     .mode-button:focus-visible, .tab-button:focus-visible, .project-detail summary:focus-visible {{ outline: 2px solid rgba(31,111,235,.52); outline-offset: 2px; }}
-    .metrics {{ display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); margin-top: 18px; background: var(--paper); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }}
-    .metric {{ min-height: 124px; padding: 14px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }}
+    .metrics {{ display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); margin-top: 18px; background: var(--paper); border-top: 1px solid var(--line); border-left: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }}
+    .metric {{ min-height: 112px; padding: 13px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }}
     .metric-value {{ font-size: clamp(27px, 3vw, 42px); font-weight: 830; line-height: 1; white-space: nowrap; }}
     .metric-label {{ margin-top: 9px; font-weight: 760; }}
     .growth {{ margin-left: 8px; color: var(--green); font-size: 13px; font-weight: 760; vertical-align: middle; }}
-    section {{ margin-top: 16px; padding: 20px; background: rgba(255,253,248,.94); border-radius: var(--radius); border: 1px solid rgba(23,32,51,.10); box-shadow: var(--shadow-sm); }}
+    section {{ margin-top: var(--gap-section); padding: var(--pad-section); background: rgba(255,253,248,.94); border-radius: var(--radius); border: 1px solid rgba(23,32,51,.10); box-shadow: var(--shadow-sm); }}
     .section-head {{ display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }}
     .panel-lite {{ padding: 16px; background: var(--paper-soft); border-radius: var(--radius); box-shadow: inset 0 0 0 1px var(--line); }}
-    .summary-panel {{ background: var(--paper); box-shadow: 0 1px 3px rgba(31,41,55,.10); }}
     .insights {{ margin: 0; padding-left: 20px; }}
     .insights li {{ margin: 7px 0; }}
-    .trust-grid {{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }}
-    .trust-card {{ min-height: 118px; padding: 13px; background: var(--paper); border-radius: var(--radius); box-shadow: 0 1px 3px rgba(31,41,55,.10); }}
-    .trust-top {{ display: flex; align-items: center; justify-content: space-between; gap: 8px; }}
-    .trust-value {{ margin-top: 12px; font-size: 18px; font-weight: 820; line-height: 1.25; }}
-    .trust-card small {{ display: block; margin-top: 8px; color: var(--muted); font-size: 11px; line-height: 1.4; }}
-    .quality-grid {{ display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }}
-    .quality-card {{ min-height: 94px; padding: 11px; background: var(--paper); border-radius: var(--radius); box-shadow: inset 0 0 0 1px var(--line-soft), 0 1px 3px rgba(31,41,55,.08); }}
-    .quality-good {{ box-shadow: inset 0 3px 0 var(--green), inset 0 0 0 1px var(--line-soft), 0 1px 3px rgba(31,41,55,.08); }}
-    .quality-warn {{ box-shadow: inset 0 3px 0 var(--amber), inset 0 0 0 1px var(--line-soft), 0 1px 3px rgba(31,41,55,.08); }}
-    .quality-bad {{ box-shadow: inset 0 3px 0 var(--red), inset 0 0 0 1px var(--line-soft), 0 1px 3px rgba(31,41,55,.08); }}
-    .quality-idle {{ box-shadow: inset 0 3px 0 var(--quiet), inset 0 0 0 1px var(--line-soft), 0 1px 3px rgba(31,41,55,.08); }}
-    .quality-top {{ display: flex; align-items: start; justify-content: space-between; gap: 8px; }}
-    .quality-top strong {{ font-size: 12px; line-height: 1.25; }}
-    .quality-card .confidence {{ font-size: 10px; min-height: 20px; padding: 2px 6px; }}
-    .quality-meter {{ height: 7px; overflow: hidden; margin-top: 10px; border-radius: 999px; background: #e4eaf1; }}
+    .signal-rail {{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 12px; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--paper); }}
+    .signal-item {{ min-height: 70px; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto; gap: 6px 10px; align-content: center; padding: 10px 12px; border-right: 1px solid var(--line-soft); }}
+    .signal-item:last-child {{ border-right: 0; }}
+    .signal-item strong {{ color: var(--muted); font-size: 12px; line-height: 1.2; }}
+    .signal-item b {{ grid-column: 1 / -1; color: var(--ink); font-size: 17px; line-height: 1.15; overflow-wrap: anywhere; }}
+    .signal-item .confidence {{ grid-column: 2; grid-row: 1; justify-self: end; font-size: 10px; min-height: 20px; padding: 2px 6px; }}
+    .quality-rail {{ display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1px; margin-top: 10px; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--line); }}
+    .quality-item {{ min-height: 58px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 5px 8px; align-items: center; padding: 8px 10px; background: #fbfcfd; }}
+    .quality-item strong {{ color: var(--muted); font-size: 11px; line-height: 1.2; }}
+    .quality-item b {{ text-align: right; font-size: 13px; line-height: 1; }}
+    .quality-item .confidence {{ grid-column: 1 / -1; width: fit-content; font-size: 10px; min-height: 18px; padding: 1px 6px; }}
+    .quality-meter {{ height: 6px; overflow: hidden; border-radius: 999px; background: #e4eaf1; }}
     .quality-meter span {{ display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--green), var(--github)); }}
-    .quality-card small {{ display: block; margin-top: 8px; color: var(--muted); font-size: 11px; line-height: 1.35; overflow-wrap: anywhere; }}
     .confidence {{ display: inline-flex; align-items: center; min-height: 23px; padding: 3px 8px; border-radius: 999px; font-size: 12px; font-weight: 780; white-space: nowrap; }}
     .confidence-high {{ color: #0f6b43; background: #e3f4ea; }}
     .confidence-medium {{ color: #7a4b0a; background: #fff0cc; }}
     .confidence-low {{ color: #982f37; background: #fde9eb; }}
     .confidence-manual {{ color: #4d3b8f; background: #ece8ff; }}
-    .value-path {{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }}
-    .value-node {{ min-height: 132px; padding: 13px; background: var(--paper); border-radius: var(--radius); box-shadow: 0 1px 3px rgba(31,41,55,.10); display: grid; grid-template-rows: auto auto auto 1fr; gap: 8px; }}
-    .value-index {{ color: var(--quiet); font-size: 11px; font-weight: 820; letter-spacing: .04em; }}
-    .value-main {{ display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; }}
-    .value-main span {{ color: var(--muted); font-size: 12px; font-weight: 780; }}
-    .value-main strong {{ font-size: 30px; line-height: .95; }}
-    .value-main em {{ grid-column: 1 / -1; color: var(--ink); font-style: normal; font-size: 13px; font-weight: 760; }}
-    .value-bar {{ height: 8px; overflow: hidden; border-radius: 999px; background: #e4eaf1; }}
+    .value-rail {{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; margin-top: 10px; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--line); }}
+    .value-step {{ min-height: 74px; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 8px; align-content: center; padding: 10px 12px; background: #fbfcfd; }}
+    .value-step > span {{ color: var(--quiet); font-size: 11px; font-weight: 820; line-height: 1; }}
+    .value-step strong {{ color: var(--muted); font-size: 12px; line-height: 1.15; }}
+    .value-step > b {{ color: var(--ink); font-size: 22px; line-height: .95; text-align: right; }}
+    .value-step em {{ grid-column: 2 / -1; color: var(--ink); font-style: normal; font-size: 12px; font-weight: 760; }}
+    .value-bar {{ grid-column: 1 / -1; height: 6px; overflow: hidden; border-radius: 999px; background: #e4eaf1; }}
     .value-bar b {{ display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--github), var(--green)); }}
-    .value-node small {{ color: var(--muted); font-size: 11px; line-height: 1.35; }}
+    .summary-evidence-grid {{ display: grid; grid-template-columns: minmax(320px, .85fr) minmax(520px, 1.15fr); gap: 16px; align-items: start; }}
+    .insight-panel {{ padding: 16px; border-radius: var(--radius); background: var(--paper); box-shadow: inset 0 0 0 1px var(--line); }}
+    .insight-panel .insights {{ display: grid; gap: 10px; padding-left: 24px; }}
+    .insight-panel .insights li {{ margin: 0; padding-bottom: 10px; border-bottom: 1px solid var(--line-soft); line-height: 1.58; }}
+    .insight-panel .insights li:last-child {{ padding-bottom: 0; border-bottom: 0; }}
+    .evidence-rail {{ display: grid; gap: 8px; }}
+    .chain-compact {{ display: grid; grid-template-columns: minmax(0, 1fr); gap: 7px; padding: 12px; border-radius: var(--radius); background: #fbfcfd; box-shadow: inset 0 0 0 1px var(--line-soft); }}
+    .chain-compact-top {{ display: flex; justify-content: space-between; align-items: center; gap: 8px; }}
+    .chain-compact-top > span {{ min-height: 22px; display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 999px; color: #344054; background: var(--paper-soft); font-size: 11px; font-weight: 780; }}
+    .chain-compact h3 {{ margin: 0; font-size: 14px; }}
+    .chain-compact p {{ margin: 0; color: #344054; font-size: 12px; line-height: 1.5; }}
+    .chain-compact small {{ color: var(--muted); font-size: 11px; line-height: 1.35; overflow-wrap: anywhere; }}
     .chain-grid {{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }}
     .chain-card {{ padding: 15px; background: var(--paper); border-radius: var(--radius); box-shadow: 0 1px 3px rgba(31,41,55,.10); }}
     .chain-head {{ display: flex; justify-content: space-between; align-items: start; gap: 10px; }}
@@ -2744,7 +2776,7 @@ def render_html(summary: dict[str, Any]) -> str:
     .mini.github {{ box-shadow: inset 0 3px 0 var(--github), 0 1px 3px rgba(31,41,55,.10); }}
     .mini.feishu {{ box-shadow: inset 0 3px 0 var(--feishu), 0 1px 3px rgba(31,41,55,.10); }}
     .chart-grid {{ display: grid; grid-template-columns: minmax(360px, 1.05fr) minmax(340px, .95fr); gap: 16px; }}
-    .viz-grid {{ display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }}
+    .viz-grid {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }}
     .viz-grid.three {{ grid-template-columns: repeat(3, minmax(0, 1fr)); }}
     .viz-card {{ min-height: 188px; padding: 14px; background: var(--paper); border-radius: var(--radius); box-shadow: 0 1px 3px rgba(31,41,55,.10); }}
     .viz-card h3 {{ margin-bottom: 12px; }}
@@ -2896,29 +2928,27 @@ def render_html(summary: dict[str, Any]) -> str:
     .module-idle {{ box-shadow: inset 0 3px 0 #a5afbd, 0 1px 3px rgba(31,41,55,.10); }}
     .module-top {{ display: flex; align-items: center; justify-content: space-between; gap: 10px; }}
     .module-card p {{ margin: 10px 0; color: var(--muted); font-size: 13px; line-height: 1.55; overflow-wrap: anywhere; }}
-    .profile-grid {{ display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }}
-    .profile-card {{ grid-column: span 3; display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 12px; min-height: 276px; padding: 14px; background: var(--paper); border-radius: var(--radius); box-shadow: 0 1px 3px rgba(31,41,55,.10); }}
-    .profile-card:first-child {{ grid-column: span 6; grid-template-columns: 58px minmax(0, 1fr); min-height: 250px; background: linear-gradient(180deg, #ffffff, #f7fbff); box-shadow: inset 0 3px 0 var(--github), 0 1px 3px rgba(31,41,55,.10); }}
+    .profile-list {{ display: grid; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--line); gap: 1px; }}
+    .profile-row {{ display: grid; grid-template-columns: 44px minmax(0, 1fr) minmax(260px, 360px); gap: 14px; padding: 14px; background: var(--paper); }}
+    .profile-row:first-child {{ background: linear-gradient(90deg, #ffffff 0, #f7fbff 100%); }}
     .profile-index {{ color: var(--quiet); font-size: 12px; font-weight: 860; letter-spacing: .04em; }}
     .profile-main {{ min-width: 0; display: grid; gap: 10px; align-content: start; }}
     .profile-head {{ display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: start; }}
     .profile-head h3 {{ margin: 0; font-size: 18px; line-height: 1.25; }}
     .profile-head small {{ display: block; margin-top: 5px; color: var(--muted); font-size: 12px; line-height: 1.35; overflow-wrap: anywhere; }}
     .profile-main p {{ margin: 0; color: #344054; font-size: 13px; line-height: 1.55; overflow-wrap: anywhere; }}
+    .profile-side {{ min-width: 0; display: grid; gap: 10px; align-content: start; }}
     .profile-values {{ display: flex; flex-wrap: wrap; gap: 6px; }}
     .profile-values span {{ padding: 4px 7px; color: #4d3b8f; background: #ece8ff; border-radius: 999px; font-size: 12px; font-weight: 780; }}
-    .profile-impact {{ display: grid; gap: 6px; padding: 9px; border-radius: 7px; background: #f4f8ff; box-shadow: inset 0 0 0 1px rgba(31,111,235,.10); }}
-    .profile-impact p {{ color: #174ea6; font-size: 12px; line-height: 1.45; }}
-    .profile-actions {{ margin: 0; padding-left: 17px; color: #344054; font-size: 12px; line-height: 1.55; }}
-    .profile-actions li {{ margin: 3px 0; }}
+    .profile-impact-line {{ color: #174ea6; font-size: 12px; line-height: 1.45; }}
+    .profile-actions {{ display: flex; flex-wrap: wrap; gap: 6px; }}
+    .profile-actions span {{ padding: 5px 7px; border-radius: 999px; background: var(--paper-soft); color: #344054; box-shadow: inset 0 0 0 1px var(--line); font-size: 11px; line-height: 1.2; font-weight: 760; }}
     .profile-metrics {{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }}
     .profile-metrics div {{ min-height: 54px; padding: 8px; border-radius: 7px; background: var(--paper-soft); box-shadow: inset 0 0 0 1px var(--line); }}
     .profile-metrics span {{ display: block; color: var(--muted); font-size: 11px; line-height: 1.1; }}
     .profile-metrics strong {{ display: block; margin-top: 7px; color: var(--ink); font-size: 18px; line-height: 1; }}
-    .profile-prs {{ margin: 0; padding-left: 18px; color: var(--muted); font-size: 12px; line-height: 1.45; }}
-    .profile-prs li {{ margin: 4px 0; }}
-    .profile-prs a {{ margin-right: 6px; font-weight: 820; }}
-    .profile-prs span {{ color: var(--ink); overflow-wrap: anywhere; }}
+    .profile-prs {{ display: grid; gap: 5px; }}
+    .profile-prs a {{ color: #174ea6; font-size: 12px; line-height: 1.35; font-weight: 760; overflow-wrap: anywhere; }}
     .project-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 10px; }}
     .project-card {{ min-height: 238px; padding: 14px; background: var(--paper); border-radius: var(--radius); box-shadow: 0 1px 3px rgba(31,41,55,.10); }}
     .project-head {{ display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: start; }}
@@ -2991,16 +3021,17 @@ def render_html(summary: dict[str, Any]) -> str:
     }}
     @media (max-width: 1050px) {{
       .metrics {{ grid-template-columns: repeat(4, minmax(0, 1fr)); }}
-      .chart-grid, .tab-layout, .chain-grid, .change-map {{ grid-template-columns: 1fr; }}
-      .value-path {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
+      .chart-grid, .tab-layout, .chain-grid, .change-map, .summary-evidence-grid {{ grid-template-columns: 1fr; }}
+      .value-rail {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
       .viz-grid {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
       .viz-grid.three {{ grid-template-columns: 1fr; }}
       .project-map {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
-      .trust-grid, .quality-grid {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
+      .signal-rail, .quality-rail {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
+      .signal-item:nth-child(2n) {{ border-right: 0; }}
       .module-grid {{ grid-template-columns: 1fr; }}
       .value-project-strip {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
-      .profile-grid {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
-      .profile-card, .profile-card:first-child {{ grid-column: span 1; grid-template-columns: 42px minmax(0, 1fr); }}
+      .profile-row {{ grid-template-columns: 38px minmax(0, 1fr); }}
+      .profile-side {{ grid-column: 2; }}
     }}
     @media (max-width: 680px) {{
       .page {{ padding: 12px 10px 34px; }}
@@ -3010,8 +3041,8 @@ def render_html(summary: dict[str, Any]) -> str:
       .source-row {{ justify-content: flex-start; }}
       h1 {{ font-size: 29px; }}
       h2 {{ font-size: 19px; }}
-      .metrics, .mini-grid, .evidence-grid, .trust-grid, .quality-grid, .viz-grid, .change-metrics {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
-      .value-path, .project-quadrant {{ grid-template-columns: 1fr; }}
+      .metrics, .mini-grid, .evidence-grid, .signal-rail, .quality-rail, .viz-grid, .change-metrics {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
+      .value-rail, .project-quadrant {{ grid-template-columns: 1fr; }}
       .metric {{ min-height: 130px; }}
       .metric-value {{ font-size: 28px; }}
       .bar-row {{ grid-template-columns: 1fr 1fr 48px; }}
@@ -3030,14 +3061,15 @@ def render_html(summary: dict[str, Any]) -> str:
       .change-projects, .change-boundary {{ grid-column: auto; }}
       .change-lane {{ grid-template-columns: 1fr; }}
       .change-lane strong {{ text-align: left; }}
-      .profile-grid, .profile-metrics {{ grid-template-columns: 1fr; }}
-      .profile-card, .profile-card:first-child {{ grid-template-columns: 1fr; }}
+      .profile-row {{ grid-template-columns: 1fr; }}
+      .profile-side {{ grid-column: auto; }}
+      .profile-metrics {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
       .tab-list {{ width: 100%; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }}
       .tab-button {{ width: 100%; padding-inline: 9px; overflow: hidden; text-overflow: clip; }}
       .callout {{ display: grid; }}
     }}
     @media (max-width: 380px) {{
-      .metrics, .mini-grid, .evidence-grid, .trust-grid, .quality-grid, .viz-grid, .change-metrics {{ grid-template-columns: 1fr; }}
+      .metrics, .mini-grid, .evidence-grid, .signal-rail, .quality-rail, .viz-grid, .change-metrics, .profile-metrics {{ grid-template-columns: 1fr; }}
       .focus-chip {{ width: 100%; justify-content: space-between; }}
       .value-project-strip, .project-evidence-grid {{ grid-template-columns: 1fr; }}
     }}
@@ -3045,11 +3077,11 @@ def render_html(summary: dict[str, Any]) -> str:
       body {{ background: #fff; color: #111827; }}
       a {{ color: inherit; text-decoration: none; }}
       .page {{ max-width: none; padding: 0; }}
-      .masthead, section, .panel-lite, .trust-card, .viz-card, .chain-card, .profile-card {{ box-shadow: none !important; }}
+      .masthead, section, .panel-lite, .viz-card, .chain-card, .chain-compact, .profile-row {{ box-shadow: none !important; }}
       .mode-row, .tab-list, .skip-link, .detail-section, .method-section, .project-detail, .subpanel {{ display: none !important; }}
       .masthead, section {{ break-inside: avoid; page-break-inside: avoid; border-color: #d1d5db; }}
       .metrics {{ grid-template-columns: repeat(4, minmax(0, 1fr)); }}
-      .chart-grid, .chain-grid, .change-map {{ grid-template-columns: 1fr 1fr; }}
+      .chart-grid, .chain-grid, .change-map, .summary-evidence-grid {{ grid-template-columns: 1fr 1fr; }}
     }}
   </style>
 </head>
@@ -3077,7 +3109,7 @@ def render_html(summary: dict[str, Any]) -> str:
         {metric_card(metrics['prs_reviewed'], 'Review 参与 PR', 'PR 集合数，不是 review 次数')}
         {metric_card(metrics['feishu_accessible_modules'], '飞书可用模块', '文档 / 消息 / 日历')}
       </div>
-      <div class="trust-grid">{executive_metric_strip(summary)}</div>
+      {executive_metric_strip(summary)}
       {data_quality_strip(summary)}
       {value_path(summary)}
       {overview_chart_grid(summary)}
@@ -3085,19 +3117,9 @@ def render_html(summary: dict[str, Any]) -> str:
 
     <section>
       <div class="section-head">
-        <h2>领导层摘要</h2>
+        <h2>结论与证据</h2>
       </div>
-      <div class="panel-lite summary-panel">
-        <h3>本季度可汇报结论</h3>
-        <ol class="insights">{''.join(f'<li>{esc(item)}</li>' for item in summary['insights'])}</ol>
-      </div>
-    </section>
-
-    <section>
-      <div class="section-head">
-        <h2>结论证据链</h2>
-      </div>
-      {evidence_chain_section(summary)}
+      {summary_evidence_section(summary)}
     </section>
 
     <section>
@@ -3107,11 +3129,6 @@ def render_html(summary: dict[str, Any]) -> str:
       <div class="panel-lite">
         <h3>季度变化地图</h3>
         {quarter_change_map(summary)}
-      </div>
-      <div class="viz-grid three">
-        {theme_stack_card(github)}
-        {work_type_chart(github)}
-        {language_mix_card(github)}
       </div>
       <div class="chart-grid" style="margin-top:14px">
         <div class="panel-lite">
