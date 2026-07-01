@@ -16,6 +16,7 @@ This repository uses an instruction-design register: precise, operational, and l
 - Keep README visuals lightweight and repo-local, preferably SVG under `assets/`.
 - Use visuals as orientation, not as a second skill catalog. Show the core lifecycle or category shape; leave detailed skill lists to Markdown tables.
 - Avoid dense cards, long descriptions, external image hosts, screenshots of private tools, and decorative imagery that does not clarify installation or skill selection.
+- For README SVGs, prefer inline `font-size`, `font-weight`, and `fill` attributes on each text element. Avoid generic text classes like `title`, `label`, or `small`, and avoid CSS `font` shorthand so Markdown preview styles cannot leak into the SVG.
 - Verify generated SVGs render without clipped text or overlapping labels before committing.
 
 ## Skill Writing Principles
