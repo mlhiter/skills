@@ -11,6 +11,13 @@ This repository uses an instruction-design register: precise, operational, and l
 - Specific about trigger conditions, evidence, and stop conditions.
 - Public-safe: avoid private paths, credentials, internal cluster names, and personal-only context.
 
+## Visual Assets
+
+- Keep README visuals lightweight and repo-local, preferably SVG under `assets/`.
+- Use visuals as orientation, not as a second skill catalog. Show the core lifecycle or category shape; leave detailed skill lists to Markdown tables.
+- Avoid dense cards, long descriptions, external image hosts, screenshots of private tools, and decorative imagery that does not clarify installation or skill selection.
+- Verify generated SVGs render without clipped text or overlapping labels before committing.
+
 ## Skill Writing Principles
 
 - Put trigger logic in frontmatter `description`; the body is loaded only after the skill triggers.

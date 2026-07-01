@@ -17,6 +17,7 @@
 
 - `skills.sh`: public install and discovery surface for this repository.
 - Codex skill conventions: skill metadata is the trigger surface; bundled resources should use progressive disclosure.
+- `tw93/Waza`: prior art for using a lightweight repo-local README SVG to make a skill catalog easier to scan.
 
 ## Prior Art For This Change
 

@@ -8,22 +8,28 @@ This repository also includes a sanitized root `AGENTS.md` derived from my globa
 
 For maintainers, the project context lives in `PRODUCT.md`, `DESIGN.md`, `ROADMAP.md`, and `docs/`.
 
+<div align="center">
+  <img src="assets/mlhiter-skills.svg" width="1000" alt="Visual overview of the mlhiter skills catalog">
+</div>
+
 ## Skills
 
-- `logseq-writer` - turns topics, drafts, and notes into practical Logseq-style tutorial articles.
-- `workflow-packager` - reviews recent work evidence and recommends minimal reusable workflow assets.
-- `quarterly-work-dashboard` - generates a leadership-facing quarterly work dashboard from read-only GitHub and Feishu evidence.
-- `first-principles-review` - runs a first-principles diagnosis plus adversarial stress review for plans, bugs, releases, and decisions.
-- `think` - turns rough ideas into decision-complete plans, now with a first-principles pass for non-trivial work.
-- `hunt` - finds root cause before fixing bugs, now with a first-principles root-cause gate.
-- `check` - reviews completed changes with feature-intent risk modeling, functional acceptance, adversarial review, and release gates.
-- `codex-goal-builder` - turns rough objectives into evidence-based Codex Goals.
-- `codex-runner-creator` - creates or repairs `.codex/environments/environment.toml` run actions.
-- `git-commit-push` - creates session-scoped Conventional Commits and safely pushes the new commit(s) to the tracked remote branch.
-- `intern-learning-recap` - turns completed work into intern-friendly learning recaps while avoiding repeated explanations via a local knowledge ledger.
-- `pr-creator` - creates pull requests with template compliance and explicit fork/upstream head safety.
-- `screenshot-interaction` - infers UI behavior and missing states from screenshots before implementation.
-- `issue-creator` - turns terse QA notes into structured GitHub issues with gh preflight, safe metadata, and sensitive-info checks.
+| Group | Skill | Use it when |
+| :--- | :--- | :--- |
+| Writing | [`logseq-writer`](skills/logseq-writer/SKILL.md) | Turning topics, drafts, and notes into practical Logseq-style tutorial articles. |
+| Writing | [`intern-learning-recap`](skills/intern-learning-recap/SKILL.md) | Teaching interns the concepts and implementation path behind completed work. |
+| Codex | [`think`](skills/think/SKILL.md) | Turning rough ideas into decision-complete plans before coding. |
+| Codex | [`hunt`](skills/hunt/SKILL.md) | Finding root cause before fixing bugs, regressions, and broken behavior. |
+| Codex | [`check`](skills/check/SKILL.md) | Reviewing completed changes with functional acceptance, adversarial review, and release gates. |
+| Codex | [`first-principles-review`](skills/first-principles-review/SKILL.md) | Stress-testing plans, bugs, architecture, releases, or decisions from first principles. |
+| Codex | [`codex-goal-builder`](skills/codex-goal-builder/SKILL.md) | Turning rough objectives into evidence-based Codex Goals. |
+| Codex | [`codex-runner-creator`](skills/codex-runner-creator/SKILL.md) | Creating or repairing `.codex/environments/environment.toml` run actions. |
+| Codex | [`workflow-packager`](skills/workflow-packager/SKILL.md) | Reviewing recent work evidence and recommending minimal reusable workflow assets. |
+| Codex | [`quarterly-work-dashboard`](skills/quarterly-work-dashboard/SKILL.md) | Generating a leadership-facing quarterly dashboard from read-only GitHub and Feishu evidence. |
+| Codex | [`git-commit-push`](skills/git-commit-push/SKILL.md) | Creating session-scoped Conventional Commits and safely pushing them. |
+| Codex | [`pr-creator`](skills/pr-creator/SKILL.md) | Creating pull requests with template compliance and explicit fork/upstream head safety. |
+| QA | [`issue-creator`](skills/issue-creator/SKILL.md) | Turning terse QA notes into structured GitHub issues with safe metadata handling. |
+| Design | [`screenshot-interaction`](skills/screenshot-interaction/SKILL.md) | Inferring UI behavior and missing states from screenshots before implementation. |
 
 ## Install
 

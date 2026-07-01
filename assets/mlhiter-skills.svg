@@ -1,0 +1,80 @@
+<svg width="100%" viewBox="0 0 1100 420" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">mlhiter skills overview</title>
+  <desc id="desc">A simple visual overview of the public agent skill catalog: think, hunt, check, ship.</desc>
+  <defs>
+    <linearGradient id="paper" x1="0" y1="0" x2="1100" y2="420" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fbfaf6"/>
+      <stop offset="1" stop-color="#eef4f2"/>
+    </linearGradient>
+    <style>
+      .bg { fill: url(#paper); }
+      .ink { fill: #18212d; }
+      .muted { fill: #65727c; }
+      .line { stroke: #cbd6d2; stroke-width: 1.2; }
+      .dash { stroke: #9aaaa4; stroke-width: 1.2; stroke-dasharray: 5 8; }
+      .title { font: 720 42px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; letter-spacing: 0; }
+      .subtitle { font: 400 18px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; letter-spacing: 0; }
+      .eyebrow { font: 700 12px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; letter-spacing: 1.1px; text-transform: uppercase; }
+      .label { font: 680 17px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; letter-spacing: 0; }
+      .small { font: 450 13px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; letter-spacing: 0; }
+      .mono { font: 650 14px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 0; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1100" height="420"/>
+
+  <g transform="translate(70 62)">
+    <circle cx="28" cy="28" r="26" fill="#18212d"/>
+    <circle cx="19" cy="19" r="3.4" fill="#fbfaf6"/>
+    <circle cx="37" cy="19" r="3.4" fill="#fbfaf6"/>
+    <circle cx="19" cy="37" r="3.4" fill="#fbfaf6"/>
+    <circle cx="37" cy="37" r="3.4" fill="#fbfaf6"/>
+    <path d="M19 19C26 28 28 28 37 37" stroke="#fbfaf6" stroke-width="2.6" stroke-linecap="round"/>
+  </g>
+
+  <text x="150" y="84" class="eyebrow" fill="#27715e">mlhiter/skills</text>
+  <text x="150" y="126" class="title ink">Reusable agent skills</text>
+  <text x="150" y="158" class="subtitle muted">A small public catalog for planning, debugging, reviewing, and shipping with evidence.</text>
+
+  <g transform="translate(150 216)">
+    <rect x="0" y="0" width="132" height="64" rx="10" fill="#eef2ff" stroke="#7b8ed8"/>
+    <text x="66" y="29" text-anchor="middle" class="label" fill="#2d438f">think</text>
+    <text x="66" y="48" text-anchor="middle" class="small" fill="#4b5c9b">decide first</text>
+
+    <path d="M148 32H198" class="dash"/>
+
+    <rect x="214" y="0" width="132" height="64" rx="10" fill="#e8f5ee" stroke="#52997b"/>
+    <text x="280" y="29" text-anchor="middle" class="label" fill="#176548">hunt</text>
+    <text x="280" y="48" text-anchor="middle" class="small" fill="#34775d">root cause</text>
+
+    <path d="M362 32H412" class="dash"/>
+
+    <rect x="428" y="0" width="132" height="64" rx="10" fill="#fff0df" stroke="#d9873d"/>
+    <text x="494" y="29" text-anchor="middle" class="label" fill="#8d4f12">check</text>
+    <text x="494" y="48" text-anchor="middle" class="small" fill="#9b642b">verify</text>
+
+    <path d="M576 32H626" class="dash"/>
+
+    <rect x="642" y="0" width="132" height="64" rx="10" fill="#f3eef8" stroke="#9b7bb6"/>
+    <text x="708" y="29" text-anchor="middle" class="label" fill="#5a3f78">ship</text>
+    <text x="708" y="48" text-anchor="middle" class="small" fill="#725889">commit &amp; PR</text>
+  </g>
+
+  <g transform="translate(782 72)">
+    <rect x="0" y="0" width="246" height="58" rx="10" fill="#ffffff" fill-opacity="0.72" stroke="#d5ddd9"/>
+    <text x="22" y="35" class="mono ink">skills.sh/mlhiter/skills</text>
+  </g>
+
+  <path d="M70 344H1030" class="line"/>
+  <g transform="translate(70 366)">
+    <text x="0" y="0" class="small muted">Writing</text>
+    <circle cx="78" cy="-4" r="3.5" fill="#d9873d"/>
+    <text x="102" y="0" class="small muted">Codex lifecycle</text>
+    <circle cx="228" cy="-4" r="3.5" fill="#52997b"/>
+    <text x="252" y="0" class="small muted">QA</text>
+    <circle cx="294" cy="-4" r="3.5" fill="#c8738d"/>
+    <text x="318" y="0" class="small muted">Design</text>
+    <circle cx="382" cy="-4" r="3.5" fill="#5a9fab"/>
+    <text x="786" y="0" class="small muted">14 skills, one public-safe source of truth.</text>
+  </g>
+</svg>
