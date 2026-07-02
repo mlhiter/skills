@@ -47,11 +47,11 @@ npx skills add mlhiter/skills --skill check
 
 These small prompts make skill-driven work more reliable:
 
-1. Ask the agent to `复述我的需求` before it starts. A clear restatement exposes mismatched assumptions early.
-2. Ask the agent to `使用第一性原理` when designing a plan. It should identify the invariant, source of truth, ownership boundary, causal chain, and smallest mechanism that solves the problem.
-3. Ask the agent to `使用对抗性审查` when reviewing code. It should actively look for malformed input, concurrency issues, tenant or auth boundary mistakes, unsafe sinks, cache surprises, deploy risks, and rollback gaps.
+1. Ask the agent to `restate my request` before it starts. A clear restatement exposes mismatched assumptions early.
+2. Ask the agent to `use first principles` when designing a plan. It should identify the invariant, source of truth, ownership boundary, causal chain, and smallest mechanism that solves the problem.
+3. Ask the agent to `use adversarial review` when reviewing code. It should actively look for malformed input, concurrency issues, tenant or auth boundary mistakes, unsafe sinks, cache surprises, deploy risks, and rollback gaps.
 
-The second and third prompts are credited to Khazix (卡兹克).
+The second and third prompts are credited to Khazix.
 
 ## Catalog
 
