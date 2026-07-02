@@ -11,7 +11,7 @@ Reusable Codex agent skills for planning, debugging, review, writing, workflow p
 
 [Browse on skills.sh](https://skills.sh/mlhiter/skills) | [Install](#install) | [Catalog](#catalog) | [Maintain](#maintaining-this-catalog)
 
-Languages: [English](README.md) | [Chinese](README.zh-CN.md)
+Languages: [en](README.md) | [zh](README.zh-CN.md)
 
 </div>
 

@@ -11,7 +11,7 @@
 
 [在 skills.sh 浏览](https://skills.sh/mlhiter/skills) | [安装](#安装) | [技能目录](#技能目录) | [维护这个目录](#维护这个目录)
 
-语言：[English](README.md) | [简体中文](README.zh-CN.md)
+语言：[zh](README.zh-CN.md) | [en](README.md)
 
 </div>
 
