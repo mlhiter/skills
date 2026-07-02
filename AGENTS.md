@@ -33,7 +33,7 @@
 
 - For non-trivial bugs, architecture choices, production-impacting changes, ambiguous fixes, or major plans, start from first principles: identify the invariant, source of truth, ownership boundary, causal chain, and smallest mechanism-level fix.
 - After implementation or before a risky decision ships, review adversarially: malformed or oversized input, time skew, retries, concurrency, auth or tenant boundary mistakes, path/shell/network sinks, cache/fallback behavior, package or generated-artifact drift, deploy failure, and rollback paths.
-- Use `first-principles-review` when the user asks for this thinking loop directly; otherwise let `think`/`hunt` carry the first-principles pass and `check` carry the functional acceptance and adversarial review gate.
+- Let `think`/`hunt` carry first-principles planning or diagnosis, and let `check` carry the functional acceptance and adversarial review gate.
 
 ## Automatic Task Closeout
 

@@ -21,7 +21,6 @@ For maintainers, the durable context is the skill catalog itself: `README.md` fo
 | Codex | [`think`](skills/think/SKILL.md) | Turning rough ideas into decision-complete plans before coding. |
 | Codex | [`hunt`](skills/hunt/SKILL.md) | Finding root cause before fixing bugs, regressions, and broken behavior. |
 | Codex | [`check`](skills/check/SKILL.md) | Reviewing completed changes with functional acceptance, adversarial review, and release gates. |
-| Codex | [`first-principles-review`](skills/first-principles-review/SKILL.md) | Stress-testing plans, bugs, architecture, releases, or decisions from first principles. |
 | Codex | [`codex-goal-builder`](skills/codex-goal-builder/SKILL.md) | Turning rough objectives into evidence-based Codex Goals. |
 | Codex | [`codex-runner-creator`](skills/codex-runner-creator/SKILL.md) | Creating or repairing `.codex/environments/environment.toml` run actions. |
 | Codex | [`workflow-packager`](skills/workflow-packager/SKILL.md) | Reviewing recent work evidence and recommending minimal reusable workflow assets. |
@@ -40,7 +39,6 @@ Some skills are original playbooks from my own workflows. Some are adapted from,
 | `think` | Adapted from [`tw93/Waza`](https://github.com/tw93/Waza)'s `think` workflow, then extended for Codex, durable context, first-principles planning, and Chinese workflow usage. |
 | `hunt` | Adapted from [`tw93/Waza`](https://github.com/tw93/Waza)'s `hunt` workflow, then extended with first-principles root-cause gates, runtime evidence ladders, and local debugging failure patterns. |
 | `check` | Adapted from [`tw93/Waza`](https://github.com/tw93/Waza)'s `check` workflow, then heavily extended with feature-intent risk modeling, functional acceptance, adversarial review, release gates, and specialist reviewers. |
-| `first-principles-review` | Original extraction of the first-principles plus adversarial-review loop used across this repository. |
 | `logseq-writer` | Original personal writing workflow for practical Logseq tutorial articles. |
 | `workflow-packager` | Original workflow-mining playbook for turning repeated agent work into reusable skills, subagents, or automations. |
 | `quarterly-work-dashboard` | Original dashboard-generation workflow for read-only GitHub and Feishu quarterly evidence. |
@@ -86,7 +84,6 @@ skills/
   logseq-writer/SKILL.md
   workflow-packager/SKILL.md
   quarterly-work-dashboard/SKILL.md
-  first-principles-review/SKILL.md
   think/SKILL.md
   hunt/SKILL.md
   check/SKILL.md

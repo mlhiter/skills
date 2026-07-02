@@ -1,4 +1,0 @@
-interface:
-  display_name: "First-Principles Review"
-  short_description: "Run first-principles reasoning plus adversarial stress review"
-  default_prompt: "Use $first-principles-review to examine this plan or change from first principles, then adversarially review where it could break."
