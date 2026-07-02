@@ -9,7 +9,7 @@
 
 [![skills.sh](https://skills.sh/b/mlhiter/skills)](https://skills.sh/mlhiter/skills)
 
-[在 skills.sh 浏览](https://skills.sh/mlhiter/skills) | [安装](#安装) | [资产目录](#资产目录) | [维护这个目录](#维护这个目录)
+[在 skills.sh 浏览](https://skills.sh/mlhiter/skills) | [安装](#安装) | [资产目录](#资产目录)
 
 语言：[zh](README.zh-CN.md) | [en](README.md)
 
@@ -72,7 +72,7 @@ npx skills add mlhiter/skills --skill check
 | 报告 | [`quarterly-work-dashboard`](skills/quarterly-work-dashboard/SKILL.md) | 基于只读的 GitHub 和飞书证据，生成面向领导层的季度工作面板。 |
 | QA | [`issue-creator`](skills/issue-creator/SKILL.md) | 把简短测试反馈整理成结构化 GitHub issue。 |
 | 设计 | [`screenshot-interaction`](skills/screenshot-interaction/SKILL.md) | 从截图推断预期 UI 行为、状态和交互。 |
-| 模板 | [`global AGENTS.md`](templates/global/AGENTS.md) | 从一份适合公开分享的全局 agent 指令基线开始，而不是把它放在仓库根目录。 |
+| 模板 | [`global AGENTS.md`](templates/global/AGENTS.md) | 从一份适合公开分享的全局 agent 指令基线开始，同时和这个仓库的项目级 `AGENTS.md` 区分开。 |
 
 ## 仓库结构
 
@@ -80,6 +80,7 @@ npx skills add mlhiter/skills --skill check
 .
 |-- README.md
 |-- README.zh-CN.md
+|-- AGENTS.md
 |-- assets/
 |   `-- mlhiter-skills.svg
 |-- skills.sh.json
@@ -94,28 +95,7 @@ npx skills add mlhiter/skills --skill check
         `-- assets/
 ```
 
-`README.md` 和 `README.zh-CN.md` 是发现入口，`skills.sh.json` 是可发布的目录元数据，每个 `skills/<skill-name>/` 目录负责存放该技能的指令和配套材料。`templates/global/AGENTS.md` 是可分享的全局 agents 模板，不是这个仓库的项目级说明。
-
-## 维护这个目录
-
-新增、移除或重命名技能或模板时：
-
-1. 把技能放在 `skills/<skill-name>/SKILL.md`。
-2. 把可复用模板放在 `templates/<template-name>/`。
-3. 把该技能专用的参考资料、脚本和资源放在它自己的技能目录里。
-4. 当可安装技能变化时，更新 `skills.sh.json`。
-5. 更新英文和中文 README，让用户能找到这个资产。
-6. 保持 `templates/global/AGENTS.md` 适合公开发布。
-
-发布前建议检查：
-
-```bash
-python3 -m json.tool skills.sh.json >/dev/null
-git diff --check
-```
-
-> [!NOTE]
-> 不要为了套用软件项目模板而创建通用的 `PRODUCT.md`、`DESIGN.md`、`ROADMAP.md` 或顶层 `docs/` 目录。这个仓库的长期上下文应该放在两个 README、`skills.sh.json` 和各技能自己的目录里。
+`README.md` 和 `README.zh-CN.md` 是发现入口，`AGENTS.md` 是这个仓库的项目级 agent 指导，`skills.sh.json` 是可发布的目录元数据，每个 `skills/<skill-name>/` 目录负责存放该技能的指令和配套材料。`templates/global/AGENTS.md` 是可分享的全局 agents 模板，不是这个仓库的项目级说明。
 
 ## 来源
 

@@ -9,7 +9,7 @@ Reusable Codex agent skills and templates for planning, debugging, review, writi
 
 [![skills.sh](https://skills.sh/b/mlhiter/skills)](https://skills.sh/mlhiter/skills)
 
-[Browse on skills.sh](https://skills.sh/mlhiter/skills) | [Install](#install) | [Asset catalog](#asset-catalog) | [Maintain](#maintaining-this-catalog)
+[Browse on skills.sh](https://skills.sh/mlhiter/skills) | [Install](#install) | [Asset catalog](#asset-catalog)
 
 Languages: [en](README.md) | [zh](README.zh-CN.md)
 
@@ -72,7 +72,7 @@ The second and third prompts are credited to Khazix.
 | Reporting | [`quarterly-work-dashboard`](skills/quarterly-work-dashboard/SKILL.md) | Generating leadership-facing quarterly dashboards from read-only GitHub and Feishu evidence. |
 | QA | [`issue-creator`](skills/issue-creator/SKILL.md) | Turning terse tester notes into structured GitHub issues. |
 | Design | [`screenshot-interaction`](skills/screenshot-interaction/SKILL.md) | Inferring expected UI behavior, states, and interactions from screenshots. |
-| Template | [`global AGENTS.md`](templates/global/AGENTS.md) | Starting from a public-safe global agent instruction baseline without placing it at repository root. |
+| Template | [`global AGENTS.md`](templates/global/AGENTS.md) | Starting from a public-safe global agent instruction baseline while keeping it separate from this repository's project-level `AGENTS.md`. |
 
 ## Repository layout
 
@@ -80,6 +80,7 @@ The second and third prompts are credited to Khazix.
 .
 |-- README.md
 |-- README.zh-CN.md
+|-- AGENTS.md
 |-- assets/
 |   `-- mlhiter-skills.svg
 |-- skills.sh.json
@@ -94,28 +95,7 @@ The second and third prompts are credited to Khazix.
         `-- assets/
 ```
 
-`README.md` and `README.zh-CN.md` are the discovery surfaces, `skills.sh.json` is the publishable catalog metadata, and each `skills/<skill-name>/` directory owns the instructions and bundled materials for that skill. `templates/global/AGENTS.md` is a shareable global agents template, not project-level guidance for this repository.
-
-## Maintaining this catalog
-
-When adding, removing, or renaming a skill or template:
-
-1. Put the skill at `skills/<skill-name>/SKILL.md`.
-2. Put reusable templates under `templates/<template-name>/`.
-3. Keep skill-specific references, scripts, and assets inside that skill directory.
-4. Update `skills.sh.json` when installable skills change.
-5. Update both README files so users can discover the asset.
-6. Keep `templates/global/AGENTS.md` sanitized for public use.
-
-Suggested checks before publishing:
-
-```bash
-python3 -m json.tool skills.sh.json >/dev/null
-git diff --check
-```
-
-> [!NOTE]
-> Do not create generic product docs such as `PRODUCT.md`, `DESIGN.md`, `ROADMAP.md`, or a top-level `docs/` folder just to satisfy a software-project template. This repository's durable context belongs in these README files, `skills.sh.json`, and the owning skill directories.
+`README.md` and `README.zh-CN.md` are the discovery surfaces, `AGENTS.md` is project-level guidance for agents working in this repository, `skills.sh.json` is the publishable catalog metadata, and each `skills/<skill-name>/` directory owns the instructions and bundled materials for that skill. `templates/global/AGENTS.md` is a shareable global agents template, not project-level guidance for this repository.
 
 ## Provenance
 
