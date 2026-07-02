@@ -14,7 +14,7 @@ This repository uses an instruction-design register: precise, operational, and l
 ## Visual Assets
 
 - Keep README visuals lightweight and repo-local, preferably SVG under `assets/`.
-- Use visuals as orientation, not as a second skill catalog. Show the core lifecycle or category shape; leave detailed skill lists to Markdown tables.
+- Use visuals as orientation, not prose. A README SVG may show every skill name for scanability, but long descriptions and provenance belong in Markdown tables.
 - Avoid dense cards, long descriptions, external image hosts, screenshots of private tools, and decorative imagery that does not clarify installation or skill selection.
 - For README SVGs, prefer inline `font-size`, `font-weight`, and `fill` attributes on each text element. Avoid generic text classes like `title`, `label`, or `small`, and avoid CSS `font` shorthand so Markdown preview styles cannot leak into the SVG.
 - Verify generated SVGs render without clipped text or overlapping labels before committing.

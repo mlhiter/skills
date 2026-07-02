@@ -17,7 +17,8 @@
 
 - `skills.sh`: public install and discovery surface for this repository.
 - Codex skill conventions: skill metadata is the trigger surface; bundled resources should use progressive disclosure.
-- `tw93/Waza`: prior art for using a lightweight repo-local README SVG to make a skill catalog easier to scan.
+- `tw93/Waza`: direct lineage for the `think`, `hunt`, and `check` skill family before this repository's Codex-specific extensions, and prior art for using a lightweight repo-local README SVG to make a skill catalog easier to scan.
+- `mattpocock/skills`: reviewed as pattern material for bug feedback loops, public-interface discipline, and domain/design vocabulary; not used as a wholesale source.
 
 ## Prior Art For This Change
 
