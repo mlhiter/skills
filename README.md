@@ -6,7 +6,7 @@ Reusable agent skills for practical writing, workflow packaging, Codex goal draf
 
 This repository also includes a sanitized root `AGENTS.md` derived from my global Codex instructions, with private registry and cluster details replaced by placeholders.
 
-For maintainers, the project context lives in `PRODUCT.md`, `DESIGN.md`, `ROADMAP.md`, and `docs/`.
+For maintainers, the durable context is the skill catalog itself: `README.md` for discovery, `skills.sh.json` for publishing metadata, `AGENTS.md` for repository operating rules, and each `skills/<skill-name>/` directory for skill-specific instructions, references, scripts, and assets.
 
 <div align="center">
   <img src="assets/mlhiter-skills.svg" width="1000" alt="Visual overview of the mlhiter skills catalog">
@@ -80,14 +80,8 @@ Skills are published under the canonical `skills/<skill-name>/SKILL.md` structur
 
 ```text
 AGENTS.md
-PRODUCT.md
-DESIGN.md
-ROADMAP.md
-docs/
-  architecture.md
-  ia.md
-  references.md
-  runbook.md
+README.md
+skills.sh.json
 skills/
   logseq-writer/SKILL.md
   workflow-packager/SKILL.md

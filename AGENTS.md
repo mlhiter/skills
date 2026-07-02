@@ -69,24 +69,19 @@ If a command fails with a quota error, inform the user and suggest `npx ctx7@lat
 Run Context7 CLI requests outside Codex's default sandbox. If a Context7 CLI command fails with DNS or network errors such as ENOTFOUND, host resolution failures, or fetch failed, rerun it outside the sandbox instead of retrying inside the sandbox.
 <!-- context7 -->
 
-## Project Knowledge Baseline
+## Documentation Scope
 
-Every sufficiently active project should maintain this minimum documentation set:
+This repository is a public catalog of installable skills and prompt playbooks, not an application or product codebase. Do not create or maintain generic software-project baseline files such as `PRODUCT.md`, `DESIGN.md`, `ROADMAP.md`, or a top-level `docs/` folder unless the user explicitly asks for them.
 
-- `DESIGN.md` — design style, visual language, UX principles, and UI tone. When creating or improving this file, prefer using the `impeccable` skill's design-document workflow so the output becomes actionable UI guidance, not generic taste notes.
-- `PRODUCT.md` — product definition, target users, core scenarios, feature scope, and product decisions. When creating or improving this file, prefer using the `impeccable` skill's product-context workflow so it captures users, brand, tone, anti-references, strategic principles, and the design register expected by that skill.
-- `README.md` — the classic project introduction: what it is, how to install/run it, and where to start. When creating or substantially improving this file, prefer using the `create-readme` skill so the README is based on a full project review and stays concise, useful, and well structured.
-- `ROADMAP.md` — roadmap and priority framing so Codex can judge what to do first.
-- `AGENTS.md` — Codex rules for the project: project overview, basic rules, "do not" constraints, run commands, environment notes, and other project-specific operating guidance.
-- `docs/` — supporting documentation folder.
-- `docs/architecture.md` — architecture, major modules, data/control flow, and important technical tradeoffs.
-- `docs/ia.md` — information architecture and page/route structure.
-- `docs/references.md` — external references, prior art, comparable projects, and source links used by this project.
-- `docs/runbook.md` — detailed run, build, test, deploy, debug, and operational commands.
+The authoritative maintenance surfaces are:
 
-When invoking the `neat-freak` skill for a project, treat this baseline as part of the cleanup contract. During the initial documentation inventory, check whether each item exists. If any item is missing and the project has enough concrete code or product direction to document it, create the missing file or folder with useful project-specific starter content instead of leaving empty placeholders. If the project is still too early for a specific document, note that explicitly in the final cleanup summary.
+- `README.md` — human-facing skill catalog, install instructions, provenance, and safety notes.
+- `skills.sh.json` — publishable catalog metadata.
+- `AGENTS.md` — repository operating rules for agents editing this catalog.
+- `skills/<skill-name>/SKILL.md` — each skill's trigger surface and execution contract.
+- `skills/<skill-name>/references/`, `scripts/`, `assets/`, and `agents/` — optional bundled resources owned by that skill.
 
-For the `PRODUCT.md`, `DESIGN.md`, and `README.md` baseline files specifically, do not treat them as generic Markdown chores. If `impeccable` is available in the project or globally, use its context expectations and relevant commands (`teach` for product context, `document` for design context) to draft or refine `PRODUCT.md` and `DESIGN.md` before continuing with broader `neat-freak` cleanup. If `create-readme` is available, use it to create or substantially rewrite `README.md` after reviewing the project instead of producing a shallow placeholder.
+When invoking the `neat-freak` skill for this repository, treat the list above as the cleanup contract. Keep context next to the skill that uses it, keep public-facing guidance sanitized, and avoid adding broad project-management documents that do not help installation, review, or skill maintenance.
 
 <!-- test-cluster-setup:start -->
 
