@@ -1,26 +1,26 @@
 <!-- prettier-ignore -->
 <div align="center">
 
-<img src="assets/mlhiter-skills.svg" width="820" alt="mlhiter skills 技能目录概览" />
+<img src="assets/mlhiter-skills.svg" width="820" alt="mlhiter skills 资产目录概览" />
 
 # mlhiter skills
 
-可复用的 Codex agent 技能，覆盖规划、调试、审查、写作、工作流打包和安全收尾。
+可复用的 Codex agent 技能和模板，覆盖规划、调试、审查、写作、工作流打包和安全收尾。
 
 [![skills.sh](https://skills.sh/b/mlhiter/skills)](https://skills.sh/mlhiter/skills)
 
-[在 skills.sh 浏览](https://skills.sh/mlhiter/skills) | [安装](#安装) | [技能目录](#技能目录) | [维护这个目录](#维护这个目录)
+[在 skills.sh 浏览](https://skills.sh/mlhiter/skills) | [安装](#安装) | [资产目录](#资产目录) | [维护这个目录](#维护这个目录)
 
 语言：[zh](README.zh-CN.md) | [en](README.md)
 
 </div>
 
-`mlhiter/skills` 是一个公开的可安装 agent 技能目录。每个技能都是一个可移植的指令包，放在 `skills/<skill-name>/SKILL.md`，对应的参考资料、脚本和资源都放在该技能自己的目录里。
+`mlhiter/skills` 是一个公开的可安装 agent 技能和可复用 agent 模板目录。每个技能都是一个可移植的指令包，放在 `skills/<skill-name>/SKILL.md`，对应的参考资料、脚本和资源都放在该技能自己的目录里。
 
-当你希望 Codex 遵循一套稳定工作流，而不是只靠一次性提示词时，可以用这个仓库：先想清楚一个功能、追查回归原因、发布前审查、创建干净的提交、把重复工作打包成可复用技能，或者把粗糙笔记整理成有用的产物。
+当你希望 Codex 遵循一套稳定工作流，而不是只靠一次性提示词时，可以用这个仓库：先想清楚一个功能、追查回归原因、发布前审查、创建干净的提交、把重复工作打包成可复用技能、借用一份适合公开分享的全局 `AGENTS.md` 基线，或者把粗糙笔记整理成有用的产物。
 
 > [!IMPORTANT]
-> 这是一个纯指令型技能目录，不是应用代码库。公开内容必须保持安全：不要写入凭据、私有 registry URL、私有集群名称、个人机器路径或一次性的项目事实。
+> 这是一个纯指令型资产目录，不是应用代码库。公开内容必须保持安全：不要写入凭据、私有 registry URL、私有集群名称、个人机器路径或一次性的项目事实。
 
 ## 安装
 
@@ -55,9 +55,9 @@ npx skills add mlhiter/skills --skill check
 
 第二和第三个提示词来自 Khazix。
 
-## 技能目录
+## 资产目录
 
-| 领域 | 技能 | 适用场景 |
+| 领域 | 资产 | 适用场景 |
 | :--- | :--- | :--- |
 | 写作 | [`logseq-writer`](skills/logseq-writer/SKILL.md) | 把主题、草稿和笔记写成实用的 Logseq 风格教程文章。 |
 | 写作 | [`intern-learning-recap`](skills/intern-learning-recap/SKILL.md) | 把已完成的工作讲成适合实习生理解的技术学习复盘。 |
@@ -72,6 +72,7 @@ npx skills add mlhiter/skills --skill check
 | 报告 | [`quarterly-work-dashboard`](skills/quarterly-work-dashboard/SKILL.md) | 基于只读的 GitHub 和飞书证据，生成面向领导层的季度工作面板。 |
 | QA | [`issue-creator`](skills/issue-creator/SKILL.md) | 把简短测试反馈整理成结构化 GitHub issue。 |
 | 设计 | [`screenshot-interaction`](skills/screenshot-interaction/SKILL.md) | 从截图推断预期 UI 行为、状态和交互。 |
+| 模板 | [`global AGENTS.md`](templates/global/AGENTS.md) | 从一份适合公开分享的全局 agent 指令基线开始，而不是把它放在仓库根目录。 |
 
 ## 仓库结构
 
@@ -97,13 +98,14 @@ npx skills add mlhiter/skills --skill check
 
 ## 维护这个目录
 
-新增、移除或重命名技能时：
+新增、移除或重命名技能或模板时：
 
 1. 把技能放在 `skills/<skill-name>/SKILL.md`。
-2. 把该技能专用的参考资料、脚本和资源放在它自己的技能目录里。
-3. 更新 `skills.sh.json`，保证发布出去的目录准确。
-4. 更新英文和中文 README，让用户能找到这个技能。
-5. 保持 `templates/global/AGENTS.md` 适合公开发布。
+2. 把可复用模板放在 `templates/<template-name>/`。
+3. 把该技能专用的参考资料、脚本和资源放在它自己的技能目录里。
+4. 当可安装技能变化时，更新 `skills.sh.json`。
+5. 更新英文和中文 README，让用户能找到这个资产。
+6. 保持 `templates/global/AGENTS.md` 适合公开发布。
 
 发布前建议检查：
 
@@ -117,9 +119,9 @@ git diff --check
 
 ## 来源
 
-有些技能来自个人工作流。有些技能改编自公开技能仓库，并针对 Codex、长期上下文、运行时证据和中英文工作流做了扩展。
+有些资产来自个人工作流。有些资产改编自公开技能仓库，并针对 Codex、长期上下文、运行时证据和中英文工作流做了扩展。
 
-| 技能 | 来源 |
+| 资产 | 来源 |
 | :--- | :--- |
 | `think` | 改编自 [`tw93/Waza`](https://github.com/tw93/Waza) 的 `think` 工作流，并扩展了 Codex 规划和长期上下文能力。 |
 | `hunt` | 改编自 [`tw93/Waza`](https://github.com/tw93/Waza) 的 `hunt` 工作流，并加入根因门禁和运行时证据路径。 |
@@ -134,9 +136,10 @@ git diff --check
 | `intern-learning-recap` | 原创面向实习生的技术学习复盘工作流。 |
 | `issue-creator` | 原创 QA issue 起草工作流，用于创建结构化 GitHub issue。 |
 | `screenshot-interaction` | 原创截图到交互契约工作流。 |
+| `global AGENTS.md` | 原创的公开安全全局 agent 指令基线，用于在仓库根目录之外分享可复用指导。 |
 
-[`mattpocock/skills`](https://github.com/mattpocock/skills) 等外部仓库也作为模式来源被审阅过，尤其适合借鉴公开接口纪律和更紧的反馈循环。这个目录里的技能不是对该仓库的整体复制。
+[`mattpocock/skills`](https://github.com/mattpocock/skills) 等外部仓库也作为模式来源被审阅过，尤其适合借鉴公开接口纪律和更紧的反馈循环。这个目录里的资产不是对该仓库的整体复制。
 
 ## 安全
 
-这些技能是指令包，会影响 agent 如何读取文件、写入项目变更、创建提交或调用外部工具。安装或调用某个工作流之前，请先阅读对应的 `SKILL.md`，尤其是会检查本地历史、修改项目文件或发布产物的技能。
+这些技能和模板都是指令包，会影响 agent 如何读取文件、写入项目变更、创建提交或调用外部工具。安装、复制或调用某个工作流之前，请先阅读对应的 `SKILL.md` 或模板，尤其是会检查本地历史、修改项目文件或发布产物的资产。

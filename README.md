@@ -5,22 +5,22 @@
 
 # mlhiter skills
 
-Reusable Codex agent skills for planning, debugging, review, writing, workflow packaging, and safe project follow-through.
+Reusable Codex agent skills and templates for planning, debugging, review, writing, workflow packaging, and safe project follow-through.
 
 [![skills.sh](https://skills.sh/b/mlhiter/skills)](https://skills.sh/mlhiter/skills)
 
-[Browse on skills.sh](https://skills.sh/mlhiter/skills) | [Install](#install) | [Catalog](#catalog) | [Maintain](#maintaining-this-catalog)
+[Browse on skills.sh](https://skills.sh/mlhiter/skills) | [Install](#install) | [Asset catalog](#asset-catalog) | [Maintain](#maintaining-this-catalog)
 
 Languages: [en](README.md) | [zh](README.zh-CN.md)
 
 </div>
 
-`mlhiter/skills` is a public catalog of installable agent skills. Each skill is a portable instruction bundle under `skills/<skill-name>/SKILL.md`, with any references, scripts, or assets kept inside the owning skill directory.
+`mlhiter/skills` is a public catalog of installable agent skills and reusable agent templates. Each skill is a portable instruction bundle under `skills/<skill-name>/SKILL.md`, with any references, scripts, or assets kept inside the owning skill directory.
 
-Use this repository when you want Codex to follow a durable workflow instead of a one-off prompt: think through a feature, hunt down a regression, review before shipping, create a clean commit, package repeated work into a reusable skill, or turn rough notes into a useful artifact.
+Use this repository when you want Codex to follow a durable workflow instead of a one-off prompt: think through a feature, hunt down a regression, review before shipping, create a clean commit, package repeated work into a reusable skill, borrow a public-safe global `AGENTS.md` baseline, or turn rough notes into a useful artifact.
 
 > [!IMPORTANT]
-> This is an instruction-only skill catalog, not an application codebase. Keep published content public-safe: no credentials, private registry URLs, private cluster names, personal machine paths, or one-off project facts.
+> This is an instruction-only asset catalog, not an application codebase. Keep published content public-safe: no credentials, private registry URLs, private cluster names, personal machine paths, or one-off project facts.
 
 ## Install
 
@@ -55,9 +55,9 @@ These small prompts make skill-driven work more reliable:
 
 The second and third prompts are credited to Khazix.
 
-## Catalog
+## Asset catalog
 
-| Area | Skill | Use it when |
+| Area | Asset | Use it when |
 | :--- | :--- | :--- |
 | Writing | [`logseq-writer`](skills/logseq-writer/SKILL.md) | Turning topics, drafts, and notes into practical Logseq-style tutorial articles. |
 | Writing | [`intern-learning-recap`](skills/intern-learning-recap/SKILL.md) | Explaining completed work as an intern-friendly technical learning recap. |
@@ -72,6 +72,7 @@ The second and third prompts are credited to Khazix.
 | Reporting | [`quarterly-work-dashboard`](skills/quarterly-work-dashboard/SKILL.md) | Generating leadership-facing quarterly dashboards from read-only GitHub and Feishu evidence. |
 | QA | [`issue-creator`](skills/issue-creator/SKILL.md) | Turning terse tester notes into structured GitHub issues. |
 | Design | [`screenshot-interaction`](skills/screenshot-interaction/SKILL.md) | Inferring expected UI behavior, states, and interactions from screenshots. |
+| Template | [`global AGENTS.md`](templates/global/AGENTS.md) | Starting from a public-safe global agent instruction baseline without placing it at repository root. |
 
 ## Repository layout
 
@@ -97,13 +98,14 @@ The second and third prompts are credited to Khazix.
 
 ## Maintaining this catalog
 
-When adding, removing, or renaming a skill:
+When adding, removing, or renaming a skill or template:
 
 1. Put the skill at `skills/<skill-name>/SKILL.md`.
-2. Keep skill-specific references, scripts, and assets inside that skill directory.
-3. Update `skills.sh.json` so the published catalog stays accurate.
-4. Update both README files so users can discover the skill.
-5. Keep `templates/global/AGENTS.md` sanitized for public use.
+2. Put reusable templates under `templates/<template-name>/`.
+3. Keep skill-specific references, scripts, and assets inside that skill directory.
+4. Update `skills.sh.json` when installable skills change.
+5. Update both README files so users can discover the asset.
+6. Keep `templates/global/AGENTS.md` sanitized for public use.
 
 Suggested checks before publishing:
 
@@ -117,9 +119,9 @@ git diff --check
 
 ## Provenance
 
-Some skills are original playbooks from personal workflows. Some are adapted from public skill repositories and then extended for Codex, durable context, runtime evidence, and Chinese/English workflow usage.
+Some assets are original playbooks from personal workflows. Some are adapted from public skill repositories and then extended for Codex, durable context, runtime evidence, and Chinese/English workflow usage.
 
-| Skill | Provenance |
+| Asset | Provenance |
 | :--- | :--- |
 | `think` | Adapted from [`tw93/Waza`](https://github.com/tw93/Waza)'s `think` workflow, then extended for Codex planning and durable context. |
 | `hunt` | Adapted from [`tw93/Waza`](https://github.com/tw93/Waza)'s `hunt` workflow, then extended with root-cause gates and runtime evidence ladders. |
@@ -134,9 +136,10 @@ Some skills are original playbooks from personal workflows. Some are adapted fro
 | `intern-learning-recap` | Original intern-friendly teaching recap workflow. |
 | `issue-creator` | Original QA issue drafting workflow for structured GitHub issue creation. |
 | `screenshot-interaction` | Original screenshot-to-interaction-contract workflow. |
+| `global AGENTS.md` | Original public-safe global agent instruction baseline for sharing reusable guidance outside a repository root. |
 
-External repositories such as [`mattpocock/skills`](https://github.com/mattpocock/skills) have also been reviewed as pattern sources, especially for public-interface discipline and tighter feedback loops. The skills in this catalog are not wholesale copies of that repository.
+External repositories such as [`mattpocock/skills`](https://github.com/mattpocock/skills) have also been reviewed as pattern sources, especially for public-interface discipline and tighter feedback loops. The assets in this catalog are not wholesale copies of that repository.
 
 ## Safety
 
-These skills are instruction bundles that can influence how an agent reads files, writes project changes, creates commits, or interacts with external tools. Read the relevant `SKILL.md` before installing or invoking a workflow, especially for skills that inspect local histories, change project files, or publish artifacts.
+These skills and templates are instruction bundles that can influence how an agent reads files, writes project changes, creates commits, or interacts with external tools. Read the relevant `SKILL.md` or template before installing, copying, or invoking a workflow, especially for assets that inspect local histories, change project files, or publish artifacts.
