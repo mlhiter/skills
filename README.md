@@ -1,60 +1,34 @@
-# Skills
+<!-- prettier-ignore -->
+<div align="center">
+
+<img src="assets/mlhiter-skills.svg" width="820" alt="Visual overview of the mlhiter skills catalog" />
+
+# mlhiter skills
+
+Reusable Codex agent skills for planning, debugging, review, writing, workflow packaging, and safe project follow-through.
 
 [![skills.sh](https://skills.sh/b/mlhiter/skills)](https://skills.sh/mlhiter/skills)
 
-Reusable agent skills for practical writing, workflow packaging, Codex goal drafting, dashboard reporting, and Codex app run actions.
+[Browse on skills.sh](https://skills.sh/mlhiter/skills) | [Install](#install) | [Catalog](#catalog) | [Maintain](#maintaining-this-catalog)
 
-This repository also includes a sanitized root `AGENTS.md` derived from my global Codex instructions, with private registry and cluster details replaced by placeholders.
-
-For maintainers, the durable context is the skill catalog itself: `README.md` for discovery, `skills.sh.json` for publishing metadata, and each `skills/<skill-name>/` directory for skill-specific instructions, references, scripts, and assets.
-
-<div align="center">
-  <img src="assets/mlhiter-skills.svg" width="1000" alt="Visual overview of the mlhiter skills catalog">
 </div>
 
-## Skills
+`mlhiter/skills` is a public catalog of installable agent skills. Each skill is a portable instruction bundle under `skills/<skill-name>/SKILL.md`, with any references, scripts, or assets kept inside the owning skill directory.
 
-| Group | Skill | Use it when |
-| :--- | :--- | :--- |
-| Writing | [`logseq-writer`](skills/logseq-writer/SKILL.md) | Turning topics, drafts, and notes into practical Logseq-style tutorial articles. |
-| Writing | [`intern-learning-recap`](skills/intern-learning-recap/SKILL.md) | Teaching interns the concepts and implementation path behind completed work. |
-| Codex | [`think`](skills/think/SKILL.md) | Turning rough ideas into decision-complete plans before coding. |
-| Codex | [`hunt`](skills/hunt/SKILL.md) | Finding root cause before fixing bugs, regressions, and broken behavior. |
-| Codex | [`check`](skills/check/SKILL.md) | Reviewing completed changes with functional acceptance, adversarial review, and release gates. |
-| Codex | [`codex-goal-builder`](skills/codex-goal-builder/SKILL.md) | Turning rough objectives into evidence-based Codex Goals. |
-| Codex | [`codex-runner-creator`](skills/codex-runner-creator/SKILL.md) | Creating or repairing `.codex/environments/environment.toml` run actions. |
-| Codex | [`workflow-packager`](skills/workflow-packager/SKILL.md) | Reviewing recent work evidence and recommending minimal reusable workflow assets. |
-| Codex | [`quarterly-work-dashboard`](skills/quarterly-work-dashboard/SKILL.md) | Generating a leadership-facing quarterly dashboard from read-only GitHub and Feishu evidence. |
-| Codex | [`git-commit-push`](skills/git-commit-push/SKILL.md) | Creating session-scoped Conventional Commits and safely pushing them. |
-| Codex | [`pr-creator`](skills/pr-creator/SKILL.md) | Creating pull requests with template compliance and explicit fork/upstream head safety. |
-| QA | [`issue-creator`](skills/issue-creator/SKILL.md) | Turning terse QA notes into structured GitHub issues with safe metadata handling. |
-| Design | [`screenshot-interaction`](skills/screenshot-interaction/SKILL.md) | Inferring UI behavior and missing states from screenshots before implementation. |
+Use this repository when you want Codex to follow a durable workflow instead of a one-off prompt: think through a feature, hunt down a regression, review before shipping, create a clean commit, package repeated work into a reusable skill, or turn rough notes into a useful artifact.
 
-## Provenance
-
-Some skills are original playbooks from my own workflows. Some are adapted from, or inspired by, public skill repositories and engineering habits. Attribution is kept here so the lineage is explicit.
-
-| Skill | Provenance |
-| :--- | :--- |
-| `think` | Adapted from [`tw93/Waza`](https://github.com/tw93/Waza)'s `think` workflow, then extended for Codex, durable context, first-principles planning, and Chinese workflow usage. |
-| `hunt` | Adapted from [`tw93/Waza`](https://github.com/tw93/Waza)'s `hunt` workflow, then extended with first-principles root-cause gates, runtime evidence ladders, and local debugging failure patterns. |
-| `check` | Adapted from [`tw93/Waza`](https://github.com/tw93/Waza)'s `check` workflow, then heavily extended with feature-intent risk modeling, functional acceptance, adversarial review, release gates, and specialist reviewers. |
-| `logseq-writer` | Original personal writing workflow for practical Logseq tutorial articles. |
-| `workflow-packager` | Original workflow-mining playbook for turning repeated agent work into reusable skills, subagents, or automations. |
-| `quarterly-work-dashboard` | Original dashboard-generation workflow for read-only GitHub and Feishu quarterly evidence. |
-| `codex-goal-builder` | Original Codex Goal drafting workflow. |
-| `codex-runner-creator` | Original Codex app environment-action workflow. |
-| `git-commit-push` | Original session-scoped git commit and safe-push workflow, based on Conventional Commits. |
-| `pr-creator` | Original PR-creation workflow focused on explicit fork/upstream head and base safety. |
-| `intern-learning-recap` | Original intern-friendly teaching recap workflow. |
-| `issue-creator` | Original QA issue drafting workflow for structured GitHub issue creation. |
-| `screenshot-interaction` | Original screenshot-to-interaction-contract workflow, with interaction defaults informed by public accessibility and design-system conventions. |
-
-External repositories such as [`mattpocock/skills`](https://github.com/mattpocock/skills) have also been reviewed as pattern sources, especially for tighter bug feedback loops and public-interface discipline, but the skills above are not wholesale copies of that repository.
+> [!IMPORTANT]
+> This is an instruction-only skill catalog, not an application codebase. Keep published content public-safe: no credentials, private registry URLs, private cluster names, personal machine paths, or one-off project facts.
 
 ## Install
 
-Install all skills:
+Preview the catalog:
+
+```bash
+npx skills add mlhiter/skills --list
+```
+
+Install every skill:
 
 ```bash
 npx skills add mlhiter/skills --all
@@ -63,49 +37,91 @@ npx skills add mlhiter/skills --all
 Install one skill:
 
 ```bash
-npx skills add mlhiter/skills --skill logseq-writer
+npx skills add mlhiter/skills --skill check
 ```
 
-Preview the repository first:
+> [!TIP]
+> Start with one skill if you only need a specific workflow. Each installed skill is self-contained enough to be read and audited before use.
 
-```bash
-npx skills add mlhiter/skills --list
-```
+## Catalog
+
+| Area | Skill | Use it when |
+| :--- | :--- | :--- |
+| Writing | [`logseq-writer`](skills/logseq-writer/SKILL.md) | Turning topics, drafts, and notes into practical Logseq-style tutorial articles. |
+| Writing | [`intern-learning-recap`](skills/intern-learning-recap/SKILL.md) | Explaining completed work as an intern-friendly technical learning recap. |
+| Planning | [`think`](skills/think/SKILL.md) | Turning rough ideas into decision-complete plans before coding. |
+| Debugging | [`hunt`](skills/hunt/SKILL.md) | Finding root cause before fixing errors, regressions, crashes, and broken behavior. |
+| Review | [`check`](skills/check/SKILL.md) | Reviewing completed work with feature-intent modeling, functional acceptance, adversarial review, and release gates. |
+| Codex | [`codex-goal-builder`](skills/codex-goal-builder/SKILL.md) | Drafting evidence-based Codex Goals from rough long-running objectives. |
+| Codex | [`codex-runner-creator`](skills/codex-runner-creator/SKILL.md) | Creating or repairing Codex app environment run actions. |
+| Codex | [`workflow-packager`](skills/workflow-packager/SKILL.md) | Mining repeated agent work and turning it into skills, subagents, automations, or templates. |
+| Git | [`git-commit-push`](skills/git-commit-push/SKILL.md) | Creating session-scoped Conventional Commits and safely publishing them. |
+| Git | [`pr-creator`](skills/pr-creator/SKILL.md) | Creating pull requests with explicit base/head resolution and fork/upstream safety. |
+| Reporting | [`quarterly-work-dashboard`](skills/quarterly-work-dashboard/SKILL.md) | Generating leadership-facing quarterly dashboards from read-only GitHub and Feishu evidence. |
+| QA | [`issue-creator`](skills/issue-creator/SKILL.md) | Turning terse tester notes into structured GitHub issues. |
+| Design | [`screenshot-interaction`](skills/screenshot-interaction/SKILL.md) | Inferring expected UI behavior, states, and interactions from screenshots. |
 
 ## Repository layout
 
-Skills are published under the canonical `skills/<skill-name>/SKILL.md` structure used by `skills.sh`. The root `AGENTS.md` is a sanitized copy of global agent instructions, not the place for skill-catalog-specific context:
-
 ```text
-AGENTS.md
-README.md
-skills.sh.json
-skills/
-  logseq-writer/SKILL.md
-  workflow-packager/SKILL.md
-  quarterly-work-dashboard/SKILL.md
-  think/SKILL.md
-  hunt/SKILL.md
-  check/SKILL.md
-  codex-goal-builder/SKILL.md
-  codex-runner-creator/SKILL.md
-  git-commit-push/SKILL.md
-  intern-learning-recap/SKILL.md
-  pr-creator/SKILL.md
-  screenshot-interaction/SKILL.md
-  issue-creator/SKILL.md
+.
+|-- AGENTS.md
+|-- README.md
+|-- assets/
+|   `-- mlhiter-skills.svg
+|-- skills.sh.json
+`-- skills/
+    `-- <skill-name>/
+        |-- SKILL.md
+        |-- references/
+        |-- scripts/
+        `-- assets/
 ```
 
-## Maintenance scope
+`README.md` is the discovery surface, `skills.sh.json` is the publishable catalog metadata, and each `skills/<skill-name>/` directory owns the instructions and bundled materials for that skill.
 
-This is a public catalog of installable skills and prompt playbooks, not an application or product codebase. Do not maintain generic software-project context files such as `PRODUCT.md`, `DESIGN.md`, `ROADMAP.md`, or a top-level `docs/` folder unless a future change has a concrete skill-catalog reason for them.
+## Maintaining this catalog
 
-Keep skill context next to the skill that uses it:
+When adding, removing, or renaming a skill:
 
-- Use `README.md` for catalog discovery, installation, provenance, and safety notes.
-- Use `skills.sh.json` for publishable catalog metadata.
-- Use each `skills/<skill-name>/` directory for that skill's instructions, references, scripts, assets, and agent metadata.
+1. Put the skill at `skills/<skill-name>/SKILL.md`.
+2. Keep skill-specific references, scripts, and assets inside that skill directory.
+3. Update `skills.sh.json` so the published catalog stays accurate.
+4. Update this README so users can discover the skill.
+5. Keep root `AGENTS.md` sanitized for public use.
+
+Suggested checks before publishing:
+
+```bash
+python3 -m json.tool skills.sh.json >/dev/null
+git diff --check
+```
+
+> [!NOTE]
+> Do not create generic product docs such as `PRODUCT.md`, `DESIGN.md`, `ROADMAP.md`, or a top-level `docs/` folder just to satisfy a software-project template. This repository's durable context belongs in this README, `skills.sh.json`, and the owning skill directories.
+
+## Provenance
+
+Some skills are original playbooks from personal workflows. Some are adapted from public skill repositories and then extended for Codex, durable context, runtime evidence, and Chinese/English workflow usage.
+
+| Skill | Provenance |
+| :--- | :--- |
+| `think` | Adapted from [`tw93/Waza`](https://github.com/tw93/Waza)'s `think` workflow, then extended for Codex planning and durable context. |
+| `hunt` | Adapted from [`tw93/Waza`](https://github.com/tw93/Waza)'s `hunt` workflow, then extended with root-cause gates and runtime evidence ladders. |
+| `check` | Adapted from [`tw93/Waza`](https://github.com/tw93/Waza)'s `check` workflow, then extended with feature-intent risk modeling, acceptance gates, and release checks. |
+| `logseq-writer` | Original personal writing workflow for practical Logseq tutorial articles. |
+| `workflow-packager` | Original workflow-mining playbook for turning repeated agent work into reusable assets. |
+| `quarterly-work-dashboard` | Original dashboard-generation workflow for read-only GitHub and Feishu quarterly evidence. |
+| `codex-goal-builder` | Original Codex Goal drafting workflow. |
+| `codex-runner-creator` | Original Codex app environment-action workflow. |
+| `git-commit-push` | Original session-scoped git commit and safe-push workflow based on Conventional Commits. |
+| `pr-creator` | Original PR-creation workflow focused on explicit fork/upstream head and base safety. |
+| `intern-learning-recap` | Original intern-friendly teaching recap workflow. |
+| `issue-creator` | Original QA issue drafting workflow for structured GitHub issue creation. |
+| `screenshot-interaction` | Original screenshot-to-interaction-contract workflow. |
+
+External repositories such as [`mattpocock/skills`](https://github.com/mattpocock/skills) have also been reviewed as pattern sources, especially for public-interface discipline and tighter feedback loops. The skills in this catalog are not wholesale copies of that repository.
 
 ## Safety
 
-These skills are instruction bundles. Read each `SKILL.md` before installing, especially skills that inspect local histories, write project files, or create automation assets.
+These skills are instruction bundles that can influence how an agent reads files, writes project changes, creates commits, or interacts with external tools. Read the relevant `SKILL.md` before installing or invoking a workflow, especially for skills that inspect local histories, change project files, or publish artifacts.
