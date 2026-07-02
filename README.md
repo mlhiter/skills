@@ -19,9 +19,6 @@ Languages: [en](README.md) | [zh](README.zh-CN.md)
 
 Use this repository when you want Codex to follow a durable workflow instead of a one-off prompt: think through a feature, hunt down a regression, review before shipping, create a clean commit, package repeated work into a reusable skill, borrow a public-safe global `AGENTS.md` baseline, or turn rough notes into a useful artifact.
 
-> [!IMPORTANT]
-> This is an instruction-only asset catalog, not an application codebase. Keep published content public-safe: no credentials, private registry URLs, private cluster names, personal machine paths, or one-off project facts.
-
 ## Install
 
 Preview the catalog:
