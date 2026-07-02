@@ -6,7 +6,7 @@ Reusable agent skills for practical writing, workflow packaging, Codex goal draf
 
 This repository also includes a sanitized root `AGENTS.md` derived from my global Codex instructions, with private registry and cluster details replaced by placeholders.
 
-For maintainers, the durable context is the skill catalog itself: `README.md` for discovery, `skills.sh.json` for publishing metadata, `AGENTS.md` for repository operating rules, and each `skills/<skill-name>/` directory for skill-specific instructions, references, scripts, and assets.
+For maintainers, the durable context is the skill catalog itself: `README.md` for discovery, `skills.sh.json` for publishing metadata, and each `skills/<skill-name>/` directory for skill-specific instructions, references, scripts, and assets.
 
 <div align="center">
   <img src="assets/mlhiter-skills.svg" width="1000" alt="Visual overview of the mlhiter skills catalog">
@@ -76,7 +76,7 @@ npx skills add mlhiter/skills --list
 
 ## Repository layout
 
-Skills are published under the canonical `skills/<skill-name>/SKILL.md` structure used by `skills.sh`. The root `AGENTS.md` documents the shared agent operating rules for this repository:
+Skills are published under the canonical `skills/<skill-name>/SKILL.md` structure used by `skills.sh`. The root `AGENTS.md` is a sanitized copy of global agent instructions, not the place for skill-catalog-specific context:
 
 ```text
 AGENTS.md
@@ -98,6 +98,16 @@ skills/
   screenshot-interaction/SKILL.md
   issue-creator/SKILL.md
 ```
+
+## Maintenance scope
+
+This is a public catalog of installable skills and prompt playbooks, not an application or product codebase. Do not maintain generic software-project context files such as `PRODUCT.md`, `DESIGN.md`, `ROADMAP.md`, or a top-level `docs/` folder unless a future change has a concrete skill-catalog reason for them.
+
+Keep skill context next to the skill that uses it:
+
+- Use `README.md` for catalog discovery, installation, provenance, and safety notes.
+- Use `skills.sh.json` for publishable catalog metadata.
+- Use each `skills/<skill-name>/` directory for that skill's instructions, references, scripts, assets, and agent metadata.
 
 ## Safety
 

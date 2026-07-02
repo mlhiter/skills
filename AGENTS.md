@@ -69,20 +69,6 @@ If a command fails with a quota error, inform the user and suggest `npx ctx7@lat
 Run Context7 CLI requests outside Codex's default sandbox. If a Context7 CLI command fails with DNS or network errors such as ENOTFOUND, host resolution failures, or fetch failed, rerun it outside the sandbox instead of retrying inside the sandbox.
 <!-- context7 -->
 
-## Documentation Scope
-
-This repository is a public catalog of installable skills and prompt playbooks, not an application or product codebase. Do not create or maintain generic software-project baseline files such as `PRODUCT.md`, `DESIGN.md`, `ROADMAP.md`, or a top-level `docs/` folder unless the user explicitly asks for them.
-
-The authoritative maintenance surfaces are:
-
-- `README.md` — human-facing skill catalog, install instructions, provenance, and safety notes.
-- `skills.sh.json` — publishable catalog metadata.
-- `AGENTS.md` — repository operating rules for agents editing this catalog.
-- `skills/<skill-name>/SKILL.md` — each skill's trigger surface and execution contract.
-- `skills/<skill-name>/references/`, `scripts/`, `assets/`, and `agents/` — optional bundled resources owned by that skill.
-
-When invoking the `neat-freak` skill for this repository, treat the list above as the cleanup contract. Keep context next to the skill that uses it, keep public-facing guidance sanitized, and avoid adding broad project-management documents that do not help installation, review, or skill maintenance.
-
 <!-- test-cluster-setup:start -->
 
 ## Test Cluster Access
