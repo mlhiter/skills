@@ -77,12 +77,14 @@ npx skills add mlhiter/skills --skill check
 
 ```text
 .
-|-- AGENTS.md
 |-- README.md
 |-- README.zh-CN.md
 |-- assets/
 |   `-- mlhiter-skills.svg
 |-- skills.sh.json
+|-- templates/
+|   `-- global/
+|       `-- AGENTS.md
 `-- skills/
     `-- <skill-name>/
         |-- SKILL.md
@@ -91,7 +93,7 @@ npx skills add mlhiter/skills --skill check
         `-- assets/
 ```
 
-`README.md` 和 `README.zh-CN.md` 是发现入口，`skills.sh.json` 是可发布的目录元数据，每个 `skills/<skill-name>/` 目录负责存放该技能的指令和配套材料。
+`README.md` 和 `README.zh-CN.md` 是发现入口，`skills.sh.json` 是可发布的目录元数据，每个 `skills/<skill-name>/` 目录负责存放该技能的指令和配套材料。`templates/global/AGENTS.md` 是可分享的全局 agents 模板，不是这个仓库的项目级说明。
 
 ## 维护这个目录
 
@@ -101,7 +103,7 @@ npx skills add mlhiter/skills --skill check
 2. 把该技能专用的参考资料、脚本和资源放在它自己的技能目录里。
 3. 更新 `skills.sh.json`，保证发布出去的目录准确。
 4. 更新英文和中文 README，让用户能找到这个技能。
-5. 保持根目录 `AGENTS.md` 适合公开发布。
+5. 保持 `templates/global/AGENTS.md` 适合公开发布。
 
 发布前建议检查：
 

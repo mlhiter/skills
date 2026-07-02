@@ -77,12 +77,14 @@ The second and third prompts are credited to Khazix.
 
 ```text
 .
-|-- AGENTS.md
 |-- README.md
 |-- README.zh-CN.md
 |-- assets/
 |   `-- mlhiter-skills.svg
 |-- skills.sh.json
+|-- templates/
+|   `-- global/
+|       `-- AGENTS.md
 `-- skills/
     `-- <skill-name>/
         |-- SKILL.md
@@ -91,7 +93,7 @@ The second and third prompts are credited to Khazix.
         `-- assets/
 ```
 
-`README.md` and `README.zh-CN.md` are the discovery surfaces, `skills.sh.json` is the publishable catalog metadata, and each `skills/<skill-name>/` directory owns the instructions and bundled materials for that skill.
+`README.md` and `README.zh-CN.md` are the discovery surfaces, `skills.sh.json` is the publishable catalog metadata, and each `skills/<skill-name>/` directory owns the instructions and bundled materials for that skill. `templates/global/AGENTS.md` is a shareable global agents template, not project-level guidance for this repository.
 
 ## Maintaining this catalog
 
@@ -101,7 +103,7 @@ When adding, removing, or renaming a skill:
 2. Keep skill-specific references, scripts, and assets inside that skill directory.
 3. Update `skills.sh.json` so the published catalog stays accurate.
 4. Update both README files so users can discover the skill.
-5. Keep root `AGENTS.md` sanitized for public use.
+5. Keep `templates/global/AGENTS.md` sanitized for public use.
 
 Suggested checks before publishing:
 
