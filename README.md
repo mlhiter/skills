@@ -11,6 +11,8 @@ Reusable Codex agent skills for planning, debugging, review, writing, workflow p
 
 [Browse on skills.sh](https://skills.sh/mlhiter/skills) | [Install](#install) | [Catalog](#catalog) | [Maintain](#maintaining-this-catalog)
 
+Languages: [English](README.md) | [Chinese](README.zh-CN.md)
+
 </div>
 
 `mlhiter/skills` is a public catalog of installable agent skills. Each skill is a portable instruction bundle under `skills/<skill-name>/SKILL.md`, with any references, scripts, or assets kept inside the owning skill directory.
@@ -77,6 +79,7 @@ The second and third prompts are credited to Khazix.
 .
 |-- AGENTS.md
 |-- README.md
+|-- README.zh-CN.md
 |-- assets/
 |   `-- mlhiter-skills.svg
 |-- skills.sh.json
@@ -88,7 +91,7 @@ The second and third prompts are credited to Khazix.
         `-- assets/
 ```
 
-`README.md` is the discovery surface, `skills.sh.json` is the publishable catalog metadata, and each `skills/<skill-name>/` directory owns the instructions and bundled materials for that skill.
+`README.md` and `README.zh-CN.md` are the discovery surfaces, `skills.sh.json` is the publishable catalog metadata, and each `skills/<skill-name>/` directory owns the instructions and bundled materials for that skill.
 
 ## Maintaining this catalog
 
@@ -97,7 +100,7 @@ When adding, removing, or renaming a skill:
 1. Put the skill at `skills/<skill-name>/SKILL.md`.
 2. Keep skill-specific references, scripts, and assets inside that skill directory.
 3. Update `skills.sh.json` so the published catalog stays accurate.
-4. Update this README so users can discover the skill.
+4. Update both README files so users can discover the skill.
 5. Keep root `AGENTS.md` sanitized for public use.
 
 Suggested checks before publishing:
@@ -108,7 +111,7 @@ git diff --check
 ```
 
 > [!NOTE]
-> Do not create generic product docs such as `PRODUCT.md`, `DESIGN.md`, `ROADMAP.md`, or a top-level `docs/` folder just to satisfy a software-project template. This repository's durable context belongs in this README, `skills.sh.json`, and the owning skill directories.
+> Do not create generic product docs such as `PRODUCT.md`, `DESIGN.md`, `ROADMAP.md`, or a top-level `docs/` folder just to satisfy a software-project template. This repository's durable context belongs in these README files, `skills.sh.json`, and the owning skill directories.
 
 ## Provenance
 

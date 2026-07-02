@@ -5,7 +5,7 @@
 - This repository is the durable source of truth for public, installable skills.
 - Keep published instructions public-safe: no credentials, private registry URLs, private cluster names, or personal machine paths.
 - Put skills under `skills/<skill-name>/SKILL.md`; keep bundled references, scripts, and assets inside the owning skill directory.
-- Update `README.md` and `skills.sh.json` whenever a skill is added, removed, or renamed.
+- Update both README files and `skills.sh.json` whenever a skill is added, removed, or renamed.
 - Shared reusable rules must be bundled inside each skill that needs them unless single-skill installation is proven to include root-level shared files; do not move one-off project facts into shared rules.
 
 - Never execute database write operations unless the user explicitly asks for a database modification.
