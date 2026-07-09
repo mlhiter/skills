@@ -34,8 +34,9 @@
     },
     {
       "title": "Design",
-      "description": "Skills for interpreting screenshots as interactive UI contracts.",
+      "description": "Skills for building distinctive UI and interpreting screenshots as interactive UI contracts.",
       "skills": [
+        "design",
         "screenshot-interaction"
       ]
     },

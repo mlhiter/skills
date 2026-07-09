@@ -68,6 +68,7 @@ npx skills add mlhiter/skills --skill check
 | Git | [`pr-creator`](skills/pr-creator/SKILL.md) | 创建 pull request，并显式处理 base/head 和 fork/upstream 安全性。 |
 | 报告 | [`quarterly-work-dashboard`](skills/quarterly-work-dashboard/SKILL.md) | 基于只读的 GitHub 和飞书证据，生成面向领导层的季度工作面板。 |
 | QA | [`issue-creator`](skills/issue-creator/SKILL.md) | 把简短测试反馈整理成结构化 GitHub issue。 |
+| 设计 | [`design`](skills/design/SKILL.md) | 基于参考 app 方向、品牌 preset 拆解和真实渲染验证，构建有辨识度的 UI。 |
 | 设计 | [`screenshot-interaction`](skills/screenshot-interaction/SKILL.md) | 从截图推断预期 UI 行为、状态和交互。 |
 | 人生设计 | [`life-design-dschool`](skills/life-design-dschool/SKILL.md) | 引导一轮温暖的斯坦福风格人生设计访谈，生成奥德赛计划和个人蓝图。 |
 | 模板 | [`global AGENTS.md`](templates/global/AGENTS.md) | 从一份适合公开分享的全局 agent 指令基线开始，同时和这个仓库的项目级 `AGENTS.md` 区分开。 |
@@ -113,6 +114,7 @@ npx skills add mlhiter/skills --skill check
 | `pr-creator` | 原创 PR 创建工作流，重点处理 fork/upstream head 和 base 的显式安全性。 |
 | `intern-learning-recap` | 原创面向实习生的技术学习复盘工作流。 |
 | `issue-creator` | 原创 QA issue 起草工作流，用于创建结构化 GitHub issue。 |
+| `design` | 原创 UI 设计工作流，并扩展了参考 app 方向锁定和 [`VoltAgent/awesome-design-md`](https://github.com/VoltAgent/awesome-design-md) 品牌 preset 拆解。 |
 | `screenshot-interaction` | 原创截图到交互契约工作流。 |
 | `life-design-dschool` | 受卡兹克的人生设计访谈框架启发，并结合斯坦福 d.school 人生设计、心流和积极心理学方法改写成可复用 skill。 |
 | `global AGENTS.md` | 原创的公开安全全局 agent 指令基线，用于在仓库根目录之外分享可复用指导。 |

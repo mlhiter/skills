@@ -68,6 +68,7 @@ The second and third prompts are credited to Khazix.
 | Git | [`pr-creator`](skills/pr-creator/SKILL.md) | Creating pull requests with explicit base/head resolution and fork/upstream safety. |
 | Reporting | [`quarterly-work-dashboard`](skills/quarterly-work-dashboard/SKILL.md) | Generating leadership-facing quarterly dashboards from read-only GitHub and Feishu evidence. |
 | QA | [`issue-creator`](skills/issue-creator/SKILL.md) | Turning terse tester notes into structured GitHub issues. |
+| Design | [`design`](skills/design/SKILL.md) | Building distinctive UI with reference-app direction, brand preset decomposition, and rendered-surface verification. |
 | Design | [`screenshot-interaction`](skills/screenshot-interaction/SKILL.md) | Inferring expected UI behavior, states, and interactions from screenshots. |
 | Life Design | [`life-design-dschool`](skills/life-design-dschool/SKILL.md) | Guiding a warm Stanford-style life design interview toward Odyssey plans and a personal blueprint. |
 | Template | [`global AGENTS.md`](templates/global/AGENTS.md) | Starting from a public-safe global agent instruction baseline while keeping it separate from this repository's project-level `AGENTS.md`. |
@@ -113,6 +114,7 @@ Some assets are original playbooks from personal workflows. Some are adapted fro
 | `pr-creator` | Original PR-creation workflow focused on explicit fork/upstream head and base safety. |
 | `intern-learning-recap` | Original intern-friendly teaching recap workflow. |
 | `issue-creator` | Original QA issue drafting workflow for structured GitHub issue creation. |
+| `design` | Original UI design workflow, extended with reference-app direction and [`VoltAgent/awesome-design-md`](https://github.com/VoltAgent/awesome-design-md) brand preset decomposition. |
 | `screenshot-interaction` | Original screenshot-to-interaction-contract workflow. |
 | `life-design-dschool` | Inspired by Khazix's life-design interview framing, then adapted with Stanford d.school life design, flow, and positive psychology methods. |
 | `global AGENTS.md` | Original public-safe global agent instruction baseline for sharing reusable guidance outside a repository root. |
