@@ -28,6 +28,9 @@ def parse_args() -> argparse.Namespace:
     github.add_argument("--github-limit", type=int, help="Maximum GitHub results per search query. Defaults to the GitHub module default.")
     github.add_argument("--skip-code-stats", action="store_true", help="Skip per-merged-PR GitHub API calls for additions/deletions/file breakdown.")
     github.add_argument("--skip-project-portfolio", action="store_true", help="Skip repo metadata/README/language collection for project portfolio analysis.")
+    github.add_argument("--skip-deep-github-analysis", action="store_true", help="Skip deep PR/body/commit/file analysis for the leadership work breakdown.")
+    github.add_argument("--deep-github-limit", type=int, default=0, help="Only deep-analyze first N merged PRs. Defaults to all merged PRs.")
+    github.add_argument("--deep-github-concurrency", type=int, default=6, help="Concurrent gh api workers for deep GitHub analysis.")
     github.add_argument("--previous-start", default="", help="Previous comparison start date, YYYY-MM-DD")
     github.add_argument("--previous-end", default="", help="Previous comparison end date, YYYY-MM-DD")
     github.add_argument("--previous-period-label", default="", help="Previous period label, e.g. 2026 Q1")
@@ -153,6 +156,29 @@ def main() -> int:
         github_summary = github_dir / "summary.json"
         github_index = github_dir / "index.html"
 
+    github_deep_analysis = ""
+    if not args.skip_deep_github_analysis:
+        github_deep_path = github_dir / "deep_work_analysis.json"
+        deep_cmd = [
+            sys.executable,
+            str(script_dir() / "deep_github_work_analysis.py"),
+            "--github-summary",
+            str(github_summary),
+            "--output",
+            str(github_deep_path),
+            "--concurrency",
+            str(args.deep_github_concurrency),
+        ]
+        if args.deep_github_limit:
+            deep_cmd.extend(["--limit", str(args.deep_github_limit)])
+        deep_step = run_step("github-deep-analysis", deep_cmd)
+        steps.append(deep_step)
+        if deep_step["returncode"] != 0:
+            write_run_summary(root, steps)
+            print(deep_step["stderr"] or deep_step["stdout"], file=sys.stderr)
+            return int(deep_step["returncode"])
+        github_deep_analysis = str(github_deep_path)
+
     if args.skip_feishu:
         if not args.feishu_summary:
             print("error: --skip-feishu requires --feishu-summary", file=sys.stderr)
@@ -235,6 +261,8 @@ def main() -> int:
         combined_cmd.extend(["--period-label", args.period_label])
     if args.annotations:
         combined_cmd.extend(["--annotations", args.annotations])
+    if github_deep_analysis:
+        combined_cmd.extend(["--github-deep-analysis", github_deep_analysis])
     combined_step = run_step("combined", combined_cmd)
     steps.append(combined_step)
     write_run_summary(root, steps)

@@ -9,6 +9,7 @@ import datetime as dt
 import html
 import json
 import sys
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -54,6 +55,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--github-index", default="", help="Optional path or URL to the GitHub dashboard index.html")
     parser.add_argument("--feishu-index", default="", help="Optional path or URL to the Feishu dashboard index.html")
     parser.add_argument("--annotations", default="", help="Optional JSON/YAML annotations for boss-facing wording and project notes.")
+    parser.add_argument("--github-deep-analysis", default="", help="Optional deep_work_analysis.json generated from merged GitHub PR details.")
     return parser.parse_args()
 
 
@@ -84,6 +86,58 @@ def load_annotations(path: str) -> dict[str, Any]:
     if not isinstance(data, dict):
         raise ValueError(f"{path} is not a JSON/YAML object")
     return data
+
+
+def load_github_deep_analysis(path: str, github_summary_path: str) -> tuple[dict[str, Any], str]:
+    candidate = Path(path).expanduser() if path else Path(github_summary_path).expanduser().with_name("deep_work_analysis.json")
+    if not candidate.exists():
+        return {}, ""
+    data = load_json(str(candidate))
+    return data, str(candidate.resolve())
+
+
+def compact_deep_analysis(data: dict[str, Any], source_path: str) -> dict[str, Any]:
+    if not data:
+        return {}
+    streams = [row for row in data.get("work_streams") or [] if isinstance(row, dict)]
+    projects = [row for row in data.get("project_breakdown") or [] if isinstance(row, dict)]
+    outcome_mix = [row for row in data.get("outcome_mix") or [] if isinstance(row, dict)]
+    totals = data.get("totals") if isinstance(data.get("totals"), dict) else {}
+    coverage = data.get("coverage") if isinstance(data.get("coverage"), dict) else {}
+    return {
+        "kind": data.get("kind") or "quarterly-github-deep-work-analysis",
+        "schema_version": data.get("schema_version") or 1,
+        "generated_at": data.get("generated_at") or "",
+        "source": source_path,
+        "coverage": coverage,
+        "totals": totals,
+        "outcome_mix": outcome_mix,
+        "work_streams": streams[:16],
+        "project_breakdown": projects[:14],
+        "limitations": [str(item) for item in (data.get("limitations") or [])[:4]],
+    }
+
+
+def apply_deep_metrics(metrics: dict[str, Any], deep_analysis: dict[str, Any]) -> dict[str, Any]:
+    if not deep_analysis:
+        return metrics
+    totals = deep_analysis.get("totals") if isinstance(deep_analysis.get("totals"), dict) else {}
+    coverage = deep_analysis.get("coverage") if isinstance(deep_analysis.get("coverage"), dict) else {}
+    enriched = dict(metrics)
+    enriched.update(
+        {
+            "deep_analyzed_prs": number(totals.get("analyzed_prs")),
+            "deep_work_items": number(totals.get("work_items")),
+            "deep_work_streams": number(totals.get("work_streams")),
+            "deep_commit_subjects": number(totals.get("commit_subjects")),
+            "deep_changed_files": number(totals.get("changed_files")),
+            "deep_projects": number(totals.get("projects")),
+            "deep_details_succeeded": number(coverage.get("details_succeeded")),
+            "deep_files_succeeded": number(coverage.get("files_succeeded")),
+            "deep_commits_succeeded": number(coverage.get("commits_succeeded")),
+        }
+    )
+    return enriched
 
 
 def apply_annotations(github: dict[str, Any], annotations: dict[str, Any]) -> dict[str, Any]:
@@ -118,6 +172,11 @@ def apply_annotations(github: dict[str, Any], annotations: dict[str, Any]) -> di
                     ("customer_value", "customer_value"),
                     ("difficulty", "difficulty"),
                     ("highlight", "highlight"),
+                    ("business_goal", "business_goal"),
+                    ("user_problem", "user_problem"),
+                    ("before_after", "before_after"),
+                    ("impact_statement", "impact_statement"),
+                    ("stakeholder", "stakeholder"),
                     ("primary_value", "primary_value"),
                     ("value_confidence", "value_confidence"),
                     ("display_priority", "display_priority"),
@@ -474,21 +533,21 @@ def infer_project_value_attribution(project: dict[str, Any]) -> list[dict[str, A
         "稳定性与质量",
         bug_fixes * 4.0 + changed_files * 0.03,
         ["fix", "bug", "test", "quality", "stable", "stability", "observability", "ops", "测试", "质量", "稳定", "可观测", "运维"],
-        [text for value, text in ((bug_fixes, f"{fmt_num(bug_fixes)} 个 Bug 修复"), (changed_files, f"{fmt_num(changed_files)} 个变更文件")) if number(value) > 0],
-        "Bug 修复、测试质量和可观测线索",
+        [text for value, text in ((bug_fixes, f"{fmt_num(bug_fixes)} 个修复类 PR"), (changed_files, f"{fmt_num(changed_files)} 个变更文件")) if number(value) > 0],
+        "修复类 PR、测试质量和可观测线索",
     )
     add(
         "交付能力",
         feature_points * 4.2 + merged_prs * 1.8 + (5 if project.get("is_new_repo") else 0),
         ["offline", "registry", "install", "deploy", "release", "delivery", "私有化", "离线", "交付", "部署", "镜像"],
-        [text for value, text in ((feature_points, f"{fmt_num(feature_points)} 个功能点"), (merged_prs, f"{fmt_num(merged_prs)} 个合并 PR")) if number(value) > 0],
+        [text for value, text in ((feature_points, f"{fmt_num(feature_points)} 个功能类 PR"), (merged_prs, f"{fmt_num(merged_prs)} 个合并 PR")) if number(value) > 0],
         "功能交付、新项目和发布/离线链路线索",
     )
     add(
         "用户体验",
         feature_points * 1.2 + changed_files * 0.02,
         ["frontend", "ui", "ux", "desktop", "logo", "extension", "interaction", "前端", "交互", "桌面", "体验", "登录"],
-        [text for value, text in ((feature_points, f"{fmt_num(feature_points)} 个功能点"), (changed_files, f"{fmt_num(changed_files)} 个变更文件")) if number(value) > 0],
+        [text for value, text in ((feature_points, f"{fmt_num(feature_points)} 个功能类 PR"), (changed_files, f"{fmt_num(changed_files)} 个变更文件")) if number(value) > 0],
         "前端、桌面、交互和体验相关线索",
     )
     add(
@@ -604,10 +663,14 @@ def project_action_lines(project: dict[str, Any]) -> list[str]:
     lines: list[str] = []
     if project.get("highlight"):
         lines.append(str(project.get("highlight")))
+    if project.get("before_after"):
+        lines.append(str(project.get("before_after")))
+    if project.get("impact_statement"):
+        lines.append(str(project.get("impact_statement")))
     if number(project.get("feature_points")):
-        lines.append(f"交付 {fmt_num(project.get('feature_points'))} 个功能点")
+        lines.append(f"归类 {fmt_num(project.get('feature_points'))} 个功能类 PR")
     if number(project.get("bug_fixes")):
-        lines.append(f"完成 {fmt_num(project.get('bug_fixes'))} 个 Bug 修复")
+        lines.append(f"归类 {fmt_num(project.get('bug_fixes'))} 个修复类 PR")
     if number(project.get("changed_files")):
         lines.append(f"覆盖 {fmt_num(project.get('changed_files'))} 个变更文件")
     if number(project.get("merged_prs")):
@@ -632,10 +695,10 @@ def build_project_profiles(projects: list[dict[str, Any]], limit: int = 5) -> li
                 "theme": project.get("theme") or project_bucket(project),
                 "role": project.get("role") or annotation.get("role") or "",
                 "difficulty": project.get("difficulty") or annotation.get("difficulty") or "",
-                "purpose": project.get("purpose") or "",
+                "purpose": project.get("purpose") or project.get("business_goal") or project.get("user_problem") or "",
                 "actions": project_action_lines(project),
-                "business_impact": project.get("business_impact") or "",
-                "customer_value": project.get("customer_value") or "",
+                "business_impact": project.get("business_impact") or project.get("impact_statement") or "",
+                "customer_value": project.get("customer_value") or project.get("before_after") or "",
                 "primary_value": attrs[0].get("label") if attrs else project.get("primary_value") or "",
                 "value_attribution": attrs,
                 "metrics": {
@@ -715,7 +778,7 @@ def build_data_quality(github: dict[str, Any], feishu: dict[str, Any], metrics: 
     project_attrs = metrics.get("portfolio_projects")
     missing_scopes = collect_missing_scopes(feishu)
     feishu_accessible = number(metrics.get("feishu_accessible_modules"))
-    return [
+    rows = [
         {
             "label": "GitHub 事实",
             "value": 100 if github.get("kind") == "quarterly-github-dashboard" else 50,
@@ -738,13 +801,6 @@ def build_data_quality(github: dict[str, Any], feishu: dict[str, Any], metrics: 
             "confidence": confidence_level(bool(portfolio_total), bool(github.get("project_portfolio"))),
         },
         {
-            "label": "飞书覆盖",
-            "value": pct_float(feishu_accessible, 3),
-            "status": "ok" if feishu_accessible == 3 else ("partial" if feishu_accessible else "permission_denied"),
-            "text": f"{fmt_num(feishu_accessible)}/3 模块可用，{fmt_num(len(missing_scopes))} 个 scope 缺口",
-            "confidence": "high" if feishu_accessible else "low",
-        },
-        {
             "label": "人工校准",
             "value": 100 if (github.get("manual_annotations") or {}).get("has_annotations") else 0,
             "status": "ok" if (github.get("manual_annotations") or {}).get("has_annotations") else "skipped",
@@ -752,6 +808,18 @@ def build_data_quality(github: dict[str, Any], feishu: dict[str, Any], metrics: 
             "confidence": "manual" if (github.get("manual_annotations") or {}).get("has_annotations") else "low",
         },
     ]
+    if feishu_accessible > 0:
+        rows.insert(
+            3,
+            {
+                "label": "飞书覆盖",
+                "value": pct_float(feishu_accessible, 3),
+                "status": "ok" if feishu_accessible == 3 else "partial",
+                "text": f"{fmt_num(feishu_accessible)}/3 模块可用，{fmt_num(len(missing_scopes))} 个 scope 缺口",
+                "confidence": "high",
+            },
+        )
+    return rows
 
 
 def stacked_style(items: list[tuple[str, Any, str]]) -> str:
@@ -939,7 +1007,7 @@ def build_executive_metrics(github: dict[str, Any], feishu: dict[str, Any], metr
             [
                 "相关关闭 issue 不是亲自解决问题数。",
                 "Review 参与 PR 是 PR 集合数，不是单次 review 次数。",
-                "功能点、Bug 修复、主题和项目用途是从 GitHub 证据推断的汇报口径。",
+                "功能类 PR、修复类 PR、主题和项目用途是从 GitHub 证据推断的汇报口径。",
                 "飞书权限不足代表协作证据未覆盖，不代表飞书侧没有产出。",
             ],
             "Skill methodology and module notes",
@@ -1023,7 +1091,7 @@ def build_evidence_chains(github: dict[str, Any], feishu: dict[str, Any], metric
         {
             "id": "outcome-classification",
             "title": "功能与修复",
-            "claim": f"从合并 PR 标题、label 和仓库线索识别 {fmt_num(metrics['feature_points'])} 个功能点、{fmt_num(metrics['bug_fixes'])} 个 bug 修复。",
+            "claim": f"从合并 PR 标题、label 和仓库线索识别 {fmt_num(metrics['feature_points'])} 个功能类 PR、{fmt_num(metrics['bug_fixes'])} 个修复类 PR。",
             "confidence": "medium",
             "source": "Merged PR title/label classification",
             "evidence": unique_evidence([evidence_item(item, "pr", "高代码变更 PR，可辅助复核工作内容") for item in top_code_prs[:8]], 6),
@@ -1047,16 +1115,19 @@ def build_evidence_chains(github: dict[str, Any], feishu: dict[str, Any], metric
             "evidence": collect_project_evidence(github),
             "caveat": "新启动表示上季度未进入活跃集合，本季度出现开发证据。",
         },
-        {
-            "id": "feishu-coverage",
-            "title": "飞书覆盖边界",
-            "claim": f"飞书当前可用模块 {fmt_num(metrics['feishu_accessible_modules'])}/3，缺少 {fmt_num(metrics['feishu_missing_scopes'])} 个 scope。",
-            "confidence": "high" if metrics["feishu_missing_scopes"] else "medium",
-            "source": "Feishu module permission preflight",
-            "evidence": [],
-            "caveat": "权限不足代表协作证据未覆盖，不代表飞书侧没有产出。",
-        },
     ]
+    if show_feishu_surface(metrics):
+        chains.append(
+            {
+                "id": "feishu-coverage",
+                "title": "飞书覆盖边界",
+                "claim": f"飞书当前可用模块 {fmt_num(metrics['feishu_accessible_modules'])}/3，缺少 {fmt_num(metrics['feishu_missing_scopes'])} 个 scope。",
+                "confidence": "high" if metrics["feishu_missing_scopes"] else "medium",
+                "source": "Feishu module permission preflight",
+                "evidence": [],
+                "caveat": "权限不足代表协作证据未覆盖，不代表飞书侧没有产出。",
+            }
+        )
     if closed_issues:
         chains[0]["evidence"].extend(unique_evidence([evidence_item(item, "issue", "相关关闭 issue，不能直接等同亲自解决") for item in closed_issues[:2]], 2))
         chains[0]["evidence"] = unique_evidence(chains[0]["evidence"], 8)
@@ -1107,7 +1178,7 @@ def build_confidence_model(github: dict[str, Any], feishu: dict[str, Any], metri
     outcomes = github.get("engineering_outcomes") or {}
     coverage = outcomes.get("coverage") or {}
     portfolio = github.get("project_portfolio") or {}
-    return [
+    rows = [
         {
             "metric": "Commit / PR / 活跃仓库",
             "confidence": "high",
@@ -1115,7 +1186,7 @@ def build_confidence_model(github: dict[str, Any], feishu: dict[str, Any], metri
             "risk": "受 GitHub 权限、索引和 query limit 影响",
         },
         {
-            "metric": "功能点 / Bug 修复",
+            "metric": "功能类 PR / 修复类 PR",
             "confidence": confidence_level(number(coverage.get("code_stats_succeeded")) == number(coverage.get("merged_prs_total")) and bool(metrics["prs_merged"]), bool(metrics["feature_points"] or metrics["bug_fixes"])),
             "basis": coverage.get("classification_source") or "合并 PR 标题、label、仓库名归类",
             "risk": "不等同正式需求或线上缺陷系统统计",
@@ -1132,19 +1203,204 @@ def build_confidence_model(github: dict[str, Any], feishu: dict[str, Any], metri
             "basis": "仓库 metadata、README 摘要、PR/commit 标题",
             "risk": "业务意义需要人工 annotation 校准",
         },
-        {
-            "metric": "飞书协作证据",
-            "confidence": "high" if metrics["feishu_accessible_modules"] else "low",
-            "basis": "飞书模块结果和 scope 预检",
-            "risk": "缺 scope 时只能说明未覆盖，不能说明没有协作",
-        },
     ]
+    if show_feishu_surface(metrics):
+        rows.append(
+            {
+                "metric": "飞书协作证据",
+                "confidence": "high",
+                "basis": "飞书模块结果和 scope 预检",
+                "risk": "缺 scope 时只能说明未覆盖，不能说明没有协作",
+            }
+        )
+    return rows
+
+
+def story_pr_items(items: list[Any], limit: int = 4) -> list[dict[str, Any]]:
+    seen: set[tuple[str, str, str]] = set()
+    result: list[dict[str, Any]] = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        title = str(item.get("title") or "").strip()
+        url = str(item.get("url") or item.get("html_url") or "").strip()
+        repo = str(item.get("repo") or "").strip()
+        number_value = str(item.get("number") or "").strip()
+        key = (url, repo, number_value or title)
+        if not title or key in seen:
+            continue
+        seen.add(key)
+        result.append(
+            {
+                "title": title,
+                "url": url,
+                "repo": repo,
+                "number": item.get("number") or "",
+                "work_type": item.get("work_type") or "",
+                "work_type_label": item.get("work_type_label") or "",
+            }
+        )
+        if len(result) >= limit:
+            break
+    return result
+
+
+def infer_storyline_language(theme: str, description: str) -> dict[str, str]:
+    haystack = f"{theme} {description}".lower()
+    if "devbox" in haystack or "ide" in haystack or "runtime" in haystack:
+        return {
+            "title": "云端开发体验与研发效率",
+            "workflow": "开发环境、IDE 接入、运行时、数据库配置和 DevBox 迁移链路",
+            "value": "降低开发环境接入和维护成本，让研发工作更快进入可用状态。",
+        }
+    if "registry" in haystack or "镜像" in haystack:
+        return {
+            "title": "镜像仓库与制品分发能力",
+            "workflow": "镜像仓库权限、仓库树、离线应用、用户凭证和上传下载反馈",
+            "value": "提升制品分发和私有化场景下的可控性，减少交付链路里的人工处理。",
+        }
+    if "admin" in haystack or "租户" in haystack or "治理" in haystack:
+        return {
+            "title": "平台管理与租户治理",
+            "workflow": "管理后台、多可用区、模板、GPU 标签和租户治理入口",
+            "value": "把平台治理能力产品化，让管理员能更直接地完成配置和运营动作。",
+        }
+    if "kite" in haystack or "helm" in haystack or "运维" in haystack:
+        return {
+            "title": "运维与应用交付链路",
+            "workflow": "Helm、OCI、CRD 菜单、数据库初始化、认证和运维补齐",
+            "value": "增强应用交付和运维操作的标准化程度，降低上线与排障的不确定性。",
+        }
+    if "桌面" in haystack or "账号" in haystack or "登录" in haystack or "workspace" in haystack:
+        return {
+            "title": "用户入口与工作区体验",
+            "workflow": "桌面入口、账号协议、工作区图标、Provider 部署配置和前端体验",
+            "value": "改善用户进入平台后的关键操作路径，让入口、配置和视觉反馈更连贯。",
+        }
+    if "offline" in haystack or "离线" in haystack or "私有化" in haystack:
+        return {
+            "title": "私有化与离线交付",
+            "workflow": "离线资源工作台、官方 release 路径、缓存镜像和平台应用交付",
+            "value": "让私有化环境中的资源准备、缓存和交付过程更稳定可复用。",
+        }
+    if "执行平台" in haystack or "mspace" in haystack or "maestro" in haystack or "mbox" in haystack:
+        return {
+            "title": "执行平台方向探索",
+            "workflow": "AI 工作空间、任务执行、证据留存和沙箱运行形态",
+            "value": "把个人探索沉淀为可验证的执行平台方向，为后续产品化留下原型和工程证据。",
+        }
+    if "skill" in haystack or "文档" in haystack or "知识" in haystack or "workflow" in haystack:
+        return {
+            "title": "知识沉淀与工作流复用",
+            "workflow": "skill、文档、开发工作流、可复用检查和个人知识资产",
+            "value": "减少重复劳动，让经验以可运行的流程和文档资产复用。",
+        }
+    return {
+        "title": theme or "项目交付主线",
+        "workflow": description or "本季度持续推进的项目工作流",
+        "value": "从可点击 PR、项目画像和功能/修复归类中呈现可追溯价值。",
+    }
+
+
+def build_value_storylines(github: dict[str, Any], projects: list[dict[str, Any]], limit: int = 5) -> list[dict[str, Any]]:
+    themes = [row for row in (((github.get("contribution_portrait") or {}).get("themes") or [])) if isinstance(row, dict)]
+    project_by_repo = {str(project.get("repo") or ""): project for project in projects if project.get("repo")}
+    storylines: list[dict[str, Any]] = []
+
+    for theme in themes:
+        theme_name = str(theme.get("theme") or "").strip()
+        if not theme_name:
+            continue
+        primary_repos = [
+            str(row.get("repo") or "")
+            for row in (theme.get("primary_repos") or [])
+            if isinstance(row, dict) and row.get("repo")
+        ]
+        matched_projects = [
+            project
+            for project in projects
+            if str(project.get("repo") or "") in primary_repos or str(project.get("theme") or "") == theme_name
+        ]
+        merged_prs = number(theme.get("merged_prs")) or sum(number(project.get("merged_prs")) for project in matched_projects)
+        commits = number(theme.get("commits")) or sum(number(project.get("commits")) for project in matched_projects)
+        reviewed_prs = number(theme.get("reviewed_prs"))
+        issue_count = number(theme.get("issues"))
+        raw_prs: list[Any] = list(theme.get("representative_prs") or [])
+        for repo in primary_repos[:4]:
+            project = project_by_repo.get(repo)
+            if project:
+                raw_prs.extend(representative_pr_items(project, 3))
+        prs = story_pr_items(raw_prs, 4)
+        if not prs and merged_prs <= 0:
+            continue
+        representative_feature_prs = sum(
+            1
+            for pr in prs
+            if str(pr.get("work_type") or "").lower() == "feature" or "功能" in str(pr.get("work_type_label") or "")
+        )
+        representative_fix_prs = sum(
+            1
+            for pr in prs
+            if str(pr.get("work_type") or "").lower() == "fix" or "修复" in str(pr.get("work_type_label") or "")
+        )
+        language = infer_storyline_language(theme_name, str(theme.get("description") or ""))
+        project_names = unique_strings(
+            [
+                str(project.get("display_name") or project.get("name") or project.get("repo") or "")
+                for project in matched_projects
+                if project.get("repo") or project.get("name")
+            ],
+            5,
+        )
+        if not project_names:
+            project_names = unique_strings(primary_repos, 5)
+        confidence = "medium" if prs and merged_prs else ("low" if not prs else "medium")
+        if prs:
+            outcome_text = f"本主线合并 {fmt_num(merged_prs)} 个 PR；当前展示 {fmt_num(len(prs))} 个代表 PR 作为证据。"
+        else:
+            outcome_text = f"本主线合并 {fmt_num(merged_prs)} 个 PR 和 {fmt_num(commits)} 次 commit；当前以项目画像作为证据。"
+        storylines.append(
+            {
+                "id": f"storyline-{len(storylines) + 1:02d}",
+                "theme": theme_name,
+                "title": language["title"],
+                "workflow": language["workflow"],
+                "value": language["value"],
+                "outcome": outcome_text,
+                "projects": project_names,
+                "metrics": {
+                    "representative_feature_prs": representative_feature_prs,
+                    "representative_fix_prs": representative_fix_prs,
+                    "merged_prs": merged_prs,
+                    "commits": commits,
+                    "reviewed_prs": reviewed_prs,
+                    "issues": issue_count,
+                    "representative_prs": len(prs),
+                    "projects": len(project_names),
+                },
+                "representative_prs": prs,
+                "confidence": confidence,
+                "boundary": "价值来自 PR 标题、label、仓库画像、README 摘要和项目活动归纳；不等同收入、客户满意度或需求系统完整记录。",
+            }
+        )
+
+    storylines = sorted(
+        storylines,
+        key=lambda row: (
+            len(row.get("representative_prs") or []),
+            number((row.get("metrics") or {}).get("merged_prs")),
+            number((row.get("metrics") or {}).get("projects")),
+        ),
+        reverse=True,
+    )
+    return storylines[:limit]
 
 
 def build_value_views(github: dict[str, Any], feishu: dict[str, Any], metrics: dict[str, Any]) -> dict[str, Any]:
     """Build presentation-only views that help leaders scan value and evidence."""
     portfolio = github.get("project_portfolio") or {}
     projects = [project for project in (portfolio.get("projects") or []) if isinstance(project, dict)]
+    value_storylines = build_value_storylines(github, projects)
     project_value_attribution, project_value_categories = build_project_value_attribution(projects)
     project_profiles = build_project_profiles(projects)
     quarter_change_map = build_quarter_change_map(github, projects)
@@ -1178,15 +1434,18 @@ def build_value_views(github: dict[str, Any], feishu: dict[str, Any], metrics: d
             "detail": f"{fmt_num(metrics.get('new_repositories'))} 新建 / {fmt_num(metrics.get('newly_active_projects'))} 新启动",
             "source": "Repo metadata and activity",
         },
-        {
-            "key": "collaboration",
-            "label": "协作",
-            "value": metrics.get("feishu_accessible_modules"),
-            "unit": "飞书模块",
-            "detail": f"{fmt_num(metrics.get('feishu_missing_scopes'))} 个权限缺口",
-            "source": "Feishu permission preflight",
-        },
     ]
+    if show_feishu_surface(metrics):
+        value_path.append(
+            {
+                "key": "collaboration",
+                "label": "协作",
+                "value": metrics.get("feishu_accessible_modules"),
+                "unit": "飞书模块",
+                "detail": f"{fmt_num(metrics.get('feishu_missing_scopes'))} 个权限缺口",
+                "source": "Feishu permission preflight",
+            }
+        )
 
     investment_lanes = [
         {
@@ -1263,6 +1522,7 @@ def build_value_views(github: dict[str, Any], feishu: dict[str, Any], metrics: d
 
     return {
         "schema_version": 3,
+        "value_storylines": value_storylines,
         "value_path": value_path,
         "investment_lanes": investment_lanes,
         "project_quadrants": project_quadrants,
@@ -1273,14 +1533,22 @@ def build_value_views(github: dict[str, Any], feishu: dict[str, Any], metrics: d
         "quarter_change_map": quarter_change_map,
         "data_quality": data_quality,
         "source_boundaries": {
-            "github": {
-                "status": "ok" if github.get("kind") == "quarterly-github-dashboard" else "partial",
-                "facts": ["commits", "prs", "issues", "reviews", "repo metadata"],
+            **{
+                "github": {
+                    "status": "ok" if github.get("kind") == "quarterly-github-dashboard" else "partial",
+                    "facts": ["commits", "prs", "issues", "reviews", "repo metadata"],
+                }
             },
-            "feishu": {
-                "status": "ok" if metrics.get("feishu_accessible_modules") else "permission_denied",
-                "missing_scopes": collect_missing_scopes(feishu),
-            },
+            **(
+                {
+                    "feishu": {
+                        "status": "ok" if metrics.get("feishu_accessible_modules") == 3 else "partial",
+                        "missing_scopes": collect_missing_scopes(feishu),
+                    }
+                }
+                if show_feishu_surface(metrics)
+                else {}
+            ),
         },
     }
 
@@ -1298,6 +1566,285 @@ def collect_missing_scopes(feishu: dict[str, Any]) -> list[str]:
                     for scope in sub.get("missing_scopes") or []:
                         scopes.add(str(scope))
     return sorted(scopes)
+
+
+def show_feishu_surface(metrics: dict[str, Any]) -> bool:
+    """Only render Feishu in the leadership-facing HTML after at least one module is usable."""
+    return number(metrics.get("feishu_accessible_modules")) > 0
+
+
+def capability_kind(label: str, project: dict[str, Any], primary_value: str) -> str:
+    haystack = f"{label} {project_haystack(project)} {primary_value}".lower()
+    if any(token in haystack for token in ("bug", "fix", "regression", "crash", "error", "稳定", "修复", "质量")):
+        return "fix"
+    if any(token in haystack for token in ("feature", "feat", "功能", "体验", "ui", "ux", "frontend", "桌面", "交互")):
+        return "feature"
+    if any(token in haystack for token in ("permission", "auth", "policy", "registry", "kubernetes", "infra", "治理", "权限", "账号")):
+        return "platform"
+    if any(token in haystack for token in ("doc", "docs", "readme", "skill", "summary", "workflow", "文档", "知识", "复用")):
+        return "knowledge"
+    if any(token in haystack for token in ("offline", "install", "deploy", "release", "delivery", "离线", "交付", "部署")):
+        return "delivery"
+    return "capability"
+
+
+def value_confidence(project: dict[str, Any], attrs: list[dict[str, Any]]) -> str:
+    if project.get("annotation") or any(attr.get("manual") for attr in attrs):
+        return "manual"
+    if attrs and (representative_pr_items(project, 1) or project_action_lines(project)):
+        return "medium"
+    return "low"
+
+
+def value_claim_confidence(outcomes: list[dict[str, Any]], has_boundary_only: bool = False) -> str:
+    if has_boundary_only:
+        return "high"
+    levels = [str(item.get("confidence") or "low") for item in outcomes]
+    if "manual" in levels:
+        return "manual"
+    supported = sum(1 for level in levels if level in ("manual", "medium", "high"))
+    if levels and supported >= max(1, len(levels) // 2):
+        return "medium"
+    return "low"
+
+
+def build_value_map(
+    github: dict[str, Any],
+    feishu: dict[str, Any],
+    metrics: dict[str, Any],
+    value_views: dict[str, Any],
+) -> dict[str, Any]:
+    """Build a derived code -> capability -> outcome -> value graph without changing source data."""
+    portfolio = github.get("project_portfolio") or {}
+    projects = [project for project in (portfolio.get("projects") or []) if isinstance(project, dict)]
+    projects = sorted(projects, key=project_display_priority, reverse=True)
+    source_categories = [row for row in (value_views.get("project_value_categories") or []) if isinstance(row, dict)]
+    evidence_items: list[dict[str, Any]] = []
+    evidence_seen: dict[tuple[str, str, str], str] = {}
+    capability_nodes: list[dict[str, Any]] = []
+    outcome_nodes: list[dict[str, Any]] = []
+    evidence_edges: list[dict[str, Any]] = []
+
+    def add_evidence(item: dict[str, Any], kind: str, why: str) -> str:
+        ev = evidence_item(item, kind, why)
+        key = (str(ev.get("kind") or ""), str(ev.get("url") or ""), str(ev.get("title") or ""))
+        if key in evidence_seen:
+            return evidence_seen[key]
+        ev_id = f"evidence-{len(evidence_items) + 1:02d}"
+        ev["id"] = ev_id
+        evidence_seen[key] = ev_id
+        evidence_items.append(ev)
+        return ev_id
+
+    for project in projects[:16]:
+        attrs = infer_project_value_attribution(project)
+        primary_value = str((attrs[0] or {}).get("label") if attrs else project.get("primary_value") or "交付能力")
+        confidence = value_confidence(project, attrs)
+        actions = project_action_lines(project)[:3]
+        if not actions:
+            actions = [f"推进 {project.get('display_name') or project.get('name') or project.get('repo') or '项目'}"]
+        project_evidence_refs = [add_evidence(project, "repo", "项目画像和季度活动证据")]
+        for pr in representative_pr_items(project, 3):
+            if isinstance(pr, dict):
+                project_evidence_refs.append(add_evidence(pr, "pr", "代表性合并 PR"))
+        project_evidence_refs = unique_strings(project_evidence_refs, 5)
+        capability_ids: list[str] = []
+        for action in actions:
+            cap_id = f"capability-{len(capability_nodes) + 1:02d}"
+            cap_kind = capability_kind(str(action), project, primary_value)
+            evidence_refs = project_evidence_refs[:3]
+            capability_nodes.append(
+                {
+                    "id": cap_id,
+                    "label": str(action),
+                    "project": project.get("display_name") or project.get("name") or project.get("repo"),
+                    "repo": project.get("repo"),
+                    "type": cap_kind,
+                    "value_category": primary_value,
+                    "metrics": {
+                        "feature_points": number(project.get("feature_points")),
+                        "bug_fixes": number(project.get("bug_fixes")),
+                        "merged_prs": number(project.get("merged_prs")),
+                        "commits": number(project.get("commits")),
+                        "changed_files": number(project.get("changed_files")),
+                        "score": number(project.get("score")),
+                    },
+                    "evidence_refs": evidence_refs,
+                    "confidence": confidence,
+                    "source": "manual annotation + GitHub portfolio" if confidence == "manual" else "GitHub portfolio inference",
+                    "limitations": ["能力线索由项目标注、PR 标题、README 和仓库活动派生，不等同正式需求系统条目。"],
+                }
+            )
+            capability_ids.append(cap_id)
+            for evidence_id in evidence_refs:
+                evidence_edges.append({"from": cap_id, "to": evidence_id, "relation": "supported_by"})
+        outcome_id = f"outcome-{len(outcome_nodes) + 1:02d}"
+        outcome_nodes.append(
+            {
+                "id": outcome_id,
+                "title": f"{project.get('display_name') or project.get('name') or project.get('repo')}：{primary_value}",
+                "project": project.get("display_name") or project.get("name") or project.get("repo"),
+                "repo": project.get("repo"),
+                "value_category": primary_value,
+                "summary": "；".join(actions[:2]),
+                "capabilities": capability_ids,
+                "evidence_refs": project_evidence_refs,
+                "confidence": confidence,
+                "limitations": [
+                    "项目结果是展示层归纳；没有人工标注时，只能代表 GitHub 证据指向的价值线索。"
+                ],
+            }
+        )
+        for cap_id in capability_ids:
+            evidence_edges.append({"from": outcome_id, "to": cap_id, "relation": "composed_of"})
+
+    category_totals: dict[str, dict[str, Any]] = {}
+    for row in source_categories:
+        label = str(row.get("label") or "")
+        if not label:
+            continue
+        category_totals[label] = {
+            "label": label,
+            "score": number(row.get("score")),
+            "projects": number(row.get("projects")),
+            "feature_points": number(row.get("feature_points")),
+            "bug_fixes": number(row.get("bug_fixes")),
+            "merged_prs": number(row.get("merged_prs")),
+            "sample_projects": row.get("sample_projects") or [],
+            "outcomes": 0,
+            "capabilities": 0,
+        }
+    for outcome in outcome_nodes:
+        label = str(outcome.get("value_category") or "交付能力")
+        category = category_totals.setdefault(
+            label,
+            {
+                "label": label,
+                "score": 0,
+                "projects": 0,
+                "feature_points": 0,
+                "bug_fixes": 0,
+                "merged_prs": 0,
+                "sample_projects": [],
+                "outcomes": 0,
+                "capabilities": 0,
+            },
+        )
+        category["outcomes"] = number(category.get("outcomes")) + 1
+        category["capabilities"] = number(category.get("capabilities")) + len(outcome.get("capabilities") or [])
+        category["sample_projects"] = unique_strings([*(category.get("sample_projects") or []), outcome.get("project")], 4)
+    value_categories = sorted(category_totals.values(), key=lambda item: (number(item.get("score")), number(item.get("outcomes"))), reverse=True)
+
+    def outcome_ids_for_categories(labels: list[str], limit: int = 5) -> list[str]:
+        return [
+            str(outcome.get("id"))
+            for outcome in outcome_nodes
+            if str(outcome.get("value_category") or "") in labels
+        ][:limit]
+
+    top_category_labels = [str(row.get("label") or "") for row in value_categories[:3] if row.get("label")]
+    value_claims: list[dict[str, Any]] = []
+    if top_category_labels:
+        related_outcomes = [outcome for outcome in outcome_nodes if str(outcome.get("value_category") or "") in top_category_labels]
+        value_claims.append(
+            {
+                "id": "claim-value-focus",
+                "title": "价值重心",
+                "text": f"本季度价值线索集中在 {'、'.join(top_category_labels)}，由 {fmt_num(len(related_outcomes))} 个项目结果和 {fmt_num(len(capability_nodes))} 条行动线索支撑。",
+                "category": "价值组合",
+                "type": "inference",
+                "confidence": value_claim_confidence(related_outcomes),
+                "evidence_strength": "medium" if related_outcomes and evidence_items else "low",
+                "outcomes": [str(outcome.get("id")) for outcome in related_outcomes[:5]],
+                "evidence_refs": unique_strings([ref for outcome in related_outcomes for ref in (outcome.get("evidence_refs") or [])], 6),
+                "limitations": ["价值类别来自项目用途、README、PR/commit 标题和人工标注；不是业务收入或客户满意度的直接度量。"],
+            }
+        )
+    if metrics.get("feature_points") or metrics.get("bug_fixes"):
+        value_claims.append(
+            {
+                "id": "claim-capability-outcomes",
+                "title": "能力产出",
+                "text": f"功能交付和稳定性修复构成主要可见产出：展示层识别 {fmt_num(metrics.get('feature_points'))} 个功能类 PR、{fmt_num(metrics.get('bug_fixes'))} 个修复类 PR。",
+                "category": "成果结构",
+                "type": "inference",
+                "confidence": "medium",
+                "evidence_strength": "medium" if capability_nodes else "low",
+                "outcomes": [str(outcome.get("id")) for outcome in outcome_nodes[:5]],
+                "evidence_refs": unique_strings([ref for outcome in outcome_nodes[:5] for ref in (outcome.get("evidence_refs") or [])], 6),
+                "limitations": ["功能类 PR 和修复类 PR 按合并 PR 标题、label 和仓库线索归类，不等同正式需求或缺陷系统完整记录。"],
+            }
+        )
+    if metrics.get("new_repositories") or metrics.get("newly_active_projects") or outcome_nodes:
+        project_outcomes = outcome_nodes[:5]
+        value_claims.append(
+            {
+                "id": "claim-project-portfolio",
+                "title": "项目组合",
+                "text": f"项目组合呈现新方向和持续投入并行：识别 {fmt_num(metrics.get('new_repositories'))} 个新建仓库、{fmt_num(metrics.get('newly_active_projects'))} 个新启动/重新活跃项目。",
+                "category": "项目组合",
+                "type": "inference",
+                "confidence": value_claim_confidence(project_outcomes),
+                "evidence_strength": "medium" if project_outcomes else "low",
+                "outcomes": [str(outcome.get("id")) for outcome in project_outcomes],
+                "evidence_refs": unique_strings([ref for outcome in project_outcomes for ref in (outcome.get("evidence_refs") or [])], 6),
+                "limitations": ["新启动表示上季度未进入活跃集合，本季度出现开发证据；项目级业务价值需要人工校准。"],
+            }
+        )
+    missing_scopes = collect_missing_scopes(feishu)
+    if show_feishu_surface(metrics):
+        value_claims.append(
+            {
+                "id": "claim-collaboration-boundary",
+                "title": "协作证据边界",
+                "text": f"飞书当前可用模块 {fmt_num(metrics.get('feishu_accessible_modules'))}/3，缺少 {fmt_num(len(missing_scopes))} 个 scope；协作证据覆盖不足应作为边界处理。",
+                "category": "数据覆盖",
+                "type": "boundary",
+                "confidence": "high",
+                "evidence_strength": "boundary",
+                "outcomes": [],
+                "evidence_refs": [],
+                "limitations": ["权限不足代表未覆盖，不代表飞书侧没有文档、会议或聊天产出。"],
+            }
+        )
+    for claim in value_claims:
+        for outcome_id in claim.get("outcomes") or []:
+            evidence_edges.append({"from": claim.get("id"), "to": outcome_id, "relation": "supported_by"})
+        for evidence_id in claim.get("evidence_refs") or []:
+            evidence_edges.append({"from": claim.get("id"), "to": evidence_id, "relation": "evidenced_by"})
+
+    return {
+        "schema_version": 1,
+        "value_categories": value_categories,
+        "capability_nodes": capability_nodes,
+        "outcome_nodes": outcome_nodes,
+        "value_claims": value_claims[:5],
+        "evidence_items": evidence_items,
+        "evidence_edges": evidence_edges,
+        "coverage": {
+            "github": {
+                "status": "ok" if github.get("kind") == "quarterly-github-dashboard" else "partial",
+                "facts": ["commit", "PR", "issue", "review", "repo metadata", "PR files"],
+            },
+            **(
+                {
+                    "feishu": {
+                        "status": "ok" if metrics.get("feishu_accessible_modules") == 3 else "partial",
+                        "accessible_modules": metrics.get("feishu_accessible_modules"),
+                        "missing_scopes": missing_scopes,
+                    }
+                }
+                if show_feishu_surface(metrics)
+                else {}
+            ),
+            "manual_annotations": github.get("manual_annotations") or {"has_annotations": False},
+            "limitations": [
+                "代码和 PR 是证据底座，不直接等同业务价值。",
+                "价值 claim 只来自 GitHub summary 与人工 annotation，不改写源数据。",
+                "没有人工标注时，价值只能表达为 GitHub 证据指向和推断边界。",
+            ],
+        },
+    }
 
 
 def build_modules(github: dict[str, Any], feishu: dict[str, Any], metrics: dict[str, Any]) -> dict[str, Any]:
@@ -1321,60 +1868,118 @@ def build_modules(github: dict[str, Any], feishu: dict[str, Any], metrics: dict[
     }
 
 
-def build_insights(github: dict[str, Any], feishu: dict[str, Any], metrics: dict[str, Any]) -> list[str]:
-    comparison = github.get("comparison") or {}
-    outcomes = github.get("engineering_outcomes") or {}
-    coverage = outcomes.get("coverage") or {}
-    themes = ((github.get("contribution_portrait") or {}).get("themes") or [])[:3]
-    portfolio = github.get("project_portfolio") or {}
-    portfolio_totals = portfolio.get("totals") or {}
-    new_project_names = [item.get("name") or item.get("repo") for item in (portfolio.get("new_repositories") or portfolio.get("newly_active_projects") or [])[:3] if isinstance(item, dict)]
-    theme_text = "、".join(str(item.get("theme")) for item in themes if isinstance(item, dict) and item.get("theme"))
-    insights = [
-        f"GitHub 侧本季度形成 {fmt_num(metrics['commits'])} 次 commit、{fmt_num(metrics['prs_merged'])} 个合并 PR，覆盖 {fmt_num(metrics['active_repos'])} 个活跃仓库。",
-    ]
-    if metrics.get("feature_points") or metrics.get("bug_fixes"):
-        insights.append(
-            f"按合并 PR 标题和标签归类，本季度识别出 {fmt_num(metrics['feature_points'])} 个功能点、{fmt_num(metrics['bug_fixes'])} 个 bug 修复；代码变更统计覆盖 {fmt_num(coverage.get('code_stats_succeeded'))}/{fmt_num(coverage.get('merged_prs_total'))} 个合并 PR。"
+def value_map_source_label(value_map: dict[str, Any]) -> str:
+    coverage = value_map.get("coverage") if isinstance(value_map, dict) else {}
+    has_feishu_surface = isinstance(coverage, dict) and isinstance(coverage.get("feishu"), dict)
+    return "value_map derived from GitHub/Feishu summaries" if has_feishu_surface else "value_map derived from GitHub summary"
+
+
+def build_claims_from_value_map(value_map: dict[str, Any]) -> list[dict[str, Any]]:
+    claims: list[dict[str, Any]] = []
+    source_label = value_map_source_label(value_map)
+    for claim in value_map.get("value_claims") or []:
+        if not isinstance(claim, dict):
+            continue
+        claims.append(
+            {
+                "id": claim.get("id"),
+                "text": claim.get("text"),
+                "title": claim.get("title"),
+                "type": claim.get("type") or "inference",
+                "category": claim.get("category") or "",
+                "confidence": claim.get("confidence") or "low",
+                "source": source_label,
+                "evidence_refs": claim.get("evidence_refs") or [],
+                "outcomes": claim.get("outcomes") or [],
+                "limitations": claim.get("limitations") or [],
+            }
         )
-    merged_cmp = comparison.get("prs_merged") or {}
-    commits_cmp = comparison.get("commits") or {}
-    if merged_cmp or commits_cmp:
-        insights.append(
-            f"与上个可比区间相比，commit {pct_text(commits_cmp.get('pct'))}，合并 PR {pct_text(merged_cmp.get('pct'))}，研发交付强度有明确增长信号。"
+    return claims
+
+
+def build_evidence_chains_from_value_map(value_map: dict[str, Any], fallback_chains: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    claims = [claim for claim in (value_map.get("value_claims") or []) if isinstance(claim, dict)]
+    if not claims:
+        return fallback_chains
+    source_label = value_map_source_label(value_map)
+    evidence_by_id = {
+        str(item.get("id")): item
+        for item in (value_map.get("evidence_items") or [])
+        if isinstance(item, dict) and item.get("id")
+    }
+    chains: list[dict[str, Any]] = []
+    for claim in claims:
+        evidence_refs = [str(ref) for ref in (claim.get("evidence_refs") or []) if ref]
+        evidence = [evidence_by_id[ref] for ref in evidence_refs if ref in evidence_by_id]
+        chains.append(
+            {
+                "id": claim.get("id"),
+                "title": claim.get("title") or claim.get("category") or "价值结论",
+                "claim": claim.get("text") or "",
+                "confidence": claim.get("confidence") or "low",
+                "source": source_label,
+                "evidence": evidence[:6],
+                "caveat": "；".join(str(item) for item in (claim.get("limitations") or [])[:2] if item),
+                "type": claim.get("type") or "inference",
+            }
         )
-    if theme_text:
-        insights.append(f"投入方向集中在 {theme_text}，这些主题由仓库、PR 标题和提交记录确定性归类得到。")
-    if portfolio_totals:
-        names = "、".join(str(name) for name in new_project_names if name)
-        suffix = f"：{names}" if names else ""
-        insights.append(
-            f"项目组合层面识别到 {fmt_num(portfolio_totals.get('new_repositories'))} 个新建仓库、{fmt_num(portfolio_totals.get('newly_active_projects'))} 个本季度新启动/重新活跃项目{suffix}。"
+    return chains
+
+
+def build_insights(github: dict[str, Any], feishu: dict[str, Any], metrics: dict[str, Any], value_map: dict[str, Any]) -> list[str]:
+    claims = [claim for claim in (value_map.get("value_claims") or []) if isinstance(claim, dict)]
+    insights = [str(claim.get("text") or "") for claim in claims if claim.get("text")]
+    categories = [row for row in (value_map.get("value_categories") or []) if isinstance(row, dict)]
+    top_categories = "、".join(str(row.get("label") or "") for row in categories[:3] if row.get("label"))
+    if top_categories and not any(top_categories in insight for insight in insights):
+        insights.insert(
+            0,
+            f"价值映射层把本季度工作归入 {top_categories} 等主线；这些主线由项目画像、代表 PR 和人工标注共同支撑。",
         )
-    insights.append(
-        f"飞书侧当前可用模块 {fmt_num(metrics['feishu_accessible_modules'])}/3，权限缺口 {fmt_num(metrics['feishu_missing_scopes'])} 个；协作证据覆盖不足，应作为数据边界而不是业绩为零。"
-    )
-    if metrics["prs_reviewed"]:
-        insights.append(f"协作参与上，GitHub 记录到 {fmt_num(metrics['prs_reviewed'])} 个参与 review 的 PR，口径是 PR 集合数，不是单次 review 次数。")
-    return insights[:5]
+    outcome_count = len([row for row in (value_map.get("outcome_nodes") or []) if isinstance(row, dict)])
+    capability_count = len([row for row in (value_map.get("capability_nodes") or []) if isinstance(row, dict)])
+    evidence_count = len([row for row in (value_map.get("evidence_items") or []) if isinstance(row, dict)])
+    if outcome_count or capability_count:
+        insights.append(
+            f"本次生成形成 {fmt_num(outcome_count)} 个项目结果、{fmt_num(capability_count)} 条行动线索和 {fmt_num(evidence_count)} 条可追溯证据，工程量指标只作为证据底座进入审计层。"
+        )
+    if show_feishu_surface(metrics) and metrics.get("feishu_missing_scopes"):
+        insights.append(
+            f"飞书仍缺少 {fmt_num(metrics.get('feishu_missing_scopes'))} 个 scope，协作证据覆盖不足，不应把未采集到的数据解释为没有协作产出。"
+        )
+    return unique_strings([item for item in insights if item], 5)
 
 
 def build_summary(args: argparse.Namespace) -> dict[str, Any]:
     annotations = load_annotations(args.annotations)
     github = apply_annotations(load_json(args.github_summary), annotations)
     feishu = load_json(args.feishu_summary)
+    raw_deep_analysis, deep_analysis_path = load_github_deep_analysis(args.github_deep_analysis, args.github_summary)
+    deep_analysis = compact_deep_analysis(raw_deep_analysis, deep_analysis_path)
     start = github.get("start") or feishu.get("start")
     end = github.get("end") or feishu.get("end")
     period_label = args.period_label or github.get("period_label") or feishu.get("period_label") or f"{start}..{end}"
     output_dir = Path(args.output_dir).expanduser().resolve()
-    metrics = build_metrics(github, feishu)
+    metrics = apply_deep_metrics(build_metrics(github, feishu), deep_analysis)
     modules = build_modules(github, feishu, metrics)
     executive_metrics = build_executive_metrics(github, feishu, metrics)
-    insights = build_insights(github, feishu, metrics)
-    evidence_chains = build_evidence_chains(github, feishu, metrics)
-    claims = build_claims(evidence_chains)
     confidence = build_confidence_model(github, feishu, metrics)
     value_views = build_value_views(github, feishu, metrics)
+    if deep_analysis:
+        value_views["deep_work_analysis"] = deep_analysis
+    value_map = build_value_map(github, feishu, metrics, value_views)
+    fallback_chains = build_evidence_chains(github, feishu, metrics)
+    insights = build_insights(github, feishu, metrics, value_map)
+    evidence_chains = build_evidence_chains_from_value_map(value_map, fallback_chains)
+    claims = build_claims_from_value_map(value_map) or build_claims(evidence_chains)
+    methodology = {
+        "github": "Read quarterly-github-dashboard summary.json. GitHub metrics remain owned by the GitHub skill.",
+        "combined": "This dashboard is a presentation layer only; it does not query or mutate external systems.",
+    }
+    if deep_analysis:
+        methodology["github_deep_analysis"] = "Read deep_work_analysis.json generated from merged PR details, commit titles, and changed file paths. It is still an inference layer, not a product requirement system."
+    if show_feishu_surface(metrics):
+        methodology["feishu"] = "Read quarterly-feishu-dashboard summary.json. Feishu permissions and module failures remain owned by the Feishu skill."
     return {
         "kind": "quarterly-work-dashboard",
         "schema_version": SCHEMA_VERSION + 1,
@@ -1389,6 +1994,7 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
         "claims": claims,
         "evidence_chains": evidence_chains,
         "value_views": value_views,
+        "value_map": value_map,
         "confidence": confidence,
         "sources": {
             "github_summary": str(Path(args.github_summary).expanduser().resolve()),
@@ -1396,14 +2002,11 @@ def build_summary(args: argparse.Namespace) -> dict[str, Any]:
             "github_index": infer_index(args.github_summary, args.github_index),
             "feishu_index": infer_index(args.feishu_summary, args.feishu_index),
             "annotations": str(Path(args.annotations).expanduser().resolve()) if args.annotations else "",
+            "github_deep_analysis": deep_analysis_path,
         },
         "github": github,
         "feishu": feishu,
-        "methodology": {
-            "github": "Read quarterly-github-dashboard summary.json. GitHub metrics remain owned by the GitHub skill.",
-            "feishu": "Read quarterly-feishu-dashboard summary.json. Feishu permissions and module failures remain owned by the Feishu skill.",
-            "combined": "This dashboard is a presentation layer only; it does not query or mutate external systems.",
-        },
+        "methodology": methodology,
         "output_dir": str(output_dir),
     }
 
@@ -1456,7 +2059,489 @@ def executive_metric_strip(summary: dict[str, Any]) -> str:
     return f'<div class="signal-rail">{rows}</div>'
 
 
+def evidence_foundation_strip(summary: dict[str, Any]) -> str:
+    metrics = summary.get("metrics") or {}
+    deep = ((summary.get("value_views") or {}).get("deep_work_analysis") or {})
+    storylines = [
+        row
+        for row in (((summary.get("value_views") or {}).get("value_storylines") or []))
+        if isinstance(row, dict)
+    ]
+    if deep:
+        items = [
+            ("合并 PR", metrics.get("prs_merged"), "GitHub API 事实"),
+            ("深读工作项", metrics.get("deep_work_items"), "逐 PR 读取正文/commit/文件"),
+            ("工作流", metrics.get("deep_work_streams"), "按证据聚类"),
+            ("功能类 PR", metrics.get("feature_points"), "PR 分类"),
+            ("修复类 PR", metrics.get("bug_fixes"), "PR 分类"),
+            ("活跃仓库", metrics.get("active_repos"), "季度开发覆盖"),
+        ]
+    else:
+        items = [
+            ("合并 PR", metrics.get("prs_merged"), "GitHub API 事实"),
+            ("功能类 PR", metrics.get("feature_points"), "标题和 label 归类"),
+            ("修复类 PR", metrics.get("bug_fixes"), "标题和 label 归类"),
+            ("活跃仓库", metrics.get("active_repos"), "季度开发覆盖"),
+            ("Review 参与", metrics.get("prs_reviewed"), "参与过 review 的 PR 集合"),
+            ("价值主线", len(storylines), "可点开证据链"),
+        ]
+    rows = "".join(
+        f"""
+        <div class="foundation-item">
+          <strong>{esc(fmt_num(value))}</strong>
+          <span>{esc(label)}</span>
+          <em>{esc(source)}</em>
+        </div>
+        """
+        for label, value, source in items
+    )
+    return f'<div class="evidence-foundation">{rows}</div>'
+
+
+def deep_analysis_view(summary: dict[str, Any]) -> dict[str, Any]:
+    data = ((summary.get("value_views") or {}).get("deep_work_analysis") or {})
+    return data if isinstance(data, dict) else {}
+
+
+def deep_work_analysis_section(summary: dict[str, Any]) -> str:
+    deep = deep_analysis_view(summary)
+    if not deep:
+        return ""
+    totals = deep.get("totals") if isinstance(deep.get("totals"), dict) else {}
+    coverage = deep.get("coverage") if isinstance(deep.get("coverage"), dict) else {}
+    streams = [row for row in deep.get("work_streams") or [] if isinstance(row, dict)]
+    if not streams:
+        return ""
+    stats = [
+        ("深读工作项", totals.get("work_items"), "每个合并 PR 一条可审计工作项"),
+        ("交付工作流", totals.get("work_streams"), "由 PR / commit / 文件路径聚类"),
+        ("commit 线索", totals.get("commit_subjects"), "PR 内 commit 标题"),
+        ("文件路径", totals.get("changed_files"), "GitHub files API"),
+    ]
+    stat_html = "".join(
+        f"""
+        <div class="deep-stat">
+          <strong>{esc(fmt_num(value))}</strong>
+          <span>{esc(label)}</span>
+          <em>{esc(note)}</em>
+        </div>
+        """
+        for label, value, note in stats
+    )
+    max_prs = max(number(row.get("pr_count")) for row in streams) or 1
+    rows = []
+    for idx, stream in enumerate(streams[:10], start=1):
+        prs = [pr for pr in stream.get("evidence_prs") or [] if isinstance(pr, dict)]
+        files = [item for item in stream.get("evidence_files") or [] if isinstance(item, dict)]
+        pr_html = "".join(
+            f"""
+            <a href="{esc(pr.get('url') or '#')}">
+              <span>#{esc(pr.get('number') or '')}</span>
+              {esc(short_label(pr.get('title'), 58))}
+            </a>
+            """
+            for pr in prs[:3]
+        )
+        file_html = "".join(f"<span>{esc(short_label(item.get('filename'), 36))}</span>" for item in files[:4])
+        mix_parts = [
+            ("功能", stream.get("feature_prs")),
+            ("修复", stream.get("fix_prs")),
+            ("治理", number(stream.get("operations_prs")) + number(stream.get("architecture_prs")) + number(stream.get("experience_prs")) + number(stream.get("other_prs"))),
+        ]
+        mix = " / ".join(f"{label} {fmt_num(value)}" for label, value in mix_parts if number(value))
+        rows.append(
+            f"""
+            <article class="deep-stream-row">
+              <div class="deep-stream-index">{esc(str(idx).zfill(2))}</div>
+              <div class="deep-stream-main">
+                <div class="deep-stream-head">
+                  <div>
+                    <h3>{esc(stream.get('title') or '')}</h3>
+                    <small>{esc(stream.get('domain') or '')} · {esc(stream.get('value_category') or '')}</small>
+                  </div>
+                  {confidence_badge(str(stream.get('confidence') or 'low'))}
+                </div>
+                <p><b>{esc(stream.get('delivered') or '')}</b></p>
+                <p>{esc(stream.get('business_value') or '')}</p>
+                <div class="deep-boundary">{esc(stream.get('boundary') or '')}</div>
+              </div>
+              <div class="deep-stream-side">
+                <div class="deep-meter">
+                  <div><strong>{esc(fmt_num(stream.get('pr_count')))}</strong><span>PR</span></div>
+                  <div><strong>{esc(fmt_num(stream.get('commit_subjects')))}</strong><span>commit</span></div>
+                  <div><strong>{esc(fmt_num(stream.get('changed_files')))}</strong><span>文件</span></div>
+                </div>
+                <div class="deep-bar"><span style="width:{bar_width(stream.get('pr_count'), max_prs)}"></span></div>
+                <div class="deep-mix">{esc(mix or '归类为其他交付')}</div>
+                {f'<div class="deep-prs">{pr_html}</div>' if pr_html else ''}
+                {f'<div class="deep-files">{file_html}</div>' if file_html else ''}
+              </div>
+            </article>
+            """
+        )
+    category_counter: Counter[str] = Counter(str(row.get("value_category") or "未归类") for row in streams)
+    category_html = "".join(
+        f"<span><b>{esc(label)}</b><em>{esc(fmt_num(count))}</em></span>"
+        for label, count in category_counter.most_common(6)
+    )
+    coverage_line = (
+        f"PR detail {fmt_num(coverage.get('details_succeeded'))}/{fmt_num(coverage.get('details_attempted'))}"
+        f" · files {fmt_num(coverage.get('files_succeeded'))}/{fmt_num(coverage.get('details_attempted'))}"
+        f" · commits {fmt_num(coverage.get('commits_succeeded'))}/{fmt_num(coverage.get('details_attempted'))}"
+    )
+    return f"""
+    <section id="deep-work-section">
+      <div class="section-head">
+        <h2>实际交付拆解</h2>
+        <div class="deep-coverage">{esc(coverage_line)}</div>
+      </div>
+      <div class="deep-stat-rail">{stat_html}</div>
+      <div class="deep-category-strip">{category_html}</div>
+      <div class="deep-stream-list">{''.join(rows)}</div>
+    </section>
+    """
+
+
+def value_storyline_section(summary: dict[str, Any]) -> str:
+    storylines = [
+        row
+        for row in (((summary.get("value_views") or {}).get("value_storylines") or []))
+        if isinstance(row, dict)
+    ]
+    if not storylines:
+        return '<p class="empty">暂无可追溯价值主线。</p>'
+    cards = []
+    for idx, row in enumerate(storylines, start=1):
+        metrics = row.get("metrics") if isinstance(row.get("metrics"), dict) else {}
+        projects = row.get("projects") if isinstance(row.get("projects"), list) else []
+        prs = row.get("representative_prs") if isinstance(row.get("representative_prs"), list) else []
+        project_html = "".join(f"<span>{esc(short_label(project, 18))}</span>" for project in projects[:5])
+        pr_html = "".join(
+            f"""
+            <li>
+              <a href="{esc(pr.get('url') or '#')}">#{esc(pr.get('number') or '')} {esc(short_label(pr.get('title'), 54))}</a>
+              <small>{esc(pr.get('repo') or '')}{esc(' · ' + str(pr.get('work_type_label')) if pr.get('work_type_label') else '')}</small>
+            </li>
+            """
+            for pr in prs[:4]
+            if isinstance(pr, dict)
+        )
+        metric_html = "".join(
+            f"<div><span>{esc(label)}</span><strong>{esc(fmt_num(value))}</strong></div>"
+            for label, value in (
+                ("PR", metrics.get("merged_prs")),
+                ("代表 PR", metrics.get("representative_prs")),
+                ("项目", metrics.get("projects")),
+                ("Review", metrics.get("reviewed_prs")),
+            )
+        )
+        cards.append(
+            f"""
+            <article class="value-storyline">
+              <div class="storyline-index">{esc(str(idx).zfill(2))}</div>
+              <div class="storyline-main">
+                <div class="storyline-head">
+                  <div>
+                    <h3>{esc(row.get('title') or row.get('theme') or '')}</h3>
+                    <small>{esc(row.get('theme') or '')}</small>
+                  </div>
+                  {confidence_badge(str(row.get('confidence') or 'low'))}
+                </div>
+                <div class="storyline-path">
+                  <span>PR / 代码证据</span><i></i><span>功能类 / 修复类</span><i></i><span>价值</span>
+                </div>
+                <p><b>{esc(row.get('workflow') or '')}</b></p>
+                <p>{esc(row.get('outcome') or '')}{esc(row.get('value') or '')}</p>
+                {f'<div class="storyline-projects">{project_html}</div>' if project_html else ''}
+                <div class="storyline-boundary">{esc(row.get('boundary') or '')}</div>
+              </div>
+              <div class="storyline-side">
+                <div class="storyline-metrics">{metric_html}</div>
+                {f'<ul class="storyline-prs">{pr_html}</ul>' if pr_html else '<p class="empty compact">暂无代表 PR，当前只保留项目级证据。</p>'}
+              </div>
+            </article>
+            """
+        )
+    return '<div class="value-storyline-list">' + "".join(cards) + "</div>"
+
+
+def value_storyline_bars(summary: dict[str, Any]) -> str:
+    storylines = [
+        row
+        for row in (((summary.get("value_views") or {}).get("value_storylines") or []))
+        if isinstance(row, dict)
+    ]
+    if not storylines:
+        return '<p class="empty">暂无主线结构。</p>'
+    max_prs = max(number((row.get("metrics") or {}).get("merged_prs")) for row in storylines) or 1
+    rows = []
+    for row in storylines:
+        metrics = row.get("metrics") if isinstance(row.get("metrics"), dict) else {}
+        merged_prs = number(metrics.get("merged_prs"))
+        rows.append(
+            f"""
+            <div class="story-bar-row">
+              <div class="story-bar-name">
+                <strong>{esc(short_label(row.get('title') or row.get('theme'), 20))}</strong>
+                <small>{esc(fmt_num(metrics.get('representative_prs')))} 个代表 PR · {esc(fmt_num(metrics.get('projects')))} 个项目</small>
+              </div>
+              <div class="story-bar-track"><span style="width:{bar_width(merged_prs, max_prs)}"></span></div>
+              <b>{esc(fmt_num(merged_prs))}</b>
+            </div>
+            """
+        )
+    return '<div class="story-bars">' + "".join(rows) + "</div>"
+
+
+def value_project_mapping_table(summary: dict[str, Any]) -> str:
+    projects = [
+        row
+        for row in (((summary.get("value_views") or {}).get("project_value_attribution") or []))
+        if isinstance(row, dict)
+    ]
+    profiles = [
+        row
+        for row in (((summary.get("value_views") or {}).get("project_profiles") or []))
+        if isinstance(row, dict)
+    ]
+    rows = []
+    eligible_projects = [
+        row
+        for row in projects
+        if row.get("representative_prs")
+        and (
+            number((row.get("metrics") or {}).get("feature_points"))
+            or number((row.get("metrics") or {}).get("bug_fixes"))
+        )
+    ]
+    fallback_rows = [row for row in profiles if row.get("representative_prs")] or profiles
+    for row in (eligible_projects or fallback_rows)[:6]:
+        metrics = row.get("metrics") if isinstance(row.get("metrics"), dict) else {}
+        prs = row.get("representative_prs") if isinstance(row.get("representative_prs"), list) else []
+        first_pr = next((pr for pr in prs if isinstance(pr, dict)), {})
+        pr_link = ""
+        if first_pr:
+            pr_link = f'<a href="{esc(first_pr.get("url") or "#")}">#{esc(first_pr.get("number") or "")} {esc(short_label(first_pr.get("title"), 38))}</a>'
+        value_label = row.get("primary_value") or ""
+        rows.append(
+            f"""
+            <tr>
+              <td><a href="{esc(row.get('url') or '#')}">{esc(row.get('name') or row.get('repo') or '')}</a><small>{esc(row.get('theme') or '')}</small></td>
+              <td>{pr_link or esc('项目画像 / commit 证据')}</td>
+              <td>{esc(fmt_num(metrics.get('feature_points')))} 功能 / {esc(fmt_num(metrics.get('bug_fixes')))} 修复</td>
+              <td>{esc(value_label)}</td>
+            </tr>
+            """
+        )
+    if not rows:
+        return '<p class="empty">暂无项目映射。</p>'
+    return f"""
+      <div class="mapping-table">
+        <table>
+          <thead><tr><th>项目</th><th>代码 / PR 证据</th><th>功能类 / 修复类 PR</th><th>价值主线</th></tr></thead>
+          <tbody>{''.join(rows)}</tbody>
+        </table>
+      </div>
+    """
+
+
+def value_claim_hero(summary: dict[str, Any]) -> str:
+    value_map = summary.get("value_map") or {}
+    claims = [claim for claim in (value_map.get("value_claims") or []) if isinstance(claim, dict)]
+    if not claims:
+        return ""
+    featured = claims[:3]
+
+    def claim_article(claim: dict[str, Any], primary: bool = False) -> str:
+        evidence_count = len(claim.get("evidence_refs") or [])
+        outcome_count = len(claim.get("outcomes") or [])
+        limitations = [str(item) for item in (claim.get("limitations") or []) if item]
+        strength = {"high": "强证据", "medium": "中证据", "low": "弱证据", "boundary": "边界"}.get(str(claim.get("evidence_strength") or ""), str(claim.get("evidence_strength") or "中证据"))
+        cls = "value-claim value-claim-primary" if primary else "value-claim value-claim-secondary"
+        return f"""
+          <article class="{esc(cls)}">
+            <div class="value-claim-top">
+              <span>{esc(claim.get('category') or claim.get('title') or '价值')}</span>
+              {confidence_badge(str(claim.get('confidence') or 'low'))}
+            </div>
+            <h2>{esc(claim.get('title') or '')}</h2>
+            <p>{esc(claim.get('text') or '')}</p>
+            <div class="claim-proof">
+              <span>{esc(fmt_num(outcome_count))} 成果</span>
+              <span>{esc(fmt_num(evidence_count))} 证据</span>
+              <span>{esc(strength)}</span>
+            </div>
+            {f'<small>{esc(limitations[0])}</small>' if limitations and primary else ''}
+          </article>
+        """
+
+    primary_html = claim_article(featured[0], True)
+    secondary_html = "".join(claim_article(claim) for claim in featured[1:])
+    counts = [
+        ("价值结论", len(claims)),
+        ("成果节点", len(value_map.get("outcome_nodes") or [])),
+        ("能力节点", len(value_map.get("capability_nodes") or [])),
+        ("证据边", len(value_map.get("evidence_edges") or [])),
+    ]
+    count_html = "".join(
+        f'<div><span>{esc(label)}</span><strong>{esc(fmt_num(value))}</strong></div>'
+        for label, value in counts
+    )
+    return f"""
+      <div class="value-hero-grid">
+        <div class="value-claims">
+          {primary_html}
+          <div class="value-claim-stack">{secondary_html}</div>
+        </div>
+        <div class="value-map-stats">{count_html}</div>
+      </div>
+    """
+
+
+def value_category_board(summary: dict[str, Any]) -> str:
+    categories = [row for row in (((summary.get("value_map") or {}).get("value_categories") or [])) if isinstance(row, dict)]
+    if not categories:
+        return ""
+    max_score = max(float(number(row.get("score"))) for row in categories) or 1.0
+    rows = []
+    for row in categories[:6]:
+        samples = "、".join(str(item) for item in (row.get("sample_projects") or [])[:3] if item)
+        rows.append(
+            f"""
+            <div class="value-cat-row">
+              <div>
+                <strong>{esc(row.get('label') or '')}</strong>
+                <span>{esc(fmt_num(row.get('outcomes')))} 成果 · {esc(fmt_num(row.get('capabilities')))} 能力{esc(' · ' + samples if samples else '')}</span>
+              </div>
+              <div class="value-cat-track"><b style="width:{bar_width(row.get('score'), max_score)}"></b></div>
+              <em>{esc(fmt_num(row.get('score')))}</em>
+            </div>
+            """
+        )
+    return '<div class="value-category-board">' + "".join(rows) + "</div>"
+
+
+def value_chain_counts(summary: dict[str, Any]) -> str:
+    value_map = summary.get("value_map") or {}
+    coverage = value_map.get("coverage") or {}
+    feishu = coverage.get("feishu") if isinstance(coverage.get("feishu"), dict) else {}
+    manual = coverage.get("manual_annotations") if isinstance(coverage.get("manual_annotations"), dict) else {}
+    steps = [
+        ("代码证据", len(value_map.get("evidence_items") or []), "repo / PR"),
+        ("能力节点", len(value_map.get("capability_nodes") or []), "feature / fix / platform"),
+        ("成果节点", len(value_map.get("outcome_nodes") or []), "project outcomes"),
+        ("价值结论", len(value_map.get("value_claims") or []), "claims"),
+    ]
+    if feishu:
+        steps.append(("协作覆盖", feishu.get("accessible_modules") or 0, f"{fmt_num(len(feishu.get('missing_scopes') or []))} scope 缺口"))
+    steps.append(("人工校准", 1 if manual.get("has_annotations") else 0, "annotations"))
+    max_value = max((number(value) for _, value, _ in steps), default=1) or 1
+    html_rows = []
+    for idx, (label, value, unit) in enumerate(steps, start=1):
+        html_rows.append(
+            f"""
+            <div class="value-chain-step">
+              <span>{esc(str(idx).zfill(2))}</span>
+              <strong>{esc(label)}</strong>
+              <b>{esc(fmt_num(value))}</b>
+              <em>{esc(unit)}</em>
+              <i><u style="width:{bar_width(value, float(max_value))}"></u></i>
+            </div>
+            """
+        )
+    return '<div class="value-chain-grid">' + "".join(html_rows) + "</div>"
+
+
+def value_overview_chart_grid(summary: dict[str, Any]) -> str:
+    value_map = summary.get("value_map") or {}
+    categories = [row for row in (value_map.get("value_categories") or []) if isinstance(row, dict)]
+    category_items = [
+        (str(row.get("label") or ""), row.get("score"), CHART_COLORS[idx % len(CHART_COLORS)])
+        for idx, row in enumerate(categories[:6])
+    ]
+    kind_labels = {
+        "feature": "功能能力",
+        "fix": "质量修复",
+        "platform": "平台治理",
+        "knowledge": "知识沉淀",
+        "delivery": "交付链路",
+        "capability": "综合能力",
+    }
+    kind_totals: dict[str, int] = {}
+    for node in value_map.get("capability_nodes") or []:
+        if isinstance(node, dict):
+            kind = str(node.get("type") or "capability")
+            kind_totals[kind] = kind_totals.get(kind, 0) + 1
+    kind_items = [
+        (kind_labels.get(kind, kind), value, CHART_COLORS[(idx + 2) % len(CHART_COLORS)])
+        for idx, (kind, value) in enumerate(sorted(kind_totals.items(), key=lambda item: item[1], reverse=True))
+    ]
+    confidence_totals: dict[str, int] = {}
+    for claim in value_map.get("value_claims") or []:
+        if isinstance(claim, dict):
+            level = str(claim.get("confidence") or "low")
+            confidence_totals[level] = confidence_totals.get(level, 0) + 1
+    confidence_items = [
+        (confidence_label(level), value, {"manual": "#6750b5", "high": "#157b50", "medium": "#ae6817", "low": "#b83a45"}.get(level, "#647084"))
+        for level, value in confidence_totals.items()
+    ]
+    return f"""
+      <div class="viz-grid overview-viz">
+        {donut_chart('价值类别分布', category_items)}
+        {stacked_bar_card('能力类型结构', kind_items)}
+        {stacked_bar_card('结论可信度', confidence_items)}
+      </div>
+    """
+
+
 def summary_evidence_section(summary: dict[str, Any]) -> str:
+    value_map = summary.get("value_map") or {}
+    value_claims = [claim for claim in (value_map.get("value_claims") or []) if isinstance(claim, dict)]
+    if value_claims:
+        evidence_by_id = {
+            str(item.get("id")): item
+            for item in (value_map.get("evidence_items") or [])
+            if isinstance(item, dict) and item.get("id")
+        }
+        claim_rows = []
+        for claim in value_claims[:5]:
+            limitations = [str(item) for item in (claim.get("limitations") or []) if item]
+            claim_rows.append(
+                f"""
+                <li class="claim-line">
+                  <div>
+                    <strong>{esc(claim.get('title') or claim.get('category') or '')}</strong>
+                    {confidence_badge(str(claim.get('confidence') or 'low'))}
+                  </div>
+                  <p>{esc(claim.get('text') or '')}</p>
+                  {f'<small>{esc(limitations[0])}</small>' if limitations else ''}
+                </li>
+                """
+            )
+        outcome_rows = []
+        for outcome in [row for row in (value_map.get("outcome_nodes") or []) if isinstance(row, dict)][:6]:
+            refs = [evidence_by_id.get(str(ref)) for ref in (outcome.get("evidence_refs") or [])]
+            refs = [ref for ref in refs if isinstance(ref, dict)]
+            outcome_rows.append(
+                f"""
+                <article class="value-evidence-row">
+                  <div>
+                    <strong>{esc(outcome.get('title') or '')}</strong>
+                    <span>{esc(outcome.get('value_category') or '')}</span>
+                  </div>
+                  <p>{esc(outcome.get('summary') or '')}</p>
+                  {evidence_chain_items(refs, 2)}
+                </article>
+                """
+            )
+    return f"""
+      <div class="summary-evidence-grid value-summary-grid">
+        <div class="insight-panel">
+          <ol class="insights value-claim-list">{''.join(claim_rows)}</ol>
+        </div>
+            <div class="evidence-rail">{''.join(outcome_rows) if outcome_rows else '<p class="empty">暂无成果证据。</p>'}</div>
+          </div>
+        """
     chains = [chain for chain in (summary.get("evidence_chains") or []) if isinstance(chain, dict)]
     chain_type = {
         "delivery-volume": "事实",
@@ -1663,7 +2748,9 @@ def project_quadrant(summary: dict[str, Any]) -> str:
         for row in rows[:6]:
             name = row.get("name") or row.get("repo") or ""
             url = row.get("url") or ""
-            chip = f'<a href="{esc(url)}">{esc(short_label(name, 18))}<span>{esc(fmt_num(row.get("score")))}</span></a>' if url else f'<span>{esc(short_label(name, 18))}<span>{esc(fmt_num(row.get("score")))}</span></span>'
+            chip_metric = number(row.get("feature_points")) + number(row.get("bug_fixes"))
+            chip_text = f"{fmt_num(chip_metric)} 项" if chip_metric else f"PR {fmt_num(row.get('merged_prs'))}"
+            chip = f'<a href="{esc(url)}">{esc(short_label(name, 18))}<span>{esc(chip_text)}</span></a>' if url else f'<span>{esc(short_label(name, 18))}<span>{esc(chip_text)}</span></span>'
             chips.append(chip)
         cells.append(
             f"""
@@ -1677,14 +2764,33 @@ def project_quadrant(summary: dict[str, Any]) -> str:
 
 
 def project_value_attribution_board(summary: dict[str, Any]) -> str:
-    categories = [row for row in (((summary.get("value_views") or {}).get("project_value_categories") or [])) if isinstance(row, dict)]
-    projects = [row for row in (((summary.get("value_views") or {}).get("project_value_attribution") or [])) if isinstance(row, dict)]
+    categories = [
+        row
+        for row in (((summary.get("value_views") or {}).get("project_value_categories") or []))
+        if isinstance(row, dict)
+        and (number(row.get("feature_points")) or number(row.get("bug_fixes")) or number(row.get("merged_prs")))
+    ]
+    projects = [
+        row
+        for row in (((summary.get("value_views") or {}).get("project_value_attribution") or []))
+        if isinstance(row, dict)
+        and (
+            number((row.get("metrics") or {}).get("feature_points"))
+            or number((row.get("metrics") or {}).get("bug_fixes"))
+            or number((row.get("metrics") or {}).get("merged_prs"))
+        )
+    ]
     if not categories:
         return '<p class="empty">暂无项目价值归因。</p>'
-    max_score = max(float(number(row.get("score"))) for row in categories) or 1.0
+    max_total = max(
+        float(number(row.get("feature_points")) + number(row.get("bug_fixes")) + number(row.get("merged_prs")))
+        for row in categories
+    ) or 1.0
     category_html = []
     for row in categories[:6]:
         samples = "、".join(str(item) for item in (row.get("sample_projects") or [])[:3] if item)
+        concrete_total = number(row.get("feature_points")) + number(row.get("bug_fixes")) + number(row.get("merged_prs"))
+        concrete_text = f"{fmt_num(row.get('feature_points'))} 功能 / {fmt_num(row.get('bug_fixes'))} 修复 / {fmt_num(row.get('merged_prs'))} PR"
         category_html.append(
             f"""
             <div class="value-category">
@@ -1692,8 +2798,8 @@ def project_value_attribution_board(summary: dict[str, Any]) -> str:
                 <strong>{esc(row.get('label') or '')}</strong>
                 <small>{esc(fmt_num(row.get('projects')))} 个项目{esc(' · ' + samples if samples else '')}</small>
               </div>
-              <div class="value-category-track"><span style="width:{bar_width(row.get('score'), max_score)}"></span></div>
-              <b>{esc(fmt_num(row.get('score')))}</b>
+              <div class="value-category-track"><span style="width:{bar_width(concrete_total, max_total)}"></span></div>
+              <b>{esc(concrete_text)}</b>
             </div>
             """
         )
@@ -1954,8 +3060,8 @@ def overview_chart_grid(summary: dict[str, Any]) -> str:
         ("相关 issue", metrics.get("issues_closed_related"), "#ae6817"),
     ]
     outcome_items = [
-        ("功能点", metrics.get("feature_points"), "#1f6feb"),
-        ("Bug 修复", metrics.get("bug_fixes"), "#b83a45"),
+        ("功能类 PR", metrics.get("feature_points"), "#1f6feb"),
+        ("修复类 PR", metrics.get("bug_fixes"), "#b83a45"),
         ("Bug-like issue", metrics.get("bug_like_closed_issues"), "#ae6817"),
     ]
     return f"""
@@ -2289,8 +3395,8 @@ def outcome_summary_cards(github: dict[str, Any]) -> str:
     outcomes = github.get("engineering_outcomes") or {}
     totals = outcomes.get("totals") or {}
     items = [
-        (totals.get("feature_points"), "功能点"),
-        (totals.get("bug_fixes"), "Bug 修复"),
+        (totals.get("feature_points"), "功能类 PR"),
+        (totals.get("bug_fixes"), "修复类 PR"),
         (totals.get("bug_like_closed_issues"), "Bug-like issue"),
         (totals.get("changed_files"), "变更文件"),
     ]
@@ -2319,7 +3425,7 @@ def outcome_bar_rows(github: dict[str, Any]) -> str:
         )
         items.append((str(row.get("repo") or ""), value, detail))
     if not items:
-        return '<p class="empty">暂无功能点 / bug 修复拆解。可能是旧 summary 或跳过了 outcome 采集。</p>'
+        return '<p class="empty">暂无功能类 / 修复类 PR 拆解。可能是旧 summary 或跳过了 outcome 采集。</p>'
     max_value = max(value for _, value, _ in items) or 1
     return "".join(
         f"""
@@ -2425,8 +3531,8 @@ def portfolio_cards(projects: list[dict[str, Any]], empty: str, limit: int = 6) 
             )
         evidence_metrics = [
             ("状态", project_status_label(project)),
-            ("功能点", fmt_num(project.get("feature_points"))),
-            ("Bug 修复", fmt_num(project.get("bug_fixes"))),
+            ("功能类 PR", fmt_num(project.get("feature_points"))),
+            ("修复类 PR", fmt_num(project.get("bug_fixes"))),
             ("合并 PR", fmt_num(project.get("merged_prs"))),
             ("Commit", fmt_num(project.get("commits"))),
             ("变更文件", fmt_num(project.get("changed_files"))),
@@ -2588,17 +3694,19 @@ def feishu_doc_tabs(feishu: dict[str, Any]) -> str:
 def methodology(summary: dict[str, Any]) -> str:
     github = summary["github"]
     feishu = summary["feishu"]
+    metrics = summary["metrics"]
     github_notes = github.get("notes") or []
     feishu_notes = feishu.get("notes") or []
     missing = summary["modules"]["feishu"].get("missing_scopes") or []
     items = [
-        "总面板只读取两个独立 summary.json，不直接查询或写入 GitHub / 飞书。",
+        "总面板只读取独立 summary.json，不直接查询或写入 GitHub。",
         "GitHub 的相关关闭 issue 是 involves 用户且在区间内关闭的 issue，不能直接等同亲自解决。",
         "GitHub 的 review 参与 PR 是 PR 集合数，不是单次 review 次数。",
     ]
     items.extend(str(note) for note in github_notes[:2])
-    items.extend(str(note) for note in feishu_notes[:2])
-    if missing:
+    if show_feishu_surface(metrics):
+        items.extend(str(note) for note in feishu_notes[:2])
+    if show_feishu_surface(metrics) and missing:
         items.append(f"飞书仍缺少 scope：{', '.join(missing)}。")
     return "".join(f"<li>{esc(item)}</li>" for item in items)
 
@@ -2612,29 +3720,35 @@ def render_html(summary: dict[str, Any]) -> str:
     out = Path(summary["output_dir"])
     github_index = rel_link(sources.get("github_index") or "", out)
     feishu_index = rel_link(sources.get("feishu_index") or "", out)
-    feishu_metrics = feishu.get("metrics") or {}
+    render_feishu = show_feishu_surface(metrics)
     title = f"{summary['period_label']} 季度工作总面板"
-    source_items = [
-        ("GitHub", modules["github"]["status"], github_index),
-        ("飞书", modules["feishu"]["status"], feishu_index),
-    ]
+    source_items = [("GitHub", modules["github"]["status"], github_index)]
+    if render_feishu:
+        source_items.append(("飞书", modules["feishu"]["status"], feishu_index))
     source_html = "".join(
         f'<a class="source-pill" href="{esc(link)}"><span>{esc(label)}</span>{status_badge(status)}</a>' if link else f'<span class="source-pill"><span>{esc(label)}</span>{status_badge(status)}</span>'
         for label, status, link in source_items
     )
-    mode_html = """
-      <div class="mode-row" aria-label="展示模式">
-        <button class="mode-button is-active" type="button" data-view-mode="normal">全量</button>
-        <button class="mode-button" type="button" data-view-mode="presentation">展示</button>
+    structure_title = "跨来源结构" if render_feishu else "结构与变化"
+    deep_section = deep_work_analysis_section(summary)
+    value_section = deep_section or f"""
+    <section id="value-section">
+      <div class="section-head">
+        <h2>价值主线证据链</h2>
       </div>
+      {value_storyline_section(summary)}
+      <div class="chart-grid" style="margin-top:14px">
+        <div class="panel-lite">
+          <h3>主线 PR 结构</h3>
+          {value_storyline_bars(summary)}
+        </div>
+        <div class="panel-lite">
+          <h3>项目映射表</h3>
+          {value_project_mapping_table(summary)}
+        </div>
+      </div>
+    </section>
     """
-    merged_prs = ((github.get("prs") or {}).get("merged") or [])
-    created_issues = ((github.get("issues") or {}).get("created") or [])
-    closed_issues = ((github.get("issues") or {}).get("closed_related") or [])
-    commits = github.get("commits") or []
-    feishu_modules = feishu.get("modules") or {}
-    message_status_text = (feishu_modules.get("messages") or {}).get("hint") or (feishu_modules.get("messages") or {}).get("error") or ""
-    calendar_status_text = (feishu_modules.get("calendar") or {}).get("hint") or (feishu_modules.get("calendar") or {}).get("error") or ""
     return f"""<!doctype html>
 <html lang="zh-CN">
 <head>
@@ -2644,23 +3758,25 @@ def render_html(summary: dict[str, Any]) -> str:
   <style>
     :root {{
       color-scheme: light;
-      --ink: #172033;
-      --muted: #657084;
-      --quiet: #8b95a5;
-      --canvas: #eef1f4;
-      --panel: #fffdf8;
+      --ink: #111827;
+      --muted: #4f5d6f;
+      --quiet: #8791a1;
+      --canvas: #f4f6f8;
+      --panel: #fbfcfd;
       --paper: #ffffff;
-      --paper-soft: #f7f4ed;
-      --line: #dce2ea;
-      --line-soft: #e9edf3;
-      --github: #1f6feb;
-      --feishu: #0f8f83;
-      --green: #157b50;
-      --amber: #ae6817;
+      --paper-soft: #f6f8fa;
+      --line: #dfe5ec;
+      --line-soft: #edf1f5;
+      --github: #2f63b7;
+      --feishu: #16867a;
+      --green: #167a59;
+      --amber: #a66517;
       --red: #b83a45;
-      --violet: #6750b5;
-      --shadow: 0 18px 48px rgba(31, 41, 55, 0.10);
-      --shadow-sm: 0 1px 3px rgba(31, 41, 55, 0.10);
+      --violet: #665aa7;
+      --claim: #202a38;
+      --claim-muted: #e5edf6;
+      --shadow: none;
+      --shadow-sm: none;
       --radius: 8px;
       --gap-section: 16px;
       --gap-card: 10px;
@@ -2673,46 +3789,134 @@ def render_html(summary: dict[str, Any]) -> str:
       margin: 0;
       font-family: -apple-system, "SF Pro Text", "PingFang SC", "Noto Sans SC", sans-serif;
       color: var(--ink);
-      background:
-        linear-gradient(90deg, rgba(23,32,51,.04) 1px, transparent 1px),
-        linear-gradient(180deg, #fbf8f0 0, var(--canvas) 430px, #e7edf2 100%);
-      background-size: 44px 44px, auto;
-      line-height: 1.72;
+      background: var(--canvas);
+      line-height: 1.65;
       font-variant-numeric: tabular-nums;
     }}
     a {{ color: #174ea6; text-decoration: none; }}
     a:hover {{ text-decoration: underline; }}
     .skip-link {{ position: absolute; left: -999px; top: 12px; padding: 8px 10px; background: var(--ink); color: white; z-index: 10; }}
     .skip-link:focus {{ left: 12px; }}
-    .page {{ max-width: 1320px; margin: 0 auto; padding: 22px 20px 58px; }}
+    .page {{ max-width: 1280px; margin: 0 auto; padding: 28px 22px 64px; }}
     .masthead {{
-      background: var(--panel);
+      background: var(--paper);
       border-radius: var(--radius);
-      box-shadow: 0 14px 38px rgba(31, 41, 55, 0.09);
-      border: 1px solid rgba(23,32,51,.10);
-      padding: 24px;
+      border: 1px solid var(--line);
+      padding: 24px 26px;
     }}
     .masthead-grid {{ display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px; align-items: start; }}
-    h1 {{ margin: 0; font-size: clamp(32px, 4vw, 56px); line-height: 1.02; letter-spacing: 0; text-wrap: balance; }}
-    h2 {{ margin: 0; font-size: 22px; line-height: 1.2; letter-spacing: 0; text-wrap: balance; }}
+    h1 {{ margin: 0; font-size: 38px; line-height: 1.08; letter-spacing: 0; text-wrap: balance; }}
+    h2 {{ margin: 0; font-size: 21px; line-height: 1.2; letter-spacing: 0; text-wrap: balance; }}
     h3 {{ margin: 0 0 12px; font-size: 15px; line-height: 1.35; letter-spacing: 0; }}
     .meta {{ color: var(--muted); font-size: 14px; margin-top: 9px; max-width: 780px; }}
     .source-tools {{ display: grid; justify-items: end; gap: 8px; min-width: 0; }}
     .source-row {{ display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }}
     .source-pill {{ min-height: 38px; display: inline-flex; align-items: center; gap: 9px; padding: 7px 10px; border-radius: 999px; background: var(--paper-soft); box-shadow: inset 0 0 0 1px var(--line); color: var(--ink); white-space: nowrap; }}
-    .mode-row {{ display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: #e8edf3; box-shadow: inset 0 0 0 1px var(--line); }}
-    .mode-button {{ min-width: 50px; min-height: 32px; padding: 5px 10px; border: 0; border-radius: 999px; color: #526071; background: transparent; font: inherit; font-size: 12px; font-weight: 820; cursor: pointer; transition-property: transform, background-color, color, opacity; transition-duration: 140ms; transition-timing-function: cubic-bezier(.16,1,.3,1); }}
-    .mode-button.is-active {{ color: var(--ink); background: var(--paper); box-shadow: 0 1px 3px rgba(31,41,55,.12); }}
-    .mode-button:active {{ transform: scale(.96); }}
-    .mode-button:focus-visible, .tab-button:focus-visible, .project-detail summary:focus-visible {{ outline: 2px solid rgba(31,111,235,.52); outline-offset: 2px; }}
+    .source-pill:focus-visible, a:focus-visible {{ outline: 2px solid rgba(31,111,235,.52); outline-offset: 2px; }}
+    .evidence-foundation {{ display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); margin-top: 18px; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--line); gap: 1px; }}
+    .foundation-item {{ min-height: 82px; display: grid; gap: 5px; align-content: center; padding: 11px 12px; background: #fbfcfd; }}
+    .foundation-item strong {{ font-size: 28px; line-height: 1; }}
+    .foundation-item span {{ color: var(--ink); font-size: 13px; line-height: 1.15; font-weight: 780; }}
+    .foundation-item em {{ color: var(--muted); font-style: normal; font-size: 11px; line-height: 1.3; }}
+    .deep-coverage {{ color: var(--muted); font-size: 12px; line-height: 1.35; }}
+    .deep-stat-rail {{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--line); }}
+    .deep-stat {{ min-height: 82px; display: grid; gap: 5px; align-content: center; padding: 12px; background: var(--paper); }}
+    .deep-stat strong {{ font-size: 30px; line-height: 1; }}
+    .deep-stat span {{ color: var(--ink); font-size: 13px; line-height: 1.15; font-weight: 820; }}
+    .deep-stat em {{ color: var(--muted); font-style: normal; font-size: 11px; line-height: 1.35; }}
+    .deep-category-strip {{ display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }}
+    .deep-category-strip span {{ display: inline-flex; align-items: center; gap: 7px; min-height: 30px; padding: 5px 9px; border-radius: 999px; background: #eef4fb; color: #344054; border: 1px solid var(--line); }}
+    .deep-category-strip b {{ font-size: 12px; line-height: 1.2; }}
+    .deep-category-strip em {{ color: #174ea6; font-style: normal; font-size: 12px; font-weight: 840; }}
+    .deep-stream-list {{ display: grid; gap: 1px; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--line); }}
+    .deep-stream-row {{ display: grid; grid-template-columns: 42px minmax(0, 1fr) minmax(340px, .72fr); gap: 14px; padding: 14px; background: var(--paper); }}
+    .deep-stream-row:nth-child(even) {{ background: #fbfcfd; }}
+    .deep-stream-index {{ color: var(--quiet); font-size: 12px; font-weight: 860; letter-spacing: .04em; }}
+    .deep-stream-main, .deep-stream-side {{ min-width: 0; display: grid; gap: 9px; align-content: start; }}
+    .deep-stream-head {{ display: flex; justify-content: space-between; align-items: start; gap: 10px; }}
+    .deep-stream-head h3 {{ margin: 0; font-size: 18px; line-height: 1.25; }}
+    .deep-stream-head small {{ display: block; margin-top: 4px; color: var(--muted); font-size: 12px; line-height: 1.35; }}
+    .deep-stream-main p {{ margin: 0; color: #344054; font-size: 13px; line-height: 1.55; }}
+    .deep-stream-main p b {{ color: var(--ink); font-weight: 760; }}
+    .deep-boundary {{ color: var(--muted); font-size: 11px; line-height: 1.42; }}
+    .deep-meter {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }}
+    .deep-meter div {{ min-height: 52px; padding: 8px; border-radius: 7px; background: var(--paper-soft); border: 1px solid var(--line); }}
+    .deep-meter strong {{ display: block; color: var(--ink); font-size: 18px; line-height: 1; }}
+    .deep-meter span {{ display: block; margin-top: 7px; color: var(--muted); font-size: 11px; line-height: 1.1; }}
+    .deep-bar {{ height: 8px; overflow: hidden; border-radius: 999px; background: #e9edf2; }}
+    .deep-bar span {{ display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--github), var(--green)); }}
+    .deep-mix {{ color: #344054; font-size: 12px; line-height: 1.35; font-weight: 760; }}
+    .deep-prs {{ display: grid; gap: 5px; }}
+    .deep-prs a {{ display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 7px; align-items: baseline; padding: 7px 8px; border-radius: 7px; background: var(--paper-soft); border: 1px solid var(--line-soft); color: #174ea6; font-size: 12px; line-height: 1.35; font-weight: 760; overflow-wrap: anywhere; }}
+    .deep-prs a span {{ color: var(--muted); font-size: 11px; font-weight: 820; }}
+    .deep-files {{ display: flex; flex-wrap: wrap; gap: 5px; }}
+    .deep-files span {{ padding: 3px 6px; border-radius: 999px; background: #eef2f7; color: #526071; font-size: 11px; line-height: 1.25; }}
+    .value-storyline-list {{ display: grid; gap: 1px; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--line); }}
+    .value-storyline {{ display: grid; grid-template-columns: 42px minmax(0, 1fr) minmax(360px, .72fr); gap: 14px; padding: 14px; background: var(--paper); }}
+    .value-storyline:nth-child(even) {{ background: #fbfcfd; }}
+    .storyline-index {{ color: var(--quiet); font-size: 12px; font-weight: 860; letter-spacing: .04em; }}
+    .storyline-main {{ min-width: 0; display: grid; gap: 9px; align-content: start; }}
+    .storyline-head {{ display: flex; justify-content: space-between; align-items: start; gap: 10px; }}
+    .storyline-head h3 {{ margin: 0; color: var(--ink); font-size: 18px; line-height: 1.25; }}
+    .storyline-head small {{ display: block; margin-top: 4px; color: var(--muted); font-size: 12px; line-height: 1.3; }}
+    .storyline-path {{ display: grid; grid-template-columns: auto 1fr auto 1fr auto; gap: 8px; align-items: center; max-width: 620px; }}
+    .storyline-path span {{ min-height: 24px; display: inline-flex; align-items: center; justify-content: center; padding: 3px 8px; border-radius: 999px; color: #344054; background: var(--paper-soft); box-shadow: inset 0 0 0 1px var(--line); font-size: 11px; font-weight: 780; white-space: nowrap; }}
+    .storyline-path i {{ height: 1px; background: var(--line); }}
+    .storyline-main p {{ margin: 0; color: #344054; font-size: 13px; line-height: 1.58; }}
+    .storyline-main p b {{ color: var(--ink); font-weight: 760; }}
+    .storyline-projects {{ display: flex; flex-wrap: wrap; gap: 6px; }}
+    .storyline-projects span {{ padding: 4px 7px; border-radius: 999px; color: #174ea6; background: #e9efff; font-size: 11px; font-weight: 780; }}
+    .storyline-boundary {{ color: var(--muted); font-size: 11px; line-height: 1.4; }}
+    .storyline-side {{ min-width: 0; display: grid; gap: 9px; align-content: start; }}
+    .storyline-metrics {{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }}
+    .storyline-metrics div {{ min-height: 54px; padding: 8px; border-radius: 7px; background: var(--paper-soft); border: 1px solid var(--line); }}
+    .storyline-metrics span {{ display: block; color: var(--muted); font-size: 11px; line-height: 1.1; }}
+    .storyline-metrics strong {{ display: block; margin-top: 7px; color: var(--ink); font-size: 18px; line-height: 1; }}
+    .storyline-prs {{ list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }}
+    .storyline-prs li {{ display: grid; gap: 2px; padding: 7px 8px; border-radius: 7px; background: var(--paper-soft); border: 1px solid var(--line-soft); }}
+    .storyline-prs a {{ color: #174ea6; font-size: 12px; line-height: 1.35; font-weight: 760; overflow-wrap: anywhere; }}
+    .storyline-prs small {{ color: var(--muted); font-size: 11px; line-height: 1.3; overflow-wrap: anywhere; }}
+    .story-bars {{ display: grid; gap: 10px; }}
+    .story-bar-row {{ display: grid; grid-template-columns: minmax(160px, 230px) 1fr 48px; gap: 10px; align-items: center; }}
+    .story-bar-name strong {{ display: block; font-size: 13px; line-height: 1.25; }}
+    .story-bar-name small {{ display: block; margin-top: 3px; color: var(--muted); font-size: 11px; line-height: 1.25; }}
+    .story-bar-track {{ height: 12px; overflow: hidden; border-radius: 999px; background: #e9edf2; }}
+    .story-bar-track span {{ display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--green), var(--github)); }}
+    .story-bar-row b {{ text-align: right; font-size: 14px; }}
+    .mapping-table {{ overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--line); background: var(--paper); }}
+    .mapping-table table {{ min-width: 720px; }}
+    .mapping-table td:first-child small {{ display: block; margin-top: 3px; color: var(--muted); font-size: 11px; line-height: 1.25; }}
+    .value-hero-grid {{ display: grid; grid-template-columns: minmax(0, 1fr) 190px; gap: 12px; margin-top: 18px; align-items: stretch; }}
+    .value-claims {{ display: grid; grid-template-columns: minmax(0, 1.18fr) minmax(300px, .82fr); gap: 1px; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--line); }}
+    .value-claim-stack {{ display: grid; gap: 1px; background: var(--line); }}
+    .value-claim {{ display: grid; grid-template-rows: auto auto 1fr auto; gap: 10px; padding: 16px; background: var(--paper); }}
+    .value-claim-primary {{ min-height: 284px; padding: 20px; color: #fff; background:
+      var(--claim);
+    }}
+    .value-claim-secondary {{ min-height: 141px; padding: 14px 15px; }}
+    .value-claim-top {{ display: flex; justify-content: space-between; gap: 8px; align-items: center; }}
+    .value-claim-top > span {{ min-height: 24px; display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 999px; color: #174ea6; background: #e9efff; font-size: 12px; font-weight: 780; white-space: nowrap; }}
+    .value-claim-primary .value-claim-top > span {{ color: #dce9ff; background: rgba(255,255,255,.10); box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); }}
+    .value-claim h2 {{ font-size: 20px; line-height: 1.16; }}
+    .value-claim-primary h2 {{ font-size: 30px; line-height: 1.08; }}
+    .value-claim p {{ margin: 0; color: #344054; font-size: 13px; line-height: 1.58; text-wrap: pretty; }}
+    .value-claim-primary p {{ max-width: 72ch; color: var(--claim-muted); font-size: 15px; line-height: 1.62; }}
+    .value-claim small {{ display: block; color: var(--muted); font-size: 11px; line-height: 1.45; }}
+    .value-claim-primary small {{ color: #b8c8da; }}
+    .claim-proof {{ display: flex; flex-wrap: wrap; gap: 6px; }}
+    .claim-proof span {{ min-height: 24px; display: inline-flex; align-items: center; padding: 3px 7px; border-radius: 999px; color: #344054; background: var(--paper-soft); box-shadow: inset 0 0 0 1px var(--line); font-size: 11px; font-weight: 780; }}
+    .value-claim-primary .claim-proof span {{ color: #eaf2ff; background: rgba(255,255,255,.09); box-shadow: inset 0 0 0 1px rgba(255,255,255,.15); }}
+    .masthead-lower {{ display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(360px, .8fr); gap: 12px; margin-top: 12px; align-items: start; }}
+    .masthead-lower .quality-rail {{ margin-top: 0; }}
+    .masthead-lower .quality-rail {{ margin-top: 10px; }}
     .metrics {{ display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); margin-top: 18px; background: var(--paper); border-top: 1px solid var(--line); border-left: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }}
     .metric {{ min-height: 112px; padding: 13px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }}
     .metric-value {{ font-size: clamp(27px, 3vw, 42px); font-weight: 830; line-height: 1; white-space: nowrap; }}
     .metric-label {{ margin-top: 9px; font-weight: 760; }}
     .growth {{ margin-left: 8px; color: var(--green); font-size: 13px; font-weight: 760; vertical-align: middle; }}
-    section {{ margin-top: var(--gap-section); padding: var(--pad-section); background: rgba(255,253,248,.94); border-radius: var(--radius); border: 1px solid rgba(23,32,51,.10); box-shadow: var(--shadow-sm); }}
+    section {{ margin-top: 26px; padding: 24px 0 0; background: transparent; border: 0; border-top: 1px solid var(--line); border-radius: 0; box-shadow: none; }}
     .section-head {{ display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }}
-    .panel-lite {{ padding: 16px; background: var(--paper-soft); border-radius: var(--radius); box-shadow: inset 0 0 0 1px var(--line); }}
+    .panel-lite {{ padding: 16px; background: var(--panel); border-radius: var(--radius); box-shadow: inset 0 0 0 1px var(--line); }}
     .insights {{ margin: 0; padding-left: 20px; }}
     .insights li {{ margin: 7px 0; }}
     .signal-rail {{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 12px; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--paper); }}
@@ -2742,11 +3946,24 @@ def render_html(summary: dict[str, Any]) -> str:
     .value-bar {{ grid-column: 1 / -1; height: 6px; overflow: hidden; border-radius: 999px; background: #e4eaf1; }}
     .value-bar b {{ display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--github), var(--green)); }}
     .summary-evidence-grid {{ display: grid; grid-template-columns: minmax(320px, .85fr) minmax(520px, 1.15fr); gap: 16px; align-items: start; }}
-    .insight-panel {{ padding: 16px; border-radius: var(--radius); background: var(--paper); box-shadow: inset 0 0 0 1px var(--line); }}
+    .insight-panel {{ padding: 16px; border-radius: var(--radius); background: var(--panel); box-shadow: inset 0 0 0 1px var(--line); }}
     .insight-panel .insights {{ display: grid; gap: 10px; padding-left: 24px; }}
     .insight-panel .insights li {{ margin: 0; padding-bottom: 10px; border-bottom: 1px solid var(--line-soft); line-height: 1.58; }}
     .insight-panel .insights li:last-child {{ padding-bottom: 0; border-bottom: 0; }}
+    .value-summary-grid .insight-panel {{ background: #f6f9fc; }}
+    .value-claim-list {{ list-style: none; padding-left: 0 !important; counter-reset: claim-ledger; }}
+    .claim-line {{ counter-increment: claim-ledger; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 7px 10px; padding: 0 0 12px !important; }}
+    .claim-line::before {{ content: counter(claim-ledger, decimal-leading-zero); grid-row: 1 / span 3; display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 999px; color: #174ea6; background: #e9efff; font-size: 11px; font-weight: 860; }}
+    .claim-line div {{ display: flex; justify-content: space-between; align-items: center; gap: 8px; }}
+    .claim-line strong {{ font-size: 14px; line-height: 1.2; }}
+    .claim-line p {{ margin: 0; color: #344054; font-size: 13px; line-height: 1.58; }}
+    .claim-line small {{ color: var(--muted); font-size: 11px; line-height: 1.35; }}
     .evidence-rail {{ display: grid; gap: 8px; }}
+    .value-evidence-row {{ display: grid; gap: 8px; padding: 12px; border-radius: var(--radius); background: #fbfcfd; box-shadow: inset 0 0 0 1px var(--line-soft); }}
+    .value-evidence-row > div {{ display: flex; justify-content: space-between; gap: 8px; align-items: start; }}
+    .value-evidence-row strong {{ font-size: 13px; line-height: 1.25; overflow-wrap: anywhere; }}
+    .value-evidence-row span {{ min-height: 22px; display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 999px; color: #174ea6; background: #e9efff; font-size: 11px; font-weight: 780; white-space: nowrap; }}
+    .value-evidence-row p {{ margin: 0; color: #344054; font-size: 12px; line-height: 1.48; }}
     .chain-compact {{ display: grid; grid-template-columns: minmax(0, 1fr); gap: 7px; padding: 12px; border-radius: var(--radius); background: #fbfcfd; box-shadow: inset 0 0 0 1px var(--line-soft); }}
     .chain-compact-top {{ display: flex; justify-content: space-between; align-items: center; gap: 8px; }}
     .chain-compact-top > span {{ min-height: 22px; display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 999px; color: #344054; background: var(--paper-soft); font-size: 11px; font-weight: 780; }}
@@ -2754,7 +3971,7 @@ def render_html(summary: dict[str, Any]) -> str:
     .chain-compact p {{ margin: 0; color: #344054; font-size: 12px; line-height: 1.5; }}
     .chain-compact small {{ color: var(--muted); font-size: 11px; line-height: 1.35; overflow-wrap: anywhere; }}
     .chain-grid {{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }}
-    .chain-card {{ padding: 15px; background: var(--paper); border-radius: var(--radius); box-shadow: 0 1px 3px rgba(31,41,55,.10); }}
+    .chain-card {{ padding: 15px; background: var(--paper); border-radius: var(--radius); box-shadow: inset 0 0 0 1px var(--line-soft); }}
     .chain-head {{ display: flex; justify-content: space-between; align-items: start; gap: 10px; }}
     .chain-head h3 {{ margin: 0; }}
     .chain-head small {{ color: var(--muted); font-size: 11px; }}
@@ -2769,16 +3986,16 @@ def render_html(summary: dict[str, Any]) -> str:
     .chain-list small {{ display: block; margin-top: 3px; color: var(--muted); font-size: 11px; line-height: 1.35; overflow-wrap: anywhere; }}
     .chain-caveat {{ margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line-soft); color: var(--muted); font-size: 12px; line-height: 1.5; }}
     .mini-grid {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }}
-    .mini {{ min-height: 86px; padding: 11px; background: var(--paper); border-radius: var(--radius); box-shadow: 0 1px 3px rgba(31,41,55,.10); }}
+    .mini {{ min-height: 86px; padding: 11px; background: var(--paper); border-radius: var(--radius); box-shadow: inset 0 0 0 1px var(--line-soft); }}
     .mini strong {{ display: block; font-size: 25px; line-height: 1; }}
     .mini span {{ display: block; margin-top: 7px; color: var(--muted); font-size: 12px; line-height: 1.35; }}
     .mini small {{ display: block; margin-top: 6px; color: var(--quiet); font-size: 11px; line-height: 1.35; }}
-    .mini.github {{ box-shadow: inset 0 3px 0 var(--github), 0 1px 3px rgba(31,41,55,.10); }}
-    .mini.feishu {{ box-shadow: inset 0 3px 0 var(--feishu), 0 1px 3px rgba(31,41,55,.10); }}
+    .mini.github {{ background: #f4f7ff; box-shadow: inset 0 0 0 1px rgba(37,99,235,.16); }}
+    .mini.feishu {{ background: #f0faf8; box-shadow: inset 0 0 0 1px rgba(15,143,131,.16); }}
     .chart-grid {{ display: grid; grid-template-columns: minmax(360px, 1.05fr) minmax(340px, .95fr); gap: 16px; }}
     .viz-grid {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }}
     .viz-grid.three {{ grid-template-columns: repeat(3, minmax(0, 1fr)); }}
-    .viz-card {{ min-height: 188px; padding: 14px; background: var(--paper); border-radius: var(--radius); box-shadow: 0 1px 3px rgba(31,41,55,.10); }}
+    .viz-card {{ min-height: 188px; padding: 14px; background: var(--paper); border-radius: var(--radius); box-shadow: inset 0 0 0 1px var(--line-soft); }}
     .viz-card h3 {{ margin-bottom: 12px; }}
     .donut-wrap {{ display: grid; grid-template-columns: 104px minmax(0, 1fr); gap: 12px; align-items: center; }}
     .donut {{ width: 104px; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; box-shadow: inset 0 0 0 1px rgba(23,32,51,.08); }}
@@ -2838,7 +4055,7 @@ def render_html(summary: dict[str, Any]) -> str:
     .project-map-legend .legend-new {{ background: #e3f4ea; box-shadow: inset 0 0 0 1px rgba(21,123,80,.18); }}
     .project-map-legend .legend-active {{ background: #fff0cc; box-shadow: inset 0 0 0 1px rgba(174,104,23,.18); }}
     .project-map {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }}
-    .project-bucket {{ min-height: 152px; padding: 12px; background: var(--paper); border-radius: var(--radius); box-shadow: 0 1px 3px rgba(31,41,55,.10); }}
+    .project-bucket {{ min-height: 152px; padding: 12px; background: var(--paper); border-radius: var(--radius); box-shadow: inset 0 0 0 1px var(--line-soft); }}
     .project-bucket h3 {{ margin-bottom: 10px; font-size: 13px; }}
     .project-nodes {{ min-height: 98px; display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }}
     .project-node {{ display: grid; place-items: center; padding: 5px; border-radius: 50%; background: #e9efff; color: #174ea6; box-shadow: inset 0 0 0 1px rgba(31,111,235,.16); text-align: center; text-decoration: none; }}
@@ -2904,33 +4121,24 @@ def render_html(summary: dict[str, Any]) -> str:
     .bar-value small {{ display: block; color: var(--muted); font-size: 11px; font-weight: 650; line-height: 1.1; }}
     .repo-row {{ grid-template-columns: minmax(170px, 260px) 1fr 58px; }}
     .code-pr-row {{ grid-template-columns: minmax(220px, 330px) 1fr 70px; }}
-    .tabs-root, .tab-panel, .tab-layout, .stack, .panel-lite {{ min-width: 0; }}
-    .tabs-root {{ display: grid; gap: 14px; }}
-    .tab-list {{ display: inline-flex; width: fit-content; max-width: 100%; gap: 4px; padding: 4px; border-radius: 999px; background: #e8edf3; box-shadow: inset 0 0 0 1px var(--line); overflow-x: auto; }}
-    .tab-list.small {{ margin-bottom: 12px; }}
-    .tab-button {{ min-width: 0; min-height: 38px; padding: 8px 14px; border: 0; border-radius: 999px; color: #526071; background: transparent; font: inherit; font-size: 13px; font-weight: 780; cursor: pointer; white-space: nowrap; transition-property: transform, background-color, color, opacity; transition-duration: 140ms; transition-timing-function: cubic-bezier(.16,1,.3,1); }}
-    .tab-button span {{ margin-left: 6px; opacity: .7; }}
-    .tab-button.is-active {{ color: var(--ink); background: var(--paper); box-shadow: 0 1px 3px rgba(31,41,55,.12); }}
-    .tab-button:active {{ transform: scale(.96); }}
-    .tab-panel {{ display: none; }}
-    .tab-panel.is-active {{ display: block; }}
-    .tab-layout {{ display: grid; grid-template-columns: minmax(420px, 1.1fr) minmax(320px, .9fr); gap: 16px; align-items: start; }}
+    .stack, .panel-lite {{ min-width: 0; }}
     .stack {{ display: grid; gap: 16px; }}
     .evidence-grid {{ display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }}
-    .evidence-card {{ padding: 13px; background: var(--paper); border-radius: var(--radius); box-shadow: 0 1px 3px rgba(31,41,55,.10); }}
+    .evidence-card {{ padding: 13px; background: var(--paper); border-radius: var(--radius); box-shadow: inset 0 0 0 1px var(--line-soft); }}
     .evidence-title {{ font-weight: 760; line-height: 1.38; overflow-wrap: anywhere; }}
     .evidence-meta {{ margin-top: 6px; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }}
     .module-grid {{ display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }}
-    .module-card {{ min-height: 150px; padding: 14px; background: var(--paper); border-radius: var(--radius); box-shadow: 0 1px 3px rgba(31,41,55,.10); }}
-    .module-good {{ box-shadow: inset 0 3px 0 var(--green), 0 1px 3px rgba(31,41,55,.10); }}
-    .module-warn {{ box-shadow: inset 0 3px 0 var(--amber), 0 1px 3px rgba(31,41,55,.10); }}
-    .module-bad {{ box-shadow: inset 0 3px 0 var(--red), 0 1px 3px rgba(31,41,55,.10); }}
-    .module-idle {{ box-shadow: inset 0 3px 0 #a5afbd, 0 1px 3px rgba(31,41,55,.10); }}
+    .module-card {{ min-height: 150px; padding: 14px; background: var(--paper); border-radius: var(--radius); box-shadow: inset 0 0 0 1px var(--line-soft); }}
+    .module-good {{ background: #f0faf5; box-shadow: inset 0 0 0 1px rgba(20,122,85,.18); }}
+    .module-warn {{ background: #fff8ea; box-shadow: inset 0 0 0 1px rgba(179,105,19,.18); }}
+    .module-bad {{ background: #fff1f3; box-shadow: inset 0 0 0 1px rgba(184,58,69,.18); }}
+    .module-idle {{ background: #f3f6fa; box-shadow: inset 0 0 0 1px rgba(123,135,152,.18); }}
     .module-top {{ display: flex; align-items: center; justify-content: space-between; gap: 10px; }}
     .module-card p {{ margin: 10px 0; color: var(--muted); font-size: 13px; line-height: 1.55; overflow-wrap: anywhere; }}
     .profile-list {{ display: grid; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--line); gap: 1px; }}
     .profile-row {{ display: grid; grid-template-columns: 44px minmax(0, 1fr) minmax(260px, 360px); gap: 14px; padding: 14px; background: var(--paper); }}
     .profile-row:first-child {{ background: linear-gradient(90deg, #ffffff 0, #f7fbff 100%); }}
+    .profile-row:nth-child(even) {{ background: #fbfcfd; }}
     .profile-index {{ color: var(--quiet); font-size: 12px; font-weight: 860; letter-spacing: .04em; }}
     .profile-main {{ min-width: 0; display: grid; gap: 10px; align-content: start; }}
     .profile-head {{ display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: start; }}
@@ -2950,7 +4158,7 @@ def render_html(summary: dict[str, Any]) -> str:
     .profile-prs {{ display: grid; gap: 5px; }}
     .profile-prs a {{ color: #174ea6; font-size: 12px; line-height: 1.35; font-weight: 760; overflow-wrap: anywhere; }}
     .project-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 10px; }}
-    .project-card {{ min-height: 238px; padding: 14px; background: var(--paper); border-radius: var(--radius); box-shadow: 0 1px 3px rgba(31,41,55,.10); }}
+    .project-card {{ min-height: 238px; padding: 14px; background: var(--paper); border-radius: var(--radius); box-shadow: inset 0 0 0 1px var(--line-soft); }}
     .project-head {{ display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: start; }}
     .project-head h3 {{ margin: 0; font-size: 15px; line-height: 1.35; }}
     .project-head small {{ display: block; margin-top: 4px; color: var(--muted); font-size: 12px; line-height: 1.35; }}
@@ -3011,22 +4219,29 @@ def render_html(summary: dict[str, Any]) -> str:
     .empty.compact {{ font-size: 12px; line-height: 1.5; }}
     .method-list {{ margin: 0; padding-left: 20px; color: #425066; }}
     .method-list li {{ margin: 6px 0; }}
-    body[data-view-mode="presentation"] .detail-section,
-    body[data-view-mode="presentation"] .method-section,
-    body[data-view-mode="presentation"] .project-detail,
-    body[data-view-mode="presentation"] .subpanel {{ display: none; }}
-    body[data-view-mode="presentation"] .masthead {{ box-shadow: 0 10px 30px rgba(31,41,55,.09); }}
+    .panel-lite, .insight-panel, .viz-card, .value-evidence-row, .chain-compact, .chain-card, .mini, .lane-row, .focus-group, .delta-tile, .project-bucket, .change-metric, .change-lane, .quadrant-cell, .value-category, .value-project, .evidence-card, .module-card, .project-card, .project-detail, .project-detail-block, .project-evidence-grid div, .project-value-row, .callout, .table-wrap {{ box-shadow: none; border: 1px solid var(--line-soft); }}
+    .panel-lite, .insight-panel, .viz-card, .chain-card, .mini, .project-card, .evidence-card {{ background: var(--paper); }}
+    .value-evidence-row, .chain-compact, .lane-row, .focus-group, .change-lane, .quadrant-cell, .value-category {{ background: #fbfcfd; }}
+    .section-head {{ margin-bottom: 14px; }}
+    .masthead .viz-grid {{ margin-top: 12px; }}
+    .masthead .viz-card {{ min-height: 166px; }}
+    .value-claim-primary {{ min-height: 252px; }}
+    .value-claim-primary h2 {{ font-size: 28px; }}
+    .value-claim-secondary {{ min-height: 125px; }}
+    .quality-meter, .value-bar, .bar-track, .stacked-bar {{ background: #e9edf2; }}
     @media (prefers-reduced-motion: reduce) {{
       *, *::before, *::after {{ transition-duration: .01ms !important; animation-duration: .01ms !important; }}
     }}
     @media (max-width: 1050px) {{
       .metrics {{ grid-template-columns: repeat(4, minmax(0, 1fr)); }}
-      .chart-grid, .tab-layout, .chain-grid, .change-map, .summary-evidence-grid {{ grid-template-columns: 1fr; }}
+      .chart-grid, .chain-grid, .change-map, .summary-evidence-grid, .value-hero-grid, .masthead-lower, .value-storyline, .deep-stream-row {{ grid-template-columns: 1fr; }}
+      .value-claims {{ grid-template-columns: 1fr; }}
       .value-rail {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
       .viz-grid {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
       .viz-grid.three {{ grid-template-columns: 1fr; }}
       .project-map {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
       .signal-rail, .quality-rail {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
+      .deep-stat-rail {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
       .signal-item:nth-child(2n) {{ border-right: 0; }}
       .module-grid {{ grid-template-columns: 1fr; }}
       .value-project-strip {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
@@ -3034,15 +4249,22 @@ def render_html(summary: dict[str, Any]) -> str:
       .profile-side {{ grid-column: 2; }}
     }}
     @media (max-width: 680px) {{
-      .page {{ padding: 12px 10px 34px; }}
+      .page {{ padding: 14px 12px 36px; }}
       .masthead, section {{ padding: 15px; }}
+      section {{ padding: 20px 0 0; }}
       .masthead-grid {{ grid-template-columns: 1fr; }}
       .source-tools {{ justify-items: start; }}
       .source-row {{ justify-content: flex-start; }}
       h1 {{ font-size: 29px; }}
       h2 {{ font-size: 19px; }}
-      .metrics, .mini-grid, .evidence-grid, .signal-rail, .quality-rail, .viz-grid, .change-metrics {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
+      .metrics, .mini-grid, .evidence-grid, .signal-rail, .quality-rail, .viz-grid, .change-metrics, .evidence-foundation {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
+      .value-cat-row {{ grid-template-columns: 1fr; }}
+      .value-cat-row em {{ text-align: left; }}
       .value-rail, .project-quadrant {{ grid-template-columns: 1fr; }}
+      .storyline-path, .story-bar-row {{ grid-template-columns: 1fr; }}
+      .storyline-path i {{ display: none; }}
+      .storyline-metrics {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
+      .deep-meter {{ grid-template-columns: repeat(3, minmax(0, 1fr)); }}
       .metric {{ min-height: 130px; }}
       .metric-value {{ font-size: 28px; }}
       .bar-row {{ grid-template-columns: 1fr 1fr 48px; }}
@@ -3064,12 +4286,12 @@ def render_html(summary: dict[str, Any]) -> str:
       .profile-row {{ grid-template-columns: 1fr; }}
       .profile-side {{ grid-column: auto; }}
       .profile-metrics {{ grid-template-columns: repeat(2, minmax(0, 1fr)); }}
-      .tab-list {{ width: 100%; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); }}
-      .tab-button {{ width: 100%; padding-inline: 9px; overflow: hidden; text-overflow: clip; }}
       .callout {{ display: grid; }}
+      .claim-line {{ grid-template-columns: 1fr; }}
+      .claim-line::before {{ grid-row: auto; }}
     }}
     @media (max-width: 380px) {{
-      .metrics, .mini-grid, .evidence-grid, .signal-rail, .quality-rail, .viz-grid, .change-metrics, .profile-metrics {{ grid-template-columns: 1fr; }}
+      .metrics, .mini-grid, .evidence-grid, .signal-rail, .quality-rail, .viz-grid, .change-metrics, .profile-metrics, .evidence-foundation, .storyline-metrics, .deep-stat-rail, .deep-meter {{ grid-template-columns: 1fr; }}
       .focus-chip {{ width: 100%; justify-content: space-between; }}
       .value-project-strip, .project-evidence-grid {{ grid-template-columns: 1fr; }}
     }}
@@ -3078,14 +4300,14 @@ def render_html(summary: dict[str, Any]) -> str:
       a {{ color: inherit; text-decoration: none; }}
       .page {{ max-width: none; padding: 0; }}
       .masthead, section, .panel-lite, .viz-card, .chain-card, .chain-compact, .profile-row {{ box-shadow: none !important; }}
-      .mode-row, .tab-list, .skip-link, .detail-section, .method-section, .project-detail, .subpanel {{ display: none !important; }}
+      .skip-link {{ display: none !important; }}
       .masthead, section {{ break-inside: avoid; page-break-inside: avoid; border-color: #d1d5db; }}
       .metrics {{ grid-template-columns: repeat(4, minmax(0, 1fr)); }}
-      .chart-grid, .chain-grid, .change-map, .summary-evidence-grid {{ grid-template-columns: 1fr 1fr; }}
+      .chart-grid, .chain-grid, .change-map, .summary-evidence-grid, .value-hero-grid {{ grid-template-columns: 1fr 1fr; }}
     }}
   </style>
 </head>
-<body data-view-mode="normal">
+<body>
   <a href="#main-content" class="skip-link">跳到主要内容</a>
   <main class="page" id="main-content">
     <header class="masthead">
@@ -3096,35 +4318,14 @@ def render_html(summary: dict[str, Any]) -> str:
         </div>
         <div class="source-tools">
           <div class="source-row">{source_html}</div>
-          {mode_html}
         </div>
       </div>
-      <div class="metrics">
-        {metric_card(metrics['commits'], 'Commit', 'GitHub authored commits', metrics['github_growth']['commits'])}
-        {metric_card(metrics['prs_merged'], '合并 PR', '本季度 merge 的 authored PR', metrics['github_growth']['prs_merged'])}
-        {metric_card(metrics['feature_points'], '功能点', '按 merged PR 归类')}
-        {metric_card(metrics['bug_fixes'], 'Bug 修复', '按 fix/bug 线索归类')}
-        {metric_card(metrics['active_repos'], '活跃仓库', '本季度有开发证据的仓库')}
-        {metric_card(metrics['new_repositories'], '新建仓库', 'repo created_at 在本季度')}
-        {metric_card(metrics['prs_reviewed'], 'Review 参与 PR', 'PR 集合数，不是 review 次数')}
-        {metric_card(metrics['feishu_accessible_modules'], '飞书可用模块', '文档 / 消息 / 日历')}
-      </div>
-      {executive_metric_strip(summary)}
-      {data_quality_strip(summary)}
-      {value_path(summary)}
-      {overview_chart_grid(summary)}
+      {evidence_foundation_strip(summary)}
     </header>
-
-    <section>
+    {value_section}
+    <section id="structure-section">
       <div class="section-head">
-        <h2>结论与证据</h2>
-      </div>
-      {summary_evidence_section(summary)}
-    </section>
-
-    <section>
-      <div class="section-head">
-        <h2>跨来源结构</h2>
+        <h2>{esc(structure_title)}</h2>
       </div>
       <div class="panel-lite">
         <h3>季度变化地图</h3>
@@ -3153,141 +4354,13 @@ def render_html(summary: dict[str, Any]) -> str:
       </div>
     </section>
 
-    <section>
+    <section id="project-section">
       <div class="section-head">
         <h2>重点项目剖面</h2>
       </div>
       {project_profile_cards(summary)}
     </section>
-
-    <section class="detail-section">
-      <div class="section-head">
-        <h2>详细模块</h2>
-      </div>
-      <div class="tabs-root" data-tabs="sources">
-        <div class="tab-list" role="tablist" aria-label="数据源模块">
-          <button class="tab-button is-active" type="button" role="tab" aria-selected="true" data-tab-target="github-panel">GitHub 开发 <span>{esc(fmt_num(metrics['prs_merged']))}</span></button>
-          <button class="tab-button" type="button" role="tab" aria-selected="false" data-tab-target="feishu-panel">飞书协作 <span>{esc(fmt_num(metrics['feishu_accessible_modules']))}/3</span></button>
-        </div>
-
-        <div class="tab-panel is-active" role="tabpanel" data-tab-panel="github-panel">
-          <div class="stack">
-            <div class="panel-lite">
-              <div class="section-head" style="margin-bottom:12px">
-                <h3>工程成果维度</h3>
-              </div>
-              <div class="mini-grid">{outcome_summary_cards(github)}</div>
-              <div class="chart-grid" style="margin-top:14px">
-                <div>
-                  <h3>功能点 / Bug 修复按仓库</h3>
-                  <div class="bar-chart">{outcome_bar_rows(github)}</div>
-                </div>
-                <div>
-                  <h3>代码区域分布</h3>
-                  <div class="bar-chart">{code_area_rows(github)}</div>
-                </div>
-              </div>
-              <div class="chart-grid" style="margin-top:14px">
-                {repo_matrix_card(github)}
-                <div class="panel-lite">
-                  <h3>代码区域 Treemap</h3>
-                  {code_area_treemap(github)}
-                </div>
-              </div>
-              <div class="subpanel">
-                <h3>PR 代码变更 Top</h3>
-                <div class="bar-chart">{top_code_pr_rows(github)}</div>
-              </div>
-            </div>
-            <div class="tab-layout">
-            <div class="stack">
-              <div class="panel-lite">
-                <h3>环比增长</h3>
-                {comparison_rows(github)}
-              </div>
-              <div class="panel-lite">
-                <h3>代表性合并 PR</h3>
-                <div class="evidence-grid">{evidence_cards(merged_prs, '暂无合并 PR 明细。', 6)}</div>
-              </div>
-            </div>
-            <div class="stack">
-              <div class="panel-lite">
-                <h3>投入主题</h3>
-                <div class="bar-chart">{theme_rows(github)}</div>
-              </div>
-              <div class="panel-lite">
-                <h3>Top 仓库贡献强度</h3>
-                <div class="bar-chart">{top_repos_chart(github)}</div>
-              </div>
-              <div class="panel-lite">
-                <h3>Issue 与 commit 抽样</h3>
-                <div class="evidence-grid">{evidence_cards(closed_issues or created_issues, '暂无 issue 明细。', 4)}{evidence_cards(commits, '暂无 commit 明细。', 2)}</div>
-              </div>
-            </div>
-          </div>
-          </div>
-        </div>
-
-        <div class="tab-panel" role="tabpanel" data-tab-panel="feishu-panel">
-          <div class="stack">
-            <div class="module-grid">{module_cards(feishu)}</div>
-            <div class="tab-layout">
-              <div class="panel-lite">
-                <h3>飞书文档</h3>
-                {feishu_doc_tabs(feishu)}
-              </div>
-              <div class="panel-lite">
-                <h3>消息与日历</h3>
-                <div class="mini-grid">
-                  {compact_metric_card(feishu_metrics.get('message_hits'), '消息命中', 'feishu')}
-                  {compact_metric_card(feishu_metrics.get('message_chats'), '会话数', 'feishu')}
-                  {compact_metric_card(feishu_metrics.get('calendar_events'), '日程数', 'feishu')}
-                </div>
-                {f'<div class="callout" style="margin-top:12px">{status_badge(module_status(feishu_modules.get("messages")))}<span>{esc(message_status_text)}</span></div>' if message_status_text else ''}
-                {f'<div class="callout">{status_badge(module_status(feishu_modules.get("calendar")))}<span>{esc(calendar_status_text)}</span></div>' if calendar_status_text else ''}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="method-section">
-      <div class="section-head">
-        <h2>口径与限制</h2>
-      </div>
-      {confidence_table(summary)}
-      <ul class="method-list">{methodology(summary)}</ul>
-    </section>
   </main>
-  <script>
-    document.querySelectorAll('[data-tabs]').forEach((root) => {{
-      const buttons = Array.from(root.querySelectorAll(':scope > .tab-list [data-tab-target], :scope > .tab-list.small [data-tab-target]'));
-      const panels = Array.from(root.querySelectorAll(':scope > [data-tab-panel]'));
-      buttons.forEach((button) => {{
-        button.addEventListener('click', () => {{
-          const target = button.getAttribute('data-tab-target');
-          buttons.forEach((item) => {{
-            const active = item === button;
-            item.classList.toggle('is-active', active);
-            item.setAttribute('aria-selected', active ? 'true' : 'false');
-          }});
-          panels.forEach((panel) => {{
-            panel.classList.toggle('is-active', panel.getAttribute('data-tab-panel') === target);
-          }});
-        }});
-      }});
-    }});
-    document.querySelectorAll('.mode-button[data-view-mode]').forEach((button) => {{
-      button.addEventListener('click', () => {{
-        const mode = button.getAttribute('data-view-mode') || 'normal';
-        document.body.dataset.viewMode = mode;
-        document.querySelectorAll('.mode-button[data-view-mode]').forEach((item) => {{
-          item.classList.toggle('is-active', item === button);
-        }});
-      }});
-    }});
-  </script>
 </body>
 </html>
 """
