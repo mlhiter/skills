@@ -114,7 +114,7 @@ Some assets are original playbooks from personal workflows. Some are adapted fro
 | `intern-learning-recap` | Original intern-friendly teaching recap workflow. |
 | `issue-creator` | Original QA issue drafting workflow for structured GitHub issue creation. |
 | `screenshot-interaction` | Original screenshot-to-interaction-contract workflow. |
-| `life-design-dschool` | Original personal life-design interview workflow based on Stanford d.school life design, flow, and positive psychology methods. |
+| `life-design-dschool` | Inspired by Khazix's life-design interview framing, then adapted with Stanford d.school life design, flow, and positive psychology methods. |
 | `global AGENTS.md` | Original public-safe global agent instruction baseline for sharing reusable guidance outside a repository root. |
 
 External repositories such as [`mattpocock/skills`](https://github.com/mattpocock/skills) have also been reviewed as pattern sources, especially for public-interface discipline and tighter feedback loops. The assets in this catalog are not wholesale copies of that repository.

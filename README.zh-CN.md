@@ -114,7 +114,7 @@ npx skills add mlhiter/skills --skill check
 | `intern-learning-recap` | 原创面向实习生的技术学习复盘工作流。 |
 | `issue-creator` | 原创 QA issue 起草工作流，用于创建结构化 GitHub issue。 |
 | `screenshot-interaction` | 原创截图到交互契约工作流。 |
-| `life-design-dschool` | 原创个人生命设计访谈工作流，基于斯坦福 d.school 人生设计、心流和积极心理学方法。 |
+| `life-design-dschool` | 受卡兹克的人生设计访谈框架启发，并结合斯坦福 d.school 人生设计、心流和积极心理学方法改写成可复用 skill。 |
 | `global AGENTS.md` | 原创的公开安全全局 agent 指令基线，用于在仓库根目录之外分享可复用指导。 |
 
 [`mattpocock/skills`](https://github.com/mattpocock/skills) 等外部仓库也作为模式来源被审阅过，尤其适合借鉴公开接口纪律和更紧的反馈循环。这个目录里的资产不是对该仓库的整体复制。
