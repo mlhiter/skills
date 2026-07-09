@@ -38,6 +38,13 @@
       "skills": [
         "screenshot-interaction"
       ]
+    },
+    {
+      "title": "Life Design",
+      "description": "Skills for personal life design interviews, Odyssey planning, and low-cost life prototyping.",
+      "skills": [
+        "life-design-dschool"
+      ]
     }
   ]
 }

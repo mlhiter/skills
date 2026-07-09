@@ -69,6 +69,7 @@ npx skills add mlhiter/skills --skill check
 | 报告 | [`quarterly-work-dashboard`](skills/quarterly-work-dashboard/SKILL.md) | 基于只读的 GitHub 和飞书证据，生成面向领导层的季度工作面板。 |
 | QA | [`issue-creator`](skills/issue-creator/SKILL.md) | 把简短测试反馈整理成结构化 GitHub issue。 |
 | 设计 | [`screenshot-interaction`](skills/screenshot-interaction/SKILL.md) | 从截图推断预期 UI 行为、状态和交互。 |
+| 人生设计 | [`life-design-dschool`](skills/life-design-dschool/SKILL.md) | 引导一轮温暖的斯坦福风格人生设计访谈，生成奥德赛计划和个人蓝图。 |
 | 模板 | [`global AGENTS.md`](templates/global/AGENTS.md) | 从一份适合公开分享的全局 agent 指令基线开始，同时和这个仓库的项目级 `AGENTS.md` 区分开。 |
 
 ## 仓库结构
@@ -113,6 +114,7 @@ npx skills add mlhiter/skills --skill check
 | `intern-learning-recap` | 原创面向实习生的技术学习复盘工作流。 |
 | `issue-creator` | 原创 QA issue 起草工作流，用于创建结构化 GitHub issue。 |
 | `screenshot-interaction` | 原创截图到交互契约工作流。 |
+| `life-design-dschool` | 原创个人生命设计访谈工作流，基于斯坦福 d.school 人生设计、心流和积极心理学方法。 |
 | `global AGENTS.md` | 原创的公开安全全局 agent 指令基线，用于在仓库根目录之外分享可复用指导。 |
 
 [`mattpocock/skills`](https://github.com/mattpocock/skills) 等外部仓库也作为模式来源被审阅过，尤其适合借鉴公开接口纪律和更紧的反馈循环。这个目录里的资产不是对该仓库的整体复制。

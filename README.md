@@ -69,6 +69,7 @@ The second and third prompts are credited to Khazix.
 | Reporting | [`quarterly-work-dashboard`](skills/quarterly-work-dashboard/SKILL.md) | Generating leadership-facing quarterly dashboards from read-only GitHub and Feishu evidence. |
 | QA | [`issue-creator`](skills/issue-creator/SKILL.md) | Turning terse tester notes into structured GitHub issues. |
 | Design | [`screenshot-interaction`](skills/screenshot-interaction/SKILL.md) | Inferring expected UI behavior, states, and interactions from screenshots. |
+| Life Design | [`life-design-dschool`](skills/life-design-dschool/SKILL.md) | Guiding a warm Stanford-style life design interview toward Odyssey plans and a personal blueprint. |
 | Template | [`global AGENTS.md`](templates/global/AGENTS.md) | Starting from a public-safe global agent instruction baseline while keeping it separate from this repository's project-level `AGENTS.md`. |
 
 ## Repository layout
@@ -113,6 +114,7 @@ Some assets are original playbooks from personal workflows. Some are adapted fro
 | `intern-learning-recap` | Original intern-friendly teaching recap workflow. |
 | `issue-creator` | Original QA issue drafting workflow for structured GitHub issue creation. |
 | `screenshot-interaction` | Original screenshot-to-interaction-contract workflow. |
+| `life-design-dschool` | Original personal life-design interview workflow based on Stanford d.school life design, flow, and positive psychology methods. |
 | `global AGENTS.md` | Original public-safe global agent instruction baseline for sharing reusable guidance outside a repository root. |
 
 External repositories such as [`mattpocock/skills`](https://github.com/mattpocock/skills) have also been reviewed as pattern sources, especially for public-interface discipline and tighter feedback loops. The assets in this catalog are not wholesale copies of that repository.

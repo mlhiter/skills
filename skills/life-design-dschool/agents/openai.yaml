@@ -1,0 +1,4 @@
+interface:
+  display_name: "Life Design D.school"
+  short_description: "Run a warm Stanford-style life design interview"
+  default_prompt: "Use $life-design-dschool to guide me through a multi-turn life design conversation and produce a personal life design blueprint."
