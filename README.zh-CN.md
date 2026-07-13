@@ -63,6 +63,7 @@ npx skills add mlhiter/skills --skill check
 | 审查 | [`check`](skills/check/SKILL.md) | 用功能意图建模、功能验收、对抗性审查和发布门禁来审查已完成的工作。 |
 | Codex | [`codex-goal-builder`](skills/codex-goal-builder/SKILL.md) | 根据粗略的长期目标，起草有证据支撑的 Codex Goal。 |
 | Codex | [`codex-runner-creator`](skills/codex-runner-creator/SKILL.md) | 创建或修复 Codex app 的本地环境运行入口。 |
+| Codex | [`codex-dynamic-workflows`](skills/codex-dynamic-workflows/SKILL.md) | 通过明确的任务包、审批门禁、集成和验证，规划并执行受监督的多 agent 工作流。 |
 | Codex | [`workflow-packager`](skills/workflow-packager/SKILL.md) | 从重复的 agent 工作中提炼技能、子 agent、自动化或模板。 |
 | Git | [`git-commit-push`](skills/git-commit-push/SKILL.md) | 创建会话级 Conventional Commit，并安全发布到远端。 |
 | Git | [`pr-creator`](skills/pr-creator/SKILL.md) | 创建 pull request，并显式处理 base/head 和 fork/upstream 安全性。 |
@@ -110,6 +111,7 @@ npx skills add mlhiter/skills --skill check
 | `quarterly-work-dashboard` | 原创季度面板生成工作流，用于基于只读 GitHub 和飞书证据生成工作总结。 |
 | `codex-goal-builder` | 原创 Codex Goal 起草工作流。 |
 | `codex-runner-creator` | 原创 Codex app 环境运行入口工作流。 |
+| `codex-dynamic-workflows` | 由 [Dan McAteer（`DannyMac180`）](https://github.com/DannyMac180)创作的外部 skill，从 [`DannyMac180/skills`](https://github.com/DannyMac180/skills/tree/5695fa19b9d39b8270025e79633b49a8b863f9a2/codex-dynamic-workflows) 的提交 `5695fa19b9d39b8270025e79633b49a8b863f9a2` 引入，并按 MIT License 再分发。它不是 `mlhiter` 的原创内容；本地仅增加来源说明和目录打包。 |
 | `git-commit-push` | 原创会话级 git 提交和安全推送工作流，基于 Conventional Commits。 |
 | `pr-creator` | 原创 PR 创建工作流，重点处理 fork/upstream head 和 base 的显式安全性。 |
 | `intern-learning-recap` | 原创面向实习生的技术学习复盘工作流。 |

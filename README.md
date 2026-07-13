@@ -63,6 +63,7 @@ The second and third prompts are credited to Khazix.
 | Review | [`check`](skills/check/SKILL.md) | Reviewing completed work with feature-intent modeling, functional acceptance, adversarial review, and release gates. |
 | Codex | [`codex-goal-builder`](skills/codex-goal-builder/SKILL.md) | Drafting evidence-based Codex Goals from rough long-running objectives. |
 | Codex | [`codex-runner-creator`](skills/codex-runner-creator/SKILL.md) | Creating or repairing Codex app environment run actions. |
+| Codex | [`codex-dynamic-workflows`](skills/codex-dynamic-workflows/SKILL.md) | Planning and running supervised multi-agent workflows with explicit packets, approval gates, integration, and verification. |
 | Codex | [`workflow-packager`](skills/workflow-packager/SKILL.md) | Mining repeated agent work and turning it into skills, subagents, automations, or templates. |
 | Git | [`git-commit-push`](skills/git-commit-push/SKILL.md) | Creating session-scoped Conventional Commits and safely publishing them. |
 | Git | [`pr-creator`](skills/pr-creator/SKILL.md) | Creating pull requests with explicit base/head resolution and fork/upstream safety. |
@@ -110,6 +111,7 @@ Some assets are original playbooks from personal workflows. Some are adapted fro
 | `quarterly-work-dashboard` | Original dashboard-generation workflow for read-only GitHub and Feishu quarterly evidence. |
 | `codex-goal-builder` | Original Codex Goal drafting workflow. |
 | `codex-runner-creator` | Original Codex app environment-action workflow. |
+| `codex-dynamic-workflows` | External skill created by [Dan McAteer (`DannyMac180`)](https://github.com/DannyMac180), imported from [`DannyMac180/skills`](https://github.com/DannyMac180/skills/tree/5695fa19b9d39b8270025e79633b49a8b863f9a2/codex-dynamic-workflows) at commit `5695fa19b9d39b8270025e79633b49a8b863f9a2` and redistributed under the MIT License. It is not original work by `mlhiter`; local changes add provenance and catalog packaging. |
 | `git-commit-push` | Original session-scoped git commit and safe-push workflow based on Conventional Commits. |
 | `pr-creator` | Original PR-creation workflow focused on explicit fork/upstream head and base safety. |
 | `intern-learning-recap` | Original intern-friendly teaching recap workflow. |

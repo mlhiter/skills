@@ -12,10 +12,11 @@
     },
     {
       "title": "Codex",
-      "description": "Skills for Codex goals, local run actions, dashboard reporting, and reusable workflow packaging.",
+      "description": "Skills for Codex goals, local run actions, dynamic workflows, dashboard reporting, and reusable workflow packaging.",
       "skills": [
         "codex-goal-builder",
         "codex-runner-creator",
+        "codex-dynamic-workflows",
         "think",
         "hunt",
         "check",
