@@ -7,7 +7,7 @@ license: MIT
 # AI Agent Dynamic Workflows
 
 > [!NOTE]
-> Provenance: this is an external skill created by [Dan McAteer (`DannyMac180`)](https://github.com/DannyMac180), imported from [`DannyMac180/skills`](https://github.com/DannyMac180/skills/tree/5695fa19b9d39b8270025e79633b49a8b863f9a2/codex-dynamic-workflows) at commit `5695fa19b9d39b8270025e79633b49a8b863f9a2`. It is redistributed under the MIT License and is not original work by `mlhiter`; local changes add provenance and catalog packaging.
+> External skill from [`DannyMac180/skills`](https://github.com/DannyMac180/skills/tree/5695fa19b9d39b8270025e79633b49a8b863f9a2/codex-dynamic-workflows), MIT licensed.
 
 Use this skill to turn a large task into a supervised AI-agent workflow: draft an orchestration artifact, enter goal mode when sustained execution is requested, delegate disjoint work to subagents when available, integrate results, verify the outcome, and save reusable workflow artifacts.
 

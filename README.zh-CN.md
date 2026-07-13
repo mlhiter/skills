@@ -111,7 +111,7 @@ npx skills add mlhiter/skills --skill check
 | `quarterly-work-dashboard` | 原创季度面板生成工作流，用于基于只读 GitHub 和飞书证据生成工作总结。 |
 | `codex-goal-builder` | 原创 Codex Goal 起草工作流。 |
 | `codex-runner-creator` | 原创 Codex app 环境运行入口工作流。 |
-| `codex-dynamic-workflows` | 由 [Dan McAteer（`DannyMac180`）](https://github.com/DannyMac180)创作的外部 skill，从 [`DannyMac180/skills`](https://github.com/DannyMac180/skills/tree/5695fa19b9d39b8270025e79633b49a8b863f9a2/codex-dynamic-workflows) 的提交 `5695fa19b9d39b8270025e79633b49a8b863f9a2` 引入，并按 MIT License 再分发。它不是 `mlhiter` 的原创内容；本地仅增加来源说明和目录打包。 |
+| `codex-dynamic-workflows` | 外部 skill，来源：[`DannyMac180/skills`](https://github.com/DannyMac180/skills/tree/5695fa19b9d39b8270025e79633b49a8b863f9a2/codex-dynamic-workflows)，MIT License。 |
 | `git-commit-push` | 原创会话级 git 提交和安全推送工作流，基于 Conventional Commits。 |
 | `pr-creator` | 原创 PR 创建工作流，重点处理 fork/upstream head 和 base 的显式安全性。 |
 | `intern-learning-recap` | 原创面向实习生的技术学习复盘工作流。 |
