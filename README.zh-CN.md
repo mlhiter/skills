@@ -75,7 +75,7 @@ npx skills add mlhiter/skills --skill check
 | 设计 | [`screenshot-interaction`](skills/screenshot-interaction/SKILL.md) | 从截图推断预期 UI 行为、状态和交互。 |
 | 人生设计 | [`life-design-dschool`](skills/life-design-dschool/SKILL.md) | 引导一轮温暖的斯坦福风格人生设计访谈，生成奥德赛计划和个人蓝图。 |
 | 模板 | [`global AGENTS.md`](templates/global/AGENTS.md) | 从一份适合公开分享的全局 agent 指令基线开始，同时和这个仓库的项目级 `AGENTS.md` 区分开。 |
-| 模板 | [`Codex 定时任务模板`](templates/codex-automations/README.md) | 通过自己的 agent 复用作者实际使用的 GitHub 热榜、AI 新闻、每周工作回顾和本地项目新闻任务。 |
+| 模板 | [`Codex 定时任务模板`](templates/codex-automations/README.md) | 通过自己的 agent 复用作者实际使用的 GitHub 热榜、AI 新闻和每周工作回顾任务。 |
 
 ## 仓库结构
 

@@ -75,7 +75,7 @@ The second and third prompts are credited to Khazix.
 | Design | [`screenshot-interaction`](skills/screenshot-interaction/SKILL.md) | Inferring expected UI behavior, states, and interactions from screenshots. |
 | Life Design | [`life-design-dschool`](skills/life-design-dschool/SKILL.md) | Guiding a warm Stanford-style life design interview toward Odyssey plans and a personal blueprint. |
 | Template | [`global AGENTS.md`](templates/global/AGENTS.md) | Starting from a public-safe global agent instruction baseline while keeping it separate from this repository's project-level `AGENTS.md`. |
-| Template | [`Codex automation templates`](templates/codex-automations/README.md) | Reusing the author's GitHub Trending, AI news, weekly work review, and local-project news schedules through your own agent. |
+| Template | [`Codex automation templates`](templates/codex-automations/README.md) | Reusing the author's GitHub Trending, AI news, and weekly work review schedules through your own agent. |
 
 ## Repository layout
 
