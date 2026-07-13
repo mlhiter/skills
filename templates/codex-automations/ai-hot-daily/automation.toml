@@ -1,0 +1,16 @@
+# Portable template. Ask an agent to create it with the Codex automation tool.
+version = 1
+kind = "heartbeat"
+name = "AI HOT 每日新闻"
+status = "ACTIVE"
+rrule = "FREQ=DAILY;BYHOUR=14;BYMINUTE=0;BYSECOND=0"
+prompt = """
+获取最近 24 小时的 AI HOT 精选新闻，并在当前 Codex 任务发送一份中文简报。如果环境中有 `aihot` skill，优先使用该 skill；否则读取公开接口 `https://aihot.virxact.com/api/public/items?mode=selected&since=<最近24小时ISO时间>&take=50`，并为 `/api/public/*` 请求添加常见浏览器 User-Agent。
+
+输出要求：
+1. 按重要性整理 5-10 条。
+2. 每条包含标题、来源、时间、链接和一句中文摘要。
+3. 无法访问数据源或返回数据不足时，明确说明原因，不要编造新闻。
+4. 最后补一行“数据来自 AI HOT”。
+5. 只读取公开信息，不执行任何外部写操作。
+"""

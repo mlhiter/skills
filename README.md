@@ -19,6 +19,8 @@ Languages: [en](README.md) | [zh](README.zh-CN.md)
 
 Use this repository when you want Codex to follow a durable workflow instead of a one-off prompt: think through a feature, hunt down a regression, review before shipping, create a clean commit, package repeated work into a reusable skill, borrow a public-safe global `AGENTS.md` baseline, or turn rough notes into a useful artifact.
 
+The recurring Codex tasks I use are also published here as sanitized [automation templates](templates/codex-automations/README.md). You can ask your agent to read one, adapt it to your local projects and timezone, and create it in your current Codex task.
+
 ## Install
 
 Preview the catalog:
@@ -73,6 +75,7 @@ The second and third prompts are credited to Khazix.
 | Design | [`screenshot-interaction`](skills/screenshot-interaction/SKILL.md) | Inferring expected UI behavior, states, and interactions from screenshots. |
 | Life Design | [`life-design-dschool`](skills/life-design-dschool/SKILL.md) | Guiding a warm Stanford-style life design interview toward Odyssey plans and a personal blueprint. |
 | Template | [`global AGENTS.md`](templates/global/AGENTS.md) | Starting from a public-safe global agent instruction baseline while keeping it separate from this repository's project-level `AGENTS.md`. |
+| Template | [`Codex automation templates`](templates/codex-automations/README.md) | Reusing the author's GitHub Trending, AI news, weekly work review, and local-project news schedules through your own agent. |
 
 ## Repository layout
 
@@ -85,6 +88,9 @@ The second and third prompts are credited to Khazix.
 |   `-- mlhiter-skills.svg
 |-- skills.sh.json
 |-- templates/
+|   |-- codex-automations/
+|   |   |-- README.md
+|   |   `-- <automation-name>/automation.toml
 |   `-- global/
 |       `-- AGENTS.md
 `-- skills/
@@ -95,7 +101,7 @@ The second and third prompts are credited to Khazix.
         `-- assets/
 ```
 
-`README.md` and `README.zh-CN.md` are the discovery surfaces, `AGENTS.md` is project-level guidance for agents working in this repository, `skills.sh.json` is the publishable catalog metadata, and each `skills/<skill-name>/` directory owns the instructions and bundled materials for that skill. `templates/global/AGENTS.md` is a shareable global agents template, not project-level guidance for this repository.
+`README.md` and `README.zh-CN.md` are the discovery surfaces, `AGENTS.md` is project-level guidance for agents working in this repository, `skills.sh.json` is the publishable catalog metadata, and each `skills/<skill-name>/` directory owns the instructions and bundled materials for that skill. `templates/global/AGENTS.md` is a shareable global agents template, while `templates/codex-automations/` contains portable automation definitions that an agent can recreate in a user's Codex task.
 
 ## Provenance
 
@@ -120,6 +126,7 @@ Some assets are original playbooks from personal workflows. Some are adapted fro
 | `screenshot-interaction` | Original screenshot-to-interaction-contract workflow. |
 | `life-design-dschool` | Inspired by Khazix's life-design interview framing, then adapted with Stanford d.school life design, flow, and positive psychology methods. |
 | `global AGENTS.md` | Original public-safe global agent instruction baseline for sharing reusable guidance outside a repository root. |
+| `Codex automation templates` | Sanitized versions of the repository author's active recurring Codex tasks, published for agent-assisted reuse. |
 
 External repositories such as [`mattpocock/skills`](https://github.com/mattpocock/skills) have also been reviewed as pattern sources, especially for public-interface discipline and tighter feedback loops. The assets in this catalog are not wholesale copies of that repository.
 

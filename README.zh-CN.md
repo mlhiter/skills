@@ -19,6 +19,8 @@
 
 当你希望 Codex 遵循一套稳定工作流，而不是只靠一次性提示词时，可以用这个仓库：先想清楚一个功能、追查回归原因、发布前审查、创建干净的提交、把重复工作打包成可复用技能、借用一份适合公开分享的全局 `AGENTS.md` 基线，或者把粗糙笔记整理成有用的产物。
 
+我日常使用的 Codex 定时任务也以脱敏后的[自动化模板](templates/codex-automations/README.md)公开在这里。你可以让自己的 agent 读取模板，根据本地项目和时区做适配，然后在当前 Codex 任务中创建。
+
 ## 安装
 
 预览目录：
@@ -73,6 +75,7 @@ npx skills add mlhiter/skills --skill check
 | 设计 | [`screenshot-interaction`](skills/screenshot-interaction/SKILL.md) | 从截图推断预期 UI 行为、状态和交互。 |
 | 人生设计 | [`life-design-dschool`](skills/life-design-dschool/SKILL.md) | 引导一轮温暖的斯坦福风格人生设计访谈，生成奥德赛计划和个人蓝图。 |
 | 模板 | [`global AGENTS.md`](templates/global/AGENTS.md) | 从一份适合公开分享的全局 agent 指令基线开始，同时和这个仓库的项目级 `AGENTS.md` 区分开。 |
+| 模板 | [`Codex 定时任务模板`](templates/codex-automations/README.md) | 通过自己的 agent 复用作者实际使用的 GitHub 热榜、AI 新闻、每周工作回顾和本地项目新闻任务。 |
 
 ## 仓库结构
 
@@ -85,6 +88,9 @@ npx skills add mlhiter/skills --skill check
 |   `-- mlhiter-skills.svg
 |-- skills.sh.json
 |-- templates/
+|   |-- codex-automations/
+|   |   |-- README.md
+|   |   `-- <automation-name>/automation.toml
 |   `-- global/
 |       `-- AGENTS.md
 `-- skills/
@@ -95,7 +101,7 @@ npx skills add mlhiter/skills --skill check
         `-- assets/
 ```
 
-`README.md` 和 `README.zh-CN.md` 是发现入口，`AGENTS.md` 是这个仓库的项目级 agent 指导，`skills.sh.json` 是可发布的目录元数据，每个 `skills/<skill-name>/` 目录负责存放该技能的指令和配套材料。`templates/global/AGENTS.md` 是可分享的全局 agents 模板，不是这个仓库的项目级说明。
+`README.md` 和 `README.zh-CN.md` 是发现入口，`AGENTS.md` 是这个仓库的项目级 agent 指导，`skills.sh.json` 是可发布的目录元数据，每个 `skills/<skill-name>/` 目录负责存放该技能的指令和配套材料。`templates/global/AGENTS.md` 是可分享的全局 agents 模板；`templates/codex-automations/` 则保存可由 agent 在用户自己的 Codex 任务中重建的定时任务定义。
 
 ## 来源
 
@@ -120,6 +126,7 @@ npx skills add mlhiter/skills --skill check
 | `screenshot-interaction` | 原创截图到交互契约工作流。 |
 | `life-design-dschool` | 受卡兹克的人生设计访谈框架启发，并结合斯坦福 d.school 人生设计、心流和积极心理学方法改写成可复用 skill。 |
 | `global AGENTS.md` | 原创的公开安全全局 agent 指令基线，用于在仓库根目录之外分享可复用指导。 |
+| `Codex 定时任务模板` | 仓库作者当前运行中的 Codex 定时任务脱敏版本，供用户通过自己的 agent 复用。 |
 
 [`mattpocock/skills`](https://github.com/mattpocock/skills) 等外部仓库也作为模式来源被审阅过，尤其适合借鉴公开接口纪律和更紧的反馈循环。这个目录里的资产不是对该仓库的整体复制。
 

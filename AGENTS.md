@@ -10,6 +10,7 @@ This file is active guidance for `mlhiter/skills`. The shareable global agents t
 - Keep published instructions public-safe: no credentials, private registry URLs, private cluster names, personal machine paths, or one-off project facts.
 - Put skills under `skills/<skill-name>/SKILL.md`; keep bundled references, scripts, and assets inside the owning skill directory.
 - Put reusable templates under `templates/<template-name>/`.
+- Keep automation templates portable: omit IDs, target thread or project bindings, timestamps, personal machine paths, and other instance-specific fields. Document that agents must create them through the Codex automation tool instead of copying them into a local automation store.
 - Update `skills.sh.json` when installable skills are added, removed, or renamed.
 - Do not add non-installable templates to `skills.sh.json` unless the user explicitly asks for that catalog behavior.
 - Update both `README.md` and `README.zh-CN.md` when a skill or template should be discoverable by users.

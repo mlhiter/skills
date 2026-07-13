@@ -1,0 +1,17 @@
+# Portable template. Ask an agent to create it with the Codex automation tool.
+version = 1
+kind = "heartbeat"
+name = "GitHub 热榜每日项目"
+status = "ACTIVE"
+rrule = "FREQ=DAILY;BYHOUR=9;BYMINUTE=30;BYSECOND=0"
+prompt = """
+每天获取 GitHub 官方 Trending daily 页面（https://github.com/trending?since=daily）的热门开源项目，并在当前 Codex 任务发送一份中文 Markdown 简报。
+
+输出要求：
+1. 标题使用 `# GitHub 热榜｜YYYY-MM-DD`。
+2. 先给 `## 今日最值得看`，从热榜中挑 3-5 个最值得关注的项目；每条包含仓库名、链接、主要用途、语言、今日热度或新增 stars、总 stars、为什么值得看。
+3. 再给 `## 完整热榜`，列出 10-15 个项目；包含仓库名、链接、简介、语言和 stars 信息。
+4. 最后给 `## 观察`，用 2-4 条总结当天的技术趋势、可借鉴的产品或工程方向，以及值得继续关注的仓库。
+5. 如果 GitHub 页面不可访问、页面结构变化、信息不足或无法确认 stars 数据，明确说明失败来源和已尝试的入口，不要编造项目。
+6. 不需要 GitHub 登录态，不执行 star、fork、watch 或其他写操作。
+"""
