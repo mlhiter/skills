@@ -9,7 +9,7 @@ Reusable Codex agent skills and templates for planning, debugging, review, writi
 
 [![skills.sh](https://skills.sh/b/mlhiter/skills)](https://skills.sh/mlhiter/skills)
 
-[Browse on skills.sh](https://skills.sh/mlhiter/skills) | [Install](#install) | [Asset catalog](#asset-catalog)
+[Browse on skills.sh](https://skills.sh/mlhiter/skills) | [Install](#install) | [Asset catalog](#asset-catalog) | [Automation templates](#codex-automation-templates)
 
 Languages: [en](README.md) | [zh](README.zh-CN.md)
 
@@ -76,6 +76,24 @@ The second and third prompts are credited to Khazix.
 | Life Design | [`life-design-dschool`](skills/life-design-dschool/SKILL.md) | Guiding a warm Stanford-style life design interview toward Odyssey plans and a personal blueprint. |
 | Template | [`global AGENTS.md`](templates/global/AGENTS.md) | Starting from a public-safe global agent instruction baseline while keeping it separate from this repository's project-level `AGENTS.md`. |
 | Template | [`Codex automation templates`](templates/codex-automations/README.md) | Reusing the author's GitHub Trending, AI news, and weekly work review schedules through your own agent. |
+
+## Codex automation templates
+
+This repository also publishes the recurring Codex tasks I actually use as [public-safe automation templates](templates/codex-automations/README.md). They are not installable skills. Each `automation.toml` gives an agent the task name, default schedule, execution mode, and full prompt needed to recreate the automation in the user's own Codex task.
+
+| Template | Default schedule | What it does |
+| :--- | :--- | :--- |
+| [`GitHub Trending daily`](templates/codex-automations/github-trending-daily/automation.toml) | Daily at 09:30 | Reads GitHub Trending without a login and produces a Chinese Markdown briefing with notable projects, the broader ranking, and trend observations. |
+| [`AI HOT daily`](templates/codex-automations/ai-hot-daily/automation.toml) | Daily at 14:00 | Reads selected AI HOT stories from the previous 24 hours and produces a sourced Chinese news briefing. |
+| [`Weekly work review`](templates/codex-automations/weekly-work-review/automation.toml) | Monday at 10:00 | Inspects visible local workspaces and Git history in read-only mode, then reviews the previous complete calendar week. |
+
+Ask an agent to review and create them with:
+
+```text
+Read templates/codex-automations in mlhiter/skills. Show me each task's schedule, data sources, and prompt, adapt the schedule to my timezone, then create only the automations I approve in the current Codex task.
+```
+
+The published files intentionally omit automation IDs, target task or project bindings, timestamps, personal machine paths, and other instance-specific data. The agent should create them through the Codex app's native automation tool instead of copying the files directly into `~/.codex/automations`.
 
 ## Repository layout
 

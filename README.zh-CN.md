@@ -9,7 +9,7 @@
 
 [![skills.sh](https://skills.sh/b/mlhiter/skills)](https://skills.sh/mlhiter/skills)
 
-[在 skills.sh 浏览](https://skills.sh/mlhiter/skills) | [安装](#安装) | [资产目录](#资产目录)
+[在 skills.sh 浏览](https://skills.sh/mlhiter/skills) | [安装](#安装) | [资产目录](#资产目录) | [定时任务模板](#codex-定时任务模板)
 
 语言：[zh](README.zh-CN.md) | [en](README.md)
 
@@ -76,6 +76,24 @@ npx skills add mlhiter/skills --skill check
 | 人生设计 | [`life-design-dschool`](skills/life-design-dschool/SKILL.md) | 引导一轮温暖的斯坦福风格人生设计访谈，生成奥德赛计划和个人蓝图。 |
 | 模板 | [`global AGENTS.md`](templates/global/AGENTS.md) | 从一份适合公开分享的全局 agent 指令基线开始，同时和这个仓库的项目级 `AGENTS.md` 区分开。 |
 | 模板 | [`Codex 定时任务模板`](templates/codex-automations/README.md) | 通过自己的 agent 复用作者实际使用的 GitHub 热榜、AI 新闻和每周工作回顾任务。 |
+
+## Codex 定时任务模板
+
+这个仓库也把我实际使用的 Codex 定时任务整理成了[适合公开分享的自动化模板](templates/codex-automations/README.md)。它们不是可安装 skill；每份 `automation.toml` 都提供任务名称、默认调度、执行模式和完整提示词，agent 可以据此在用户自己的 Codex 任务中重建自动化。
+
+| 模板 | 默认时间 | 任务内容 |
+| :--- | :--- | :--- |
+| [`GitHub 热榜每日项目`](templates/codex-automations/github-trending-daily/automation.toml) | 每天 09:30 | 无需登录地读取 GitHub Trending，生成包含重点项目、完整热榜和趋势观察的中文 Markdown 简报。 |
+| [`AI HOT 每日新闻`](templates/codex-automations/ai-hot-daily/automation.toml) | 每天 14:00 | 读取最近 24 小时的 AI HOT 精选内容，生成带来源的中文 AI 新闻简报。 |
+| [`每周工作回顾`](templates/codex-automations/weekly-work-review/automation.toml) | 每周一 10:00 | 只读检查当前可见的本地工作区和 Git 历史，回顾上一个完整自然周。 |
+
+可以直接让 agent 检查并创建：
+
+```text
+读取 mlhiter/skills 中 templates/codex-automations 下的模板，告诉我每个任务的调度时间、数据来源和完整提示词，根据我的时区调整时间，然后只把我确认的任务创建到当前 Codex 任务中。
+```
+
+公开文件刻意省略了 automation ID、目标任务或项目绑定、时间戳、个人本机路径和其他实例专属数据。agent 应通过 Codex app 原生的 automation 工具创建任务，不要把这些文件直接复制到 `~/.codex/automations`。
 
 ## 仓库结构
 
