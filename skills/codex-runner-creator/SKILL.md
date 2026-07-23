@@ -21,7 +21,8 @@ Create a local Codex environment action file that lets the user start the projec
 Before writing or editing `.codex/environments/environment.toml`, inspect the project for startup truth:
 
 - Read an existing `.codex/environments/environment.toml` if present.
-- Check `README.md`, `AGENTS.md`, package manager files, `package.json`, `Makefile`, `justfile`, `Taskfile.yml`, `docker-compose.yml`, `compose.yaml`, and `scripts/`.
+- Check `README.md`, `AGENTS.md`, package manager files, `package.json`, `Makefile`, `justfile`, `Taskfile.yml`, `docker-compose.yml`, `compose.yaml`, project environment files such as `.env` or `.env.local`, and `scripts/`.
+- Trace how the application already loads environment values, which local environment files are ignored, and whether an example file defines the public-safe key contract.
 - Prefer existing project scripts and documented commands over newly invented shell.
 - If several valid commands exist, choose the one that starts the main developer workflow.
 - If the user asked for a specific action, preserve that intent even when other scripts exist.
@@ -73,6 +74,17 @@ Rules:
 - Keep command output interactive: run the foreground server last so logs remain visible.
 - For fragile local app actions, write logs to a temp file such as `${TMPDIR:-/tmp}/<project>-codex-run.log` and print that path on failure.
 
+## Environment Configuration
+
+- Keep application runtime values in the project's established environment configuration, such as an ignored `.env`, `.env.local`, Compose env file, or the framework's native environment store. This includes database URLs, credentials, encryption keys, provider settings, feature flags, and application-owned ports.
+- Do not hardcode or export application environment defaults from `environment.toml` or a wrapper script. The runner may set runner-only mechanics such as `PATH`, cleanup state, log paths, and local container names, but it must not become a second application configuration source.
+- Load the environment file through the project's existing dotenv mechanism or a structured parser. Do not `source` dotenv files as shell code when values may contain shell metacharacters.
+- If a wrapper parses an environment file for runner mechanics, return only an explicit allowlist of runner-required derived fields. Never export every dotenv entry into the runner shell, where application keys could override `PATH`, `HOME`, `DOCKER_HOST`, or other process controls.
+- Preserve existing local environment files and user values. Add only missing local defaults that are required for the requested workflow, keep the file ignored, and never replace it from `.env.example`.
+- Keep `.env.example` and other tracked examples public-safe. They define keys and placeholders, not working secrets.
+- When the runner provisions a local dependency such as PostgreSQL, derive its setup arguments from the configured local connection values instead of duplicating usernames, passwords, database names, ports, or connection strings in the runner. Validate that the target is local or explicitly disposable before any provisioning.
+- Fail with the missing or invalid key name only. Never print environment values, connection credentials, tokens, or secrets to the Codex terminal or durable logs.
+
 ## Action Design
 
 - Default to one action named `运行`.
@@ -84,7 +96,7 @@ Rules:
 ## Safety Rules
 
 - Do not add destructive setup, database writes, migrations, cluster mutations, production deploys, or cleanup commands to a default `运行` action unless the user explicitly asks.
-- Do not put secrets in the file unless they are already local development placeholders or explicitly required by the existing local workflow.
+- Never put application secrets or runtime environment values in `environment.toml` or wrapper scripts. Store them in the established ignored environment configuration and keep tracked examples placeholder-only.
 - Prefer local development ports and test kubeconfig paths over production targets.
 - Treat `.codex/environments/` as a local Codex artifact. Do not add it to repo `.gitignore` by default; prefer the user's global git ignore policy when cleanup is needed.
 - If adding wrapper scripts under `.codex/environments/`, keep them local-only with the environment file unless the user explicitly wants project-owned run scripts.
@@ -104,6 +116,8 @@ After editing:
    ```bash
    git check-ignore -v .codex/environments/environment.toml .codex/environments/*.sh
    ```
+
+   Also verify the selected local environment file is ignored and that the runner does not duplicate or override its application values.
 
 3. For wrapper scripts, validate them from a minimal non-login environment so missing `PATH` assumptions are caught before the user clicks the Codex App action:
 
