@@ -12,6 +12,79 @@ description:
 Create high-quality pull requests that follow the repository template and keep
 the PR head/base unambiguous.
 
+## PR Flow Diagrams
+
+Use these sequence diagrams as the decision map for every PR. The numbered
+workflow below remains the executable checklist.
+
+### Standard PR Path
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Agent
+    participant Git
+    participant GH as GitHub CLI
+    participant PR as GitHub PR
+
+    User->>Agent: Ask to create a PR
+    Agent->>Git: Check branch, status, diff, and template
+    Agent->>Agent: Stage and commit only session-scoped changes if needed
+    Agent->>GH: Read repo owner, fork parent, and default branch
+    Agent->>Git: Resolve target repository, base branch, head owner, and head remote
+    alt Base or head remains ambiguous
+        Agent-->>User: Stop and ask which target/base/head takes precedence
+    else Target, base, and head are resolved
+        Agent->>Git: Verify target base ref with ls-remote
+        Agent->>Git: Push HEAD only to the intended head remote
+        Agent->>Git: Verify pushed head ref with ls-remote
+        Agent->>Agent: Draft template body and scan PR-facing text
+        Agent->>GH: gh pr create with explicit repo, owner-qualified head, and base
+        GH->>PR: Create PR
+        Agent->>GH: gh pr view metadata
+        alt PR metadata matches resolved target/base/head
+            Agent-->>User: Report PR URL, base, head, and verification
+        else PR metadata differs
+            Agent-->>User: Hard stop and report the mismatch
+        end
+    end
+```
+
+### Existing PR and Fork-Failure Path
+
+```mermaid
+sequenceDiagram
+    participant Agent
+    participant Git
+    participant GH as GitHub CLI
+    participant User
+
+    Agent->>Git: Determine current branch and intended head owner
+    Agent->>GH: Search existing PRs for owner-qualified head
+    alt Existing PR found
+        Agent->>GH: Read existing PR base, head, state, and URL
+        alt Existing PR matches the intended target/base/head
+            Agent-->>User: Reuse or report the existing PR
+        else Existing PR points somewhere else
+            Agent-->>User: Stop and ask whether to update, replace, or leave it
+        end
+    else No existing PR found
+        Agent->>GH: Create PR with fork-owner:branch head
+        alt GitHub accepts the fork head
+            Agent->>GH: Verify created PR metadata
+            Agent-->>User: Report verified PR
+        else GitHub rejects the fork head
+            Agent-->>User: Hard stop with command, target, head, base, and error
+            opt User explicitly approves upstream-owned fallback
+                Agent->>Git: Push a unique upstream-owned branch
+                Agent->>GH: Create PR with upstream-owner:unique-branch
+                Agent->>GH: Verify created PR metadata
+                Agent-->>User: Report verified fallback PR
+            end
+        end
+    end
+```
+
 ## Workflow
 
 1. **Branch Management**: Ensure you are not working on `main` or `master`.
@@ -70,6 +143,17 @@ the PR head/base unambiguous.
      target is the upstream owner.
    - Do not treat tracking config (`branch.<branch>.remote` or
      `branch.<branch>.merge`) as the PR base.
+   - Before opening a new PR, check whether an existing PR already uses the
+     resolved owner-qualified head:
+     ```bash
+     gh pr list \
+       --repo <target-owner/repo> \
+       --head <head-owner>:<branch> \
+       --state all
+     ```
+     If an existing PR matches the intended target/base/head, reuse or report
+     it. If it points at a different target, base, or head, stop and ask whether
+     to update, replace, or leave it.
 
 7. **Push Only to the Intended Head Remote**: Verify both refs, then push the
    current branch to the chosen head remote.
