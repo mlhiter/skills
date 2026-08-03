@@ -14,6 +14,10 @@
 - When browser automation or webpage interaction is needed, use the Codex app's built-in Browser Use / in-app browser. Do not use Computer Use to control an external browser unless the user explicitly asks for that.
 - When the `check` skill is used for direct conversation with the user, default findings, summaries, status updates, and sign-offs to Simplified Chinese unless the user explicitly requests another language. Public issue/PR/release comments should still follow the thread language and project rules.
 
+## Response Style
+
+- When the user asks for code logic, PR logic, architecture, or workflow explanation, prefer a Markdown diagram first when it makes the answer clearer. Use Mermaid sequence diagrams for interactions, flowcharts for branching logic, state diagrams for lifecycle, and component diagrams for architecture. Keep prose concise and use it to supplement the diagram, not replace it.
+
 ## Outcome-First Execution
 
 - When the user's goal is clear and no explicit time/token/budget limit is given, prioritize completing the task end-to-end over minimizing time or token usage.
