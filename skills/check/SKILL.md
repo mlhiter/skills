@@ -284,6 +284,18 @@ Record:
 
 For UI, native, browser, generated artifact, packaging, CLI, API, and deployment changes, prefer runtime or artifact evidence over source-only inference. If a runtime check is impossible, say so in the sign-off and name the exact check a human should run.
 
+## Sealos Deployment Audit Gate
+
+When the target repository is Sealos-related and the current diff touches deployment-facing files, run the installed `sealos-apps-audit` skill as part of `/check` before sign-off.
+
+Sealos-related signals include a `sealos` or `sealos-apps` repository owner/name, Sealos app deploy docs, Sealos chart or install scripts, or project context that clearly identifies the repository as a Sealos app, SealosCore component, or Sealos deployment package.
+
+Deployment-facing files include `deploy/**`, Helm charts/templates/values, `Dockerfile`, `Kubefile`, `Sealfile`, install or entrypoint scripts, GitHub Actions release workflows, runtime/cluster image naming or build logic, multi-arch release logic, and OSS tar/md5 sync logic.
+
+Use the target repository root plus the confirmed deploy directory and app type. If public context clearly indicates a normal Sealos app using `deploy`, run the audit with `--deploy-dir deploy --app-type app`. If SealosCore, multiple deploy directories, or a nonstandard deploy path are plausible, confirm those values before running the audit instead of guessing.
+
+Treat any `sealos-apps-audit` `FAIL` as a hard stop. Treat `WARN` as either a fix-now item or explicit residual risk with owner and recheck command. If the skill is unavailable in the current environment, state that verifier gap in the sign-off and do not claim the Sealos deployment audit passed.
+
 ## Adversarial Review Gate
 
 After checking the intended behavior, review the change as if you were trying to break the system through this diff. Use the risk model as the map; do not run this as a rote security checklist detached from the feature.
@@ -442,6 +454,7 @@ risk model:       intent/source/path/surfaces captured; top risk: [what]
 hard stops:       N found, N fixed, N deferred
 specialists:      [security, architecture] or none
 acceptance:       happy/negative/edge checked; residual risk: [none or reason]
+sealos deploy:    audit pass / fail / warn / n/a / not run: [reason]
 adversarial:      [surface] checked; abuse path: [command/path or not run + reason]
 new tests:        N
 doc debt:         none / AGENTS.md needs X / rules need Y

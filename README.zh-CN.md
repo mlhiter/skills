@@ -62,7 +62,7 @@ npx skills add mlhiter/skills --skill check
 | 写作 | [`intern-learning-recap`](skills/intern-learning-recap/SKILL.md) | 把已完成的工作讲成适合实习生理解的技术学习复盘。 |
 | 规划 | [`think`](skills/think/SKILL.md) | 在编码前，把粗糙想法整理成决策完整的方案。 |
 | 调试 | [`hunt`](skills/hunt/SKILL.md) | 在修复错误、回归、崩溃和异常行为前先找到根因。 |
-| 审查 | [`check`](skills/check/SKILL.md) | 用功能意图建模、功能验收、对抗性审查和发布门禁来审查已完成的工作。 |
+| 审查 | [`check`](skills/check/SKILL.md) | 用功能意图建模、功能验收、对抗性审查、Sealos 部署审计和发布门禁来审查已完成的工作。 |
 | Codex | [`codex-goal-builder`](skills/codex-goal-builder/SKILL.md) | 根据粗略的长期目标，起草有证据支撑的 Codex Goal。 |
 | Codex | [`codex-runner-creator`](skills/codex-runner-creator/SKILL.md) | 创建或修复 Codex app 的本地环境运行入口。 |
 | Codex | [`codex-dynamic-workflows`](skills/codex-dynamic-workflows/SKILL.md) | 通过明确的任务包、审批门禁、集成和验证，规划并执行受监督的多 agent 工作流。 |
@@ -129,7 +129,7 @@ npx skills add mlhiter/skills --skill check
 | :--- | :--- |
 | `think` | 改编自 [`tw93/Waza`](https://github.com/tw93/Waza) 的 `think` 工作流，并扩展了 Codex 规划和长期上下文能力。 |
 | `hunt` | 改编自 [`tw93/Waza`](https://github.com/tw93/Waza) 的 `hunt` 工作流，并加入根因门禁和运行时证据路径。 |
-| `check` | 改编自 [`tw93/Waza`](https://github.com/tw93/Waza) 的 `check` 工作流，并扩展了功能意图风险建模、验收门禁和发布检查。 |
+| `check` | 改编自 [`tw93/Waza`](https://github.com/tw93/Waza) 的 `check` 工作流，并扩展了功能意图风险建模、验收门禁、Sealos 部署审计和发布检查。 |
 | `logseq-writer` | 原创个人写作工作流，用于输出实用的 Logseq 教程文章。 |
 | `workflow-packager` | 原创工作流挖掘 playbook，用于把重复工作转成可复用资产。 |
 | `quarterly-work-dashboard` | 原创季度面板生成工作流，用于基于只读 GitHub 和飞书证据生成工作总结。 |

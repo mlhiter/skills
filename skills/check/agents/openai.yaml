@@ -1,4 +1,4 @@
 interface:
   display_name: "Check"
   short_description: "Review code changes before shipping"
-  default_prompt: "Use $check to review this change with functional acceptance, adversarial review, verification, and release-readiness gates."
+  default_prompt: "Use $check to review this change with functional acceptance, adversarial review, verification, conditional Sealos deployment audit, and release-readiness gates."

@@ -62,7 +62,7 @@ The second and third prompts are credited to Khazix.
 | Writing | [`intern-learning-recap`](skills/intern-learning-recap/SKILL.md) | Explaining completed work as an intern-friendly technical learning recap. |
 | Planning | [`think`](skills/think/SKILL.md) | Turning rough ideas into decision-complete plans before coding. |
 | Debugging | [`hunt`](skills/hunt/SKILL.md) | Finding root cause before fixing errors, regressions, crashes, and broken behavior. |
-| Review | [`check`](skills/check/SKILL.md) | Reviewing completed work with feature-intent modeling, functional acceptance, adversarial review, and release gates. |
+| Review | [`check`](skills/check/SKILL.md) | Reviewing completed work with feature-intent modeling, functional acceptance, adversarial review, Sealos deployment audits, and release gates. |
 | Codex | [`codex-goal-builder`](skills/codex-goal-builder/SKILL.md) | Drafting evidence-based Codex Goals from rough long-running objectives. |
 | Codex | [`codex-runner-creator`](skills/codex-runner-creator/SKILL.md) | Creating or repairing Codex app environment run actions. |
 | Codex | [`codex-dynamic-workflows`](skills/codex-dynamic-workflows/SKILL.md) | Planning and running supervised multi-agent workflows with explicit packets, approval gates, integration, and verification. |
@@ -129,7 +129,7 @@ Some assets are original playbooks from personal workflows. Some are adapted fro
 | :--- | :--- |
 | `think` | Adapted from [`tw93/Waza`](https://github.com/tw93/Waza)'s `think` workflow, then extended for Codex planning and durable context. |
 | `hunt` | Adapted from [`tw93/Waza`](https://github.com/tw93/Waza)'s `hunt` workflow, then extended with root-cause gates and runtime evidence ladders. |
-| `check` | Adapted from [`tw93/Waza`](https://github.com/tw93/Waza)'s `check` workflow, then extended with feature-intent risk modeling, acceptance gates, and release checks. |
+| `check` | Adapted from [`tw93/Waza`](https://github.com/tw93/Waza)'s `check` workflow, then extended with feature-intent risk modeling, acceptance gates, Sealos deployment audits, and release checks. |
 | `logseq-writer` | Original personal writing workflow for practical Logseq tutorial articles. |
 | `workflow-packager` | Original workflow-mining playbook for turning repeated agent work into reusable assets. |
 | `quarterly-work-dashboard` | Original dashboard-generation workflow for read-only GitHub and Feishu quarterly evidence. |
