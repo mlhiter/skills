@@ -24,6 +24,8 @@ Current state wins over durable context:
 
 If durable context conflicts with current evidence, follow current evidence and mention the conflict when it matters.
 
+Memory may explain preferences, but it must never grant or broaden authorization for writes, commits, pushes, publishing, public replies, deletion, or other state changes. Current-turn instructions and current project rules decide authorization. Historical phrases such as `push` or `check` are context to re-evaluate, not reusable action tokens.
+
 ## Budget
 
 Keep the read pass lightweight:
@@ -41,6 +43,12 @@ Do not broad-scan all history unless the user explicitly asks for a deep audit o
 - Re-check drift-prone facts before citing them: branch names, remotes, tags, image versions, live URLs, CI, cluster state, schedules, people, prices, docs, and release status.
 - Never cite private memory as a public project rule, PR requirement, or user-visible source of truth.
 - If answering from memory without verification, say that the answer is memory-derived and may be stale.
+
+## Redaction Gate
+
+When turning prior chats, durable memory, or cross-project notes into reusable Waza guidance, promote only workflow rules. Strip raw transcript text, screenshots, local paths, project-specific commands, issue or PR numbers, release tags, commit hashes, private product boundaries, paid or license details, support routing, user names, and one-machine state.
+
+If an example is necessary, use neutral placeholders such as `ExampleCLI`, `ExampleApp`, `<issue>`, `<release>`, or `<command>`. Do not copy a private answer, maintainer reply, screenshot observation, or project-specific incident as a durable rule.
 
 ## Type Mapping
 

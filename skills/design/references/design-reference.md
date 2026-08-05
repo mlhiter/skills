@@ -59,7 +59,7 @@ Never draw illustrative imagery using inline SVG. SVG is for icons and geometric
 
 ## Production Quality Baseline
 
-Check before handoff. These are not aesthetic choices, they are non-negotiable.
+Check before handoff. Accessibility and the CSS-pattern bans are non-negotiable; everything else below is craft detail in service of the locked direction.
 
 > Treat the sections below as craft details, not defaults. Only apply them when they serve the locked visual direction. If removing a detail changes nothing about how the interface feels, leave it out.
 
@@ -70,15 +70,23 @@ Check before handoff. These are not aesthetic choices, they are non-negotiable.
 - Visible focus states: `focus-visible:ring-*` or equivalent; never `outline: none` without replacement
 
 ### Animation
+
+Settle whether it animates before settling how, and let frequency decide. Something the user triggers hundreds of times a day (keyboard shortcut, command palette, hotkey tab switch) gets no animation, because at that repetition motion is indistinguishable from lag; tens of times a day (hover, list navigation, disclosure) gets the shortest form that still reads; occasional surfaces (modal, drawer, toast, sheet) get the standard treatment; rare or once-only moments (onboarding, first result, completion) can carry delight. Never animate a keyboard-initiated state change. If the only answer to "why does this move?" is that it looks nice, and the user will see it daily, delete it.
+
+Once motion is earned, duration follows the element: press feedback 100-160ms, tooltip and small popover 125-200ms, dropdown and select 150-250ms, modal and drawer 200-500ms. An interactive element over 300ms needs a stated reason. Perceived speed is set by the first frame, not the total, so a 200ms ease-out feels faster than a 200ms ease-in covering the same distance; when something feels slow, fix the curve before the number.
+
 - Honor `prefers-reduced-motion`: disable or reduce animations when set
 - Animate `transform`/`opacity` only (compositor-friendly, no layout thrash)
-- Never `transition: all`; list properties explicitly
+- Default to no bounce or elastic easing: real objects decelerate smoothly; use exponential ease-out (`ease-out-quart`, `ease-out-quint`, or `cubic-bezier(0.16,1,0.3,1)`). The exception is motion a finger or pointer is still driving (drag-to-dismiss, press-and-hold, momentum handoff), where a small bounce (`bounce` 0.1-0.3, or spring `dampingFraction` 0.6-0.8) reads as physical rather than decorative. Motion the system starts on its own stays strictly ease-out
+- Never enter from `scale(0)` or exit to it: nothing physical appears out of nothing. Enter from `scale(0.95)` paired with `opacity: 0`; even a barely visible starting size makes the entrance read as an object arriving rather than materializing
+- Anchor the origin to the trigger: popovers, dropdowns, menus, and tooltips scale from the control that opened them, not from their own center (`transform-origin: var(--transform-origin)` in Base UI, `.scaleEffect(_:anchor:)` in SwiftUI). Modals are the exception and stay centered, because nothing anchors them
 - Interruptible animations: prefer CSS transitions for interactive state changes (hover, toggle, open/close) because they retarget mid-animation; reserve keyframe animations for staged sequences that run once (e.g., staggered page enters)
 - Staggered enter: split content into semantic chunks with ~100ms delay; titles into words at ~80ms; typical enter uses `opacity: 0 → 1`, `translateY(12px) → 0`, and `blur(4px) → 0`
-- Subtle exit: use a small fixed `translateY(-12px)` instead of full height; keep duration ~150ms `ease-in`, shorter and softer than enter
-- Contextual icon swaps: animate with `scale: 0.25 → 1`, `opacity: 0 → 1`, and `blur: 4px → 0px`. With a spring library: `{ type: "spring", duration: 0.3, bounce: 0 }`. Without: keep both icons in DOM (one absolute) and cross-fade with CSS using `cubic-bezier(0.2, 0, 0, 1)`
-- Scale on press: buttons use `scale(0.96)` on active/press via CSS transitions so the press can be interrupted; add a `static` prop to disable when motion would be distracting
+- Subtle exit: use a small fixed `translateY(-12px)` instead of full height; keep duration ~150ms `ease-in`, shorter and softer than enter. That short exit is the only place `ease-in` belongs; on an enter, hover, press, or anything the user is watching for a response, it delays the first frame and reads as lag
+- Contextual icon swaps: animate with `scale: 0.25 → 1`, `opacity: 0 → 1`, and `blur: 4px → 0px`. With a spring library: `{ type: "spring", duration: 0.3, bounce: 0 }`. Without: keep both icons in DOM (one absolute) and cross-fade with CSS using `cubic-bezier(0.2, 0, 0, 1)`. No rotation unless rotation is semantically meaningful (e.g. a chevron indicating direction change)
+- Scale on press: buttons use `scale(0.96)` on active/press via CSS transitions so the press can be interrupted; add a `static` prop to disable when motion would be distracting. Hover alone is not press feedback: a surface that lights up on hover but does not move on press leaves the click unacknowledged, and pointer-only hover states do not exist on touch at all
 - Page-load guard: use `initial={false}` on animated presence wrappers for toggles, tabs, and icon swaps to prevent enter animations on first render; do not use it for intentional page-load entrance sequences
+- When a crossfade between two states still reads as two overlapping objects after trying other curves and durations, add `filter: blur(2px)` during the transition to blend them into one; keep blur under 20px, it is expensive in Safari
 
 ### Performance
 - Transition specificity: never `transition: all`; list exact properties (e.g., `transition-property: scale, opacity`). Tailwind's `transition-transform` covers `transform, translate, scale, rotate`; use `transition-[scale,opacity,filter]` for mixed properties
@@ -132,7 +140,7 @@ If swapping in different content would make the new component look out of place,
 
 ## Data Visualization Surfaces
 
-For dashboards, analytics views, chart-heavy interfaces, or number-dense displays, load `references/design-data-viz.md`. It owns dashboard defaults, chart selection, number alignment, and product-benchmark extraction.
+For dashboards, analytics views, chart-heavy interfaces, or number-dense displays, load `design-data-viz.md`. It owns dashboard defaults, chart selection, number alignment, and product-benchmark extraction.
 
 ## Reflex Fonts to Reject
 
@@ -194,16 +202,6 @@ These patterns appear in the majority of AI-generated interfaces. Each one has a
 | Generic rounded-rect card with `box-shadow` as the default container | Template thinking; applies the same container to every content type regardless of hierarchy | Default to cardless sections; only add card treatment when the content type requires it |
 | Modals as a lazy escape for overflow UI | Interrupts flow and breaks browser back navigation; used when an inline expansion, drawer, or separate page would be better | Inline expand, detail panel, or dedicated route; modals only when the action truly requires focus-lock |
 | `transition: all` or animating width/height/padding/margin | Forces the browser into layout recalculation on every frame | List exact properties (`transition-property: transform, opacity`); use `grid-template-rows: 0fr to 1fr` for height reveals |
-
-## Motion Specifics
-
-Complements the motion timing in the main SKILL.md constraints.
-
-- No bounce or elastic easing. Real objects decelerate smoothly. Use exponential ease-out (`ease-out-quart`, `ease-out-quint`, or `cubic-bezier(0.16,1,0.3,1)`) for natural, high-quality deceleration.
-- Animate `transform` and `opacity` only. Every other property triggers layout or paint.
-- For height reveals, use `grid-template-rows: 0fr` to `1fr` transitions instead of animating `height` directly. It avoids the `height: auto` animation trap.
-- Icon swaps: use a 120ms cross-fade with `opacity` and a subtle `scale(0.9)` to `scale(1)`. No rotation unless rotation is semantically meaningful (e.g. a chevron indicating direction change).
-- Do not use `transition: all` even as a quick prototype shortcut. It animates layout, color, and font-size simultaneously, causing visible jank.
 
 ## Reference-site Brand Presets (awesome-design-md)
 
@@ -273,16 +271,16 @@ For a single component or quick prototype, skip this. The three-line thesis in S
 
 ## Pre-Handoff Checklist: Strategic Omissions
 
-These are the items most frequently missing from AI-generated UIs because they require intentional product thinking, not visual judgment. Run through them before every handoff.
+These are audit prompts, not automatic implementation scope. Run through them before handoff and report material omissions. Add one only when the current task or target project's public requirements include that surface; never create a route, footer link, consent flow, or policy page as incidental visual polish.
 
-- [ ] **Custom 404 page**: a generic framework 404 is a broken experience. Build a branded page with a clear path back (home link, search, or most-used nav items).
+- [ ] **Custom 404 page**: if the task includes routing or production hardening, a branded page needs a clear path back (home link, search, or most-used nav items).
 - [ ] **Back navigation**: every page reachable by user action must have a clear, functional path back. Dead-end pages (detail views, confirmation screens, modal-only flows) are UX failures.
 - [ ] **Form client-side validation**: email fields validate format before submit; required fields show inline errors; error messages appear adjacent to the field, not only at form top.
 - [ ] **Skip-to-content link**: a visually hidden `<a href="#main-content">Skip to main content</a>` as the first focusable element in the document. Required for keyboard accessibility.
-- [ ] **Cookie consent**: if the product operates in the EU or California, cookie consent UI is not optional. Scope the implementation to the jurisdiction.
-- [ ] **Footer Privacy and Terms links**: every product page needs these. Their absence signals "demo", not "product".
+- [ ] **Cookie consent**: if the product's actual tracking and jurisdiction require consent, flag the missing flow and scope it to that requirement.
+- [ ] **Footer Privacy and Terms links**: if the product's legal and distribution requirements call for them, verify they are discoverable without inventing a new footer in an unrelated task.
 
-These are not visual polish items. They are the difference between a demo and a shippable product.
+These are product-readiness questions. A visual-polish request may surface them, but does not authorize building them.
 
 ## AI Slop Test
 
@@ -297,7 +295,7 @@ For well-known brands catalogued in `awesome-design-md`: ask the user whether to
 When building a sidebar + main workspace layout (Slack, Linear, Notion class):
 - Decorative backgrounds default to off
 - Surface hierarchy uses background-color steps and shadow only
-- All interactive elements get `active:scale-95`
+- All interactive elements get the standard press scale from Animation (`scale(0.96)` on active/press)
 - Button radius is consistent within each component type (pick one: pill, square, or one fixed value, do not mix)
 - Commit to a named radius scale before the first component (see Border radius system above)
 
@@ -312,4 +310,4 @@ When asked for design options, give at least 3 variations spread across genuinel
 
 ---
 
-*Rules in Reflex Fonts, Font Selection, OKLCH, Theme Matrix, Absolute Bans, Motion Specifics, and AI Slop Test adapted from [pbakaus/impeccable](https://github.com/pbakaus/impeccable) (Apache 2.0). DESIGN.md Scaffold adapted from [getdesign.md](https://getdesign.md) (MIT); concept credited to Google Stitch. Brand preset catalog from [VoltAgent/awesome-design-md](https://github.com/VoltAgent/awesome-design-md) (MIT). Content Authenticity, Multi-Card Alignment, and Strategic Omissions inspired by [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill).*
+*Rules in Reflex Fonts, Font Selection, OKLCH, Theme Matrix, Absolute Bans, the motion rules, and AI Slop Test adapted from [pbakaus/impeccable](https://github.com/pbakaus/impeccable) (Apache 2.0). DESIGN.md Scaffold adapted from [getdesign.md](https://getdesign.md) (MIT); concept credited to Google Stitch. Brand preset catalog from [VoltAgent/awesome-design-md](https://github.com/VoltAgent/awesome-design-md) (MIT). Content Authenticity, Multi-Card Alignment, and Strategic Omissions inspired by [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill).*

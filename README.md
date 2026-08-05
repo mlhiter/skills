@@ -62,7 +62,7 @@ The second and third prompts are credited to Khazix.
 | Writing | [`intern-learning-recap`](skills/intern-learning-recap/SKILL.md) | Explaining completed work as an intern-friendly technical learning recap. |
 | Planning | [`think`](skills/think/SKILL.md) | Turning rough ideas into decision-complete plans before coding. |
 | Debugging | [`hunt`](skills/hunt/SKILL.md) | Finding root cause before fixing errors, regressions, crashes, and broken behavior. |
-| Review | [`check`](skills/check/SKILL.md) | Reviewing completed work with feature-intent modeling, functional acceptance, adversarial review, Sealos deployment audits, and release gates. |
+| Review | [`check`](skills/check/SKILL.md) | Reviewing completed work with feature-intent modeling, functional acceptance, adversarial review, Sealos deployment audits, release gates, and packaged install surface checks. |
 | Codex | [`codex-goal-builder`](skills/codex-goal-builder/SKILL.md) | Drafting evidence-based Codex Goals from rough long-running objectives. |
 | Codex | [`codex-runner-creator`](skills/codex-runner-creator/SKILL.md) | Creating or repairing Codex app environment run actions. |
 | Codex | [`codex-dynamic-workflows`](skills/codex-dynamic-workflows/SKILL.md) | Planning and running supervised multi-agent workflows with explicit packets, approval gates, integration, and verification. |
@@ -71,7 +71,7 @@ The second and third prompts are credited to Khazix.
 | Git | [`pr-creator`](skills/pr-creator/SKILL.md) | Creating pull requests with explicit base/head resolution and fork/upstream safety. |
 | Reporting | [`quarterly-work-dashboard`](skills/quarterly-work-dashboard/SKILL.md) | Generating leadership-facing quarterly dashboards from read-only GitHub and Feishu evidence. |
 | QA | [`issue-creator`](skills/issue-creator/SKILL.md) | Turning terse tester notes into structured GitHub issues. |
-| Design | [`design`](skills/design/SKILL.md) | Building distinctive UI with reference-app direction, brand preset decomposition, and rendered-surface verification. |
+| Design | [`design`](skills/design/SKILL.md) | Building distinctive UI with reference-app direction, quick-fix and screenshot modes, generated asset guidance, native motion mapping, and rendered-surface verification. |
 | Design | [`screenshot-interaction`](skills/screenshot-interaction/SKILL.md) | Inferring expected UI behavior, states, and interactions from screenshots. |
 | Life Design | [`life-design-dschool`](skills/life-design-dschool/SKILL.md) | Guiding a warm Stanford-style life design interview toward Odyssey plans and a personal blueprint. |
 | Template | [`global AGENTS.md`](templates/global/AGENTS.md) | Starting from a public-safe global agent instruction baseline while keeping it separate from this repository's project-level `AGENTS.md`. |
@@ -129,7 +129,7 @@ Some assets are original playbooks from personal workflows. Some are adapted fro
 | :--- | :--- |
 | `think` | Adapted from [`tw93/Waza`](https://github.com/tw93/Waza)'s `think` workflow, then extended for Codex planning and durable context. |
 | `hunt` | Adapted from [`tw93/Waza`](https://github.com/tw93/Waza)'s `hunt` workflow, then extended with root-cause gates and runtime evidence ladders. |
-| `check` | Adapted from [`tw93/Waza`](https://github.com/tw93/Waza)'s `check` workflow, then extended with feature-intent risk modeling, acceptance gates, Sealos deployment audits, and release checks. |
+| `check` | Adapted from [`tw93/Waza`](https://github.com/tw93/Waza)'s `check` workflow, then extended with feature-intent risk modeling, acceptance gates, Sealos deployment audits, release checks, and packaged install/runtime parity checks. |
 | `logseq-writer` | Original personal writing workflow for practical Logseq tutorial articles. |
 | `workflow-packager` | Original workflow-mining playbook for turning repeated agent work into reusable assets. |
 | `quarterly-work-dashboard` | Original dashboard-generation workflow for read-only GitHub and Feishu quarterly evidence. |
@@ -140,7 +140,7 @@ Some assets are original playbooks from personal workflows. Some are adapted fro
 | `pr-creator` | Original PR-creation workflow focused on explicit fork/upstream head and base safety. |
 | `intern-learning-recap` | Original intern-friendly teaching recap workflow. |
 | `issue-creator` | Original QA issue drafting workflow for structured GitHub issue creation. |
-| `design` | Original UI design workflow, extended with reference-app direction and [`VoltAgent/awesome-design-md`](https://github.com/VoltAgent/awesome-design-md) brand preset decomposition. |
+| `design` | Local UI design workflow that tracks Waza's `ui` updates under the `design` name, extended with reference-app direction and [`VoltAgent/awesome-design-md`](https://github.com/VoltAgent/awesome-design-md) brand preset decomposition. |
 | `screenshot-interaction` | Original screenshot-to-interaction-contract workflow. |
 | `life-design-dschool` | Inspired by Khazix's life-design interview framing, then adapted with Stanford d.school life design, flow, and positive psychology methods. |
 | `global AGENTS.md` | Original public-safe global agent instruction baseline for sharing reusable guidance outside a repository root. |

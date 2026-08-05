@@ -17,6 +17,7 @@ A patch applied to a symptom creates a new bug somewhere else.
 - Done when: one sentence explains the cause, every observed symptom fits it, and the fix or handoff is verified against a reproducible check.
 - Evidence: source trace, repro command or UI path, logs or state, targeted test/build output, and runtime evidence for UI or native defects.
 - Output: root cause, fix or handoff, verification result, and any unswept sibling risks.
+- Authorization: "diagnose", "investigate", "why", "look into", "排查", "看看", or equivalent is report-only. Apply a fix only when the current turn explicitly asks to fix, change, implement, or optimize; root-cause proof is still required first.
 
 **Do not touch code until you can state the root cause in one sentence:**
 > "I believe the root cause is [X] because [evidence]."
@@ -60,6 +61,7 @@ For `/hunt`, diagnostic constraints are `decision`, `preference`, and `principle
 - **Visual/rendering bugs: static analysis first.** Trace paint layers, stacking contexts, and layer order in DevTools before adding console.log or visual debug overlays. Logs cannot capture what the compositor does. Only add instrumentation after static analysis fails.
 - **Behavioral / lifecycle / async bugs: instrument first, not after failure.** Window lifecycle, event delivery, navigation, focus, timer, state-machine, and async-ordering bugs almost never yield to static reading alone. Do not wait for a failed fix to add logs. The moment your hypothesis involves "this callback fires before/after that one", "this state should be X when Y runs", or "this object should still be alive here", **add the log immediately as part of forming the hypothesis**, before writing any fix. A hypothesis without runtime evidence is a guess; two guesses in a row is the hard-stop signal. Distinguish from visual-rendering bugs (compositor behavior needs DevTools, not logs) and pure-logic bugs (wrong formula, off-by-one) where static analysis is sufficient.
 - **Tuning magic numbers past round three: stop, unify.** When a spacing / sizing / threshold value has been adjusted three times and still looks wrong, the bug is structural, not numeric. Replace the N independent values with one named token (`Spacing.s4`, `--gap-content`, etc.) and verify the asymmetry was hiding a missing constraint. Asymmetry that survives tuning is structural; more tuning will not converge.
+- **Performance complaints need numbers.** For "slow", "laggy", or memory-growth reports outside Native App Freeze Mode, measure the baseline first (wall-clock time, profile sample, memory footprint), fix, then re-measure and report before/after numbers. "Feels faster" is not evidence.
 - **Fix the cause, not the symptom.** If the fix touches more than 5 files, pause and confirm scope with the user.
 
 ## Fix Scope Discipline
@@ -128,6 +130,8 @@ Use this ladder before claiming a bug is fixed:
 
 Compile-only is not enough for UI, native-app, visual, rendering, or generated-artifact bugs. If the runtime check is impossible in the environment, say why and hand off the exact screen, command, or artifact to verify.
 
+When the reporter's environment is the missing rung and it cannot be reproduced locally, the next artifact is a read-only probe they can paste and run, not another hypothesis. Have it print the environment, the disputed measurement, and the state of whatever the hypothesis turns on, and nothing that could carry a secret or a private path. Assume none of your own layout: their install method, directory conventions, locale, shell, and version all differ, so discover rather than hardcode. Ship it as plain copyable text with one command to run and one block to paste back. Two rounds of "could you check whether..." without a probe is the shape this replaces.
+
 For recurring classes of failures, load `references/failure-patterns.md` before adding a second fix.
 
 ## Native App Freeze Mode
@@ -179,6 +183,10 @@ If adding logs changes the behavior, treat that as evidence of a timing, lifecyc
 | Stack trace points deep into a library | Walk back 3 frames into your own code; the bug is almost always there, not in the dependency |
 | Worked when launched from app, broke when opened via file association / drag-drop / deep link / external proxy | Reproduce using the exact entry point the user described. App-internal init differs from cold-launch-with-file init; state may not be ready when the document arrives. |
 | Build passed but UI still looked wrong | Move up the Runtime Evidence Ladder and verify the real rendered surface or artifact. |
+| Fix matched the reporter's setup but changed nothing for everyone else, or regressed the default | A defect report is evidence, not the full scope. State whether the fix changes the default experience for all users or only the reporter's configuration, and prefer fixing the default path. |
+| Broke after toggling theme / mode / locale, fine after restart | State not re-applied on the toggle path. Trace the toggle's recompute or invalidation route first; do not tune styles pixel by pixel while the state path is broken. |
+| Changed the algorithm but the output stayed wrong | The reader may be hitting persisted output written by the old code (scan results, analysis cache, snapshot with a TTL). Changing generated-then-persisted data requires invalidating or version-bumping the old cache in the same change; before re-diagnosing, confirm the runtime is not reading stale data. |
+| Reporter reproduces, local machine is fine, agent patched blind | Produce one copy-paste diagnostic command first (single command, silent collection, one output file, a privacy note), diagnose from the returned evidence, then fix. |
 
 ## Outcome
 
@@ -198,6 +206,7 @@ Status: **resolved**, **resolved with caveats** (state them), or **blocked** (st
 1. A regression test exists that fails on the unfixed code and passes on the fixed code.
 2. The test lives in the project's test suite, not a temporary file.
 3. The commit message states why the bug recurred and why this fix prevents it.
+4. Red-green was **run**, not assumed: revert the fix (or stash it), watch the new test fail, restore the fix, watch it pass. A regression test that has only ever been observed passing pins nothing. State the red run in the output. Two shapes make this fail silently and both have shipped: a framework or syntax where a failing assertion mid-test does not fail the test, so only the last one gates (in shell suites this can hinge on the bracket form alone, with one keyword swallowed and the other caught, so confirm which by running a two-line minimal repro rather than reasoning about it); and an assertion that the wrong string is absent, which passes forever because that string was never emitted under any code version. Any negative assertion ("output must not contain X") also needs a paired positive case in the same test proving the assertion can fail at all.
 
 ### Handoff Format (after 3 failed hypotheses)
 

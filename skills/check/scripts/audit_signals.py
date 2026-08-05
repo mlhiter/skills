@@ -29,10 +29,13 @@ EXCLUDED_DIRS = {
     ".ruff_cache", "Pods", "Carthage", ".swiftpm", ".gradle",
 }
 
+# Source suffixes that this standalone check auditor treats as inspectable
+# project text. Keep this list local to the check skill's runtime surface.
 SOURCE_EXTS = {
-    ".py", ".swift", ".rs", ".go", ".ts", ".tsx", ".js", ".jsx", ".sh",
-    ".bash", ".zsh", ".rb", ".java", ".kt", ".m", ".mm", ".vue", ".c",
-    ".cc", ".cpp", ".h", ".hpp", ".cs",
+    ".bash", ".c", ".cc", ".cpp", ".cs", ".css", ".go", ".h", ".hpp",
+    ".html", ".java", ".js", ".jsx", ".kt", ".lua", ".m", ".mjs", ".mm",
+    ".md", ".php", ".py", ".rb", ".rs", ".scss", ".sh", ".swift", ".ts",
+    ".tsx", ".vue", ".yaml", ".yml", ".zsh",
 }
 
 HOTSPOT_LINES = 500
@@ -41,8 +44,9 @@ HEREDOC_LINES = 100
 DRIFT_WARN = 50
 DRIFT_FAIL = 150
 DUP_JACCARD = 0.70
+MAX_TEXT_BYTES = 2_000_000
 
-MARKER_RE = re.compile(r"\b(TODO|FIXME|HACK|XXX)\b")
+MARKER_RE = re.compile(r"\b(TODO|FIXME|HACK|XXX)\b", re.IGNORECASE)
 HEREDOC_OPEN_RE = re.compile(
     r"(python3?|node|ruby|perl|php)\b[^|\n]*?<<-?\s*['\"]?(\w+)['\"]?"
 )
@@ -85,12 +89,9 @@ CLI_CORE_BUCKETS = (
 )
 
 
-# The file-walk helpers below are deliberately duplicated in
-# skills/health/scripts/check_maintainability.py. Both scripts ship
-# standalone (see packaging.allowlist) and run inside an arbitrary target
-# project, so they import only stdlib. Do not hoist them into a shared
-# scripts/ module: it is dev-only, not on the ship allowlist, and would
-# couple a standalone tool to the install layout.
+# The file-walk helpers below stay in this script because the check skill
+# ships as a standalone runtime bundle and must run inside arbitrary target
+# projects with only the Python stdlib available.
 def is_excluded(path: Path, root: Path) -> bool:
     try:
         parts = path.relative_to(root).parts
@@ -101,19 +102,57 @@ def is_excluded(path: Path, root: Path) -> bool:
     return bool(MINIFIED_RE.search(path.name))
 
 
+def is_repo_file(path: Path, root: Path) -> bool:
+    """Return true only for a regular file reached without any symlink hop."""
+    try:
+        relative = path.relative_to(root)
+    except ValueError:
+        return False
+    if not relative.parts:
+        return False
+    current = root
+    try:
+        for part in relative.parts:
+            current /= part
+            if current.is_symlink():
+                return False
+        return current.is_file()
+    except OSError:
+        return False
+
+
+def is_repo_dir(path: Path, root: Path) -> bool:
+    """Return true only for a directory reached without any symlink hop."""
+    try:
+        relative = path.relative_to(root)
+    except ValueError:
+        return False
+    current = root
+    try:
+        for part in relative.parts:
+            current /= part
+            if current.is_symlink():
+                return False
+        return current.is_dir()
+    except OSError:
+        return False
+
+
 def iter_files(root: Path) -> list[Path]:
     try:
         proc = subprocess.run(
-            ["git", "-C", str(root), "ls-files",
-             "--cached", "--others", "--exclude-standard"],
-            text=True, stdout=subprocess.PIPE,
+            ["git", "-c", "core.fsmonitor=false", "-C", str(root), "ls-files",
+             "--cached", "--others", "--exclude-standard", "-z"],
+            stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL, check=False,
         )
-        if proc.returncode == 0 and proc.stdout.strip():
+        if proc.returncode == 0 and proc.stdout:
             out = []
-            for line in proc.stdout.splitlines():
-                p = root / line
-                if p.is_file() and not is_excluded(p, root):
+            for raw_path in proc.stdout.split(b"\0"):
+                if not raw_path:
+                    continue
+                p = root / os.fsdecode(raw_path)
+                if is_repo_file(p, root) and not is_excluded(p, root):
                     out.append(p)
             return out
     except OSError:
@@ -121,37 +160,67 @@ def iter_files(root: Path) -> list[Path]:
     out = []
     for dirpath, dirnames, filenames in os.walk(root):
         current = Path(dirpath)
-        dirnames[:] = [d for d in dirnames if d not in EXCLUDED_DIRS]
+        dirnames[:] = [
+            d for d in dirnames
+            if d not in EXCLUDED_DIRS and is_repo_dir(current / d, root)
+        ]
         if is_excluded(current, root):
             continue
         for fname in filenames:
             p = current / fname
-            if p.is_file() and not is_excluded(p, root):
+            if is_repo_file(p, root) and not is_excluded(p, root):
                 out.append(p)
     return out
 
 
-def line_count(path: Path) -> int:
+def line_count(path: Path, root: Path) -> int:
+    if not is_repo_file(path, root):
+        return 0
     try:
-        with path.open("rb") as fh:
+        flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+        with os.fdopen(os.open(path, flags), "rb") as fh:
             return sum(1 for _ in fh)
     except OSError:
         return 0
 
 
-def read_text(path: Path, limit: int = 0) -> str:
+def read_text(path: Path, root: Path, limit: int = 0) -> str:
+    if not is_repo_file(path, root):
+        return ""
+    byte_limit = limit or MAX_TEXT_BYTES
     try:
-        data = path.read_text(encoding="utf-8", errors="replace")
+        flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+        descriptor = os.open(path, flags)
     except OSError:
         return ""
-    return data[:limit] if limit else data
+    try:
+        chunks: list[bytes] = []
+        remaining = byte_limit
+        while remaining:
+            chunk = os.read(descriptor, min(65_536, remaining))
+            if not chunk:
+                break
+            chunks.append(chunk)
+            remaining -= len(chunk)
+    except OSError:
+        return ""
+    finally:
+        os.close(descriptor)
+    return b"".join(chunks).decode("utf-8", errors="replace")
 
 
 def rel(path: Path, root: Path) -> str:
     try:
-        return path.relative_to(root).as_posix()
+        value = path.relative_to(root).as_posix()
     except ValueError:
-        return path.as_posix()
+        value = path.as_posix()
+    return safe_label(value)
+
+
+def safe_label(value: str, limit: int = 500) -> str:
+    if any(ord(char) < 32 or ord(char) == 127 for char in value):
+        value = json.dumps(value, ensure_ascii=False)
+    return value if len(value) <= limit else f"{value[: limit - 3]}..."
 
 
 def header(name: str) -> None:
@@ -164,7 +233,7 @@ def status(label: str) -> None:
 
 def block_hotspots(files: list[Path], root: Path) -> None:
     header("FILE SIZE HOTSPOTS")
-    sized = ((p, line_count(p)) for p in files if p.suffix in SOURCE_EXTS)
+    sized = ((p, line_count(p, root)) for p in files if p.suffix.lower() in SOURCE_EXTS)
     big = sorted(
         (item for item in sized if item[1] >= HOTSPOT_LINES),
         key=lambda x: -x[1],
@@ -182,9 +251,9 @@ def block_heredoc(files: list[Path], root: Path) -> None:
     header("HEREDOC BLOAT")
     hits: list[tuple[str, int, str, int]] = []
     for path in files:
-        if path.suffix not in {".sh", ".bash", ".zsh"}:
+        if path.suffix.lower() not in {".sh", ".bash", ".zsh"}:
             continue
-        text = read_text(path)
+        text = read_text(path, root)
         if not text:
             continue
         lines = text.splitlines()
@@ -216,19 +285,23 @@ def block_test_ci(files: list[Path], root: Path) -> None:
     header("TEST AND CI SURFACE")
     test_files = [
         p for p in files
-        if p.suffix in SOURCE_EXTS
+        if p.suffix.lower() in SOURCE_EXTS
         and (("test" in p.name.lower()) or ("spec" in p.name.lower()))
     ]
-    src_files = [p for p in files if p.suffix in SOURCE_EXTS]
+    src_files = [p for p in files if p.suffix.lower() in SOURCE_EXTS]
     wf_dir = root / ".github" / "workflows"
     workflows = []
-    if wf_dir.is_dir():
-        workflows = sorted(list(wf_dir.glob("*.yml")) + list(wf_dir.glob("*.yaml")))
+    if is_repo_dir(wf_dir, root):
+        workflows = sorted(
+            path
+            for path in list(wf_dir.glob("*.yml")) + list(wf_dir.glob("*.yaml"))
+            if is_repo_file(path, root)
+        )
     job_names: list[str] = []
     for wf in workflows:
-        text = read_text(wf, 50_000)
+        text = read_text(wf, root, 50_000)
         for m in re.finditer(r"^name:\s*(.+?)\s*$", text, re.MULTILINE):
-            job_names.append(f"{wf.name}: {m.group(1)[:60]}")
+            job_names.append(safe_label(f"{wf.name}: {m.group(1)[:60]}"))
             break
     ratio = len(test_files) / max(len(src_files), 1)
     print(f"tests_count={len(test_files)} source_count={len(src_files)} "
@@ -246,9 +319,9 @@ def block_test_ci(files: list[Path], root: Path) -> None:
 
 def _package_bin_entrypoints(root: Path) -> list[str]:
     path = root / "package.json"
-    if not path.is_file():
+    if not is_repo_file(path, root):
         return []
-    text = read_text(path, 200_000)
+    text = read_text(path, root, 200_000)
     try:
         data = json.loads(text)
     except json.JSONDecodeError:
@@ -268,9 +341,9 @@ def _package_bin_entrypoints(root: Path) -> list[str]:
 
 def _pyproject_script_entrypoints(root: Path) -> list[str]:
     path = root / "pyproject.toml"
-    if not path.is_file():
+    if not is_repo_file(path, root):
         return []
-    text = read_text(path, 200_000)
+    text = read_text(path, root, 200_000)
     entries: list[str] = []
     in_scripts = False
     for line in text.splitlines():
@@ -292,15 +365,15 @@ def _pyproject_script_entrypoints(root: Path) -> list[str]:
 def _cargo_entrypoints(root: Path) -> list[str]:
     entries: list[str] = []
     cargo = root / "Cargo.toml"
-    if cargo.is_file():
-        text = read_text(cargo, 200_000)
+    if is_repo_file(cargo, root):
+        text = read_text(cargo, root, 200_000)
         if "[[bin]]" in text:
             names = re.findall(r'(?m)^\s*name\s*=\s*["\']([^"\']+)["\']', text)
             if names:
                 entries.extend(f"Cargo.toml bin:{name}" for name in sorted(set(names)))
             else:
                 entries.append("Cargo.toml [[bin]]")
-    if (root / "src" / "main.rs").is_file():
+    if is_repo_file(root / "src" / "main.rs", root):
         entries.append("src/main.rs")
     return entries
 
@@ -350,7 +423,7 @@ def cli_contract_evidence(files: list[Path], root: Path) -> dict[str, list[tuple
     for path in files:
         if not _is_cli_contract_candidate(path, root):
             continue
-        text = read_text(path, 200_000)
+        text = read_text(path, root, 200_000)
         if not text:
             continue
         for bucket, pattern in CLI_CONTRACT_BUCKETS:
@@ -370,7 +443,7 @@ def block_cli_contract_surface(files: list[Path], root: Path) -> None:
 
     print(f"entrypoints={len(entries)}")
     for entry in entries[:12]:
-        print(f"  entry: {entry}")
+        print(f"  entry: {safe_label(entry)}")
     if len(entries) > 12:
         print(f"  ... {len(entries) - 12} more")
 
@@ -382,7 +455,10 @@ def block_cli_contract_surface(files: list[Path], root: Path) -> None:
     printed = 0
     for bucket in covered:
         for path, signal in evidence[bucket][:3]:
-            print(f"  evidence: {bucket}  {path}  signal={signal}")
+            print(
+                f"  evidence: {bucket}  {safe_label(path)}  "
+                f"signal={safe_label(signal)}"
+            )
             printed += 1
             if printed >= 12:
                 break
@@ -394,8 +470,8 @@ def block_cli_contract_surface(files: list[Path], root: Path) -> None:
         status("WARN")
 
 
-def _grep_version(path: Path, pattern: str) -> str | None:
-    text = read_text(path, 20_000)
+def _grep_version(path: Path, root: Path, pattern: str) -> str | None:
+    text = read_text(path, root, 20_000)
     if not text:
         return None
     m = re.search(pattern, text, re.MULTILINE)
@@ -406,8 +482,8 @@ def block_version_sources(root: Path) -> None:
     header("VERSION SOURCE COUNT")
     found: list[tuple[str, str]] = []
     v = root / "VERSION"
-    if v.is_file():
-        first = read_text(v).strip().splitlines()
+    if is_repo_file(v, root):
+        first = read_text(v, root).strip().splitlines()
         if first:
             found.append(("VERSION", first[0]))
     probes = [
@@ -418,20 +494,24 @@ def block_version_sources(root: Path) -> None:
     ]
     for fname, pat in probes:
         p = root / fname
-        if p.is_file():
-            v_str = _grep_version(p, pat)
+        if is_repo_file(p, root):
+            v_str = _grep_version(p, root, pat)
             if v_str:
                 found.append((fname, v_str))
     for pat in ("*.podspec", "*.csproj"):
         for path in root.glob(pat):
+            if not is_repo_file(path, root):
+                continue
             v_str = _grep_version(
-                path, r'(?i)version\s*[:=]\s*["\']?(\d+\.\d+\.\d+[\w.-]*)'
+                path, root, r'(?i)version\s*[:=]\s*["\']?(\d+\.\d+\.\d+[\w.-]*)'
             )
             if v_str:
                 found.append((path.name, v_str))
     for path in list(root.glob("build.gradle*")):
+        if not is_repo_file(path, root):
+            continue
         v_str = _grep_version(
-            path, r'(?i)version\s*[:=]\s*["\']?(\d+\.\d+\.\d+[\w.-]*)'
+            path, root, r'(?i)version\s*[:=]\s*["\']?(\d+\.\d+\.\d+[\w.-]*)'
         )
         if v_str:
             found.append((path.name, v_str))
@@ -440,7 +520,7 @@ def block_version_sources(root: Path) -> None:
         status("PASS")
         return
     for f, val in found:
-        print(f"  {f}: {val}")
+        print(f"  {safe_label(f)}: {safe_label(val)}")
     distinct = {val for _, val in found if val}
     print(f"sources={len(found)} distinct_values={len(distinct)}")
     if len(found) > 1 and len(distinct) > 1:
@@ -451,12 +531,20 @@ def block_version_sources(root: Path) -> None:
 
 def block_packaging_posture(root: Path) -> None:
     header("PACKAGING FILTER POSTURE")
-    allowlist_files = list(root.glob("*.allowlist")) + list(root.glob("MANIFEST.in"))
-    pkg_scripts = (list(root.glob("scripts/package*.sh"))
-                   + list(root.glob("scripts/release*.sh")))
+    allowlist_files = [
+        path for path in list(root.glob("*.allowlist")) + list(root.glob("MANIFEST.in"))
+        if is_repo_file(path, root)
+    ]
+    pkg_scripts = [
+        path for path in (
+            list(root.glob("scripts/package*.sh"))
+            + list(root.glob("scripts/release*.sh"))
+        )
+        if is_repo_file(path, root)
+    ]
     denylist_hits = 0
     for sp in pkg_scripts:
-        for line in read_text(sp).splitlines():
+        for line in read_text(sp, root).splitlines():
             if DENYLIST_HINT_RE.search(line):
                 denylist_hits += 1
     if allowlist_files:
@@ -482,9 +570,9 @@ def block_install_url(root: Path) -> None:
     targets += list(root.glob("scripts/install*.sh"))
     findings: list[tuple[str, int, str]] = []
     for path in targets:
-        if not path.is_file():
+        if not is_repo_file(path, root):
             continue
-        text = read_text(path, 200_000)
+        text = read_text(path, root, 200_000)
         for i, line in enumerate(text.splitlines(), start=1):
             for m in INSTALL_URL_RE.finditer(line):
                 findings.append((rel(path, root), i, m.group(1)))
@@ -525,8 +613,8 @@ def block_agent_doc_dedup(root: Path) -> None:
         print("posture=symlink (AGENTS.md -> CLAUDE.md)")
         status("PASS")
         return
-    a = read_text(claude)
-    b = read_text(agents)
+    a = read_text(claude, root)
+    b = read_text(agents, root)
     if a and a == b:
         print("posture=identical (consider symlink to dedup)")
         status("WARN")
@@ -556,12 +644,12 @@ def block_drift_markers(files: list[Path], root: Path) -> None:
     counts: list[tuple[str, int]] = []
     total = 0
     for path in files:
-        if path.suffix not in SOURCE_EXTS:
+        if path.suffix.lower() not in SOURCE_EXTS:
             continue
-        text = read_text(path, 200_000)
+        text = read_text(path, root, 200_000)
         if not text:
             continue
-        n = len(MARKER_RE.findall(text))
+        n = sum(1 for line in text.splitlines() if MARKER_RE.search(line))
         if n:
             counts.append((rel(path, root), n))
             total += n
@@ -579,15 +667,20 @@ def block_drift_markers(files: list[Path], root: Path) -> None:
 
 def block_duplicate_setup(root: Path) -> None:
     header("DUPLICATE SETUP SCRIPTS")
-    scripts = (list(root.glob("scripts/setup-*.sh"))
-               + list(root.glob("scripts/install-*.sh")))
+    scripts = [
+        path for path in (
+            list(root.glob("scripts/setup-*.sh"))
+            + list(root.glob("scripts/install-*.sh"))
+        )
+        if is_repo_file(path, root)
+    ]
     if len(scripts) < 2:
         print("(fewer than 2 setup-* scripts to compare)")
         status("N/A")
         return
     sets: dict[Path, set[str]] = {}
     for sp in scripts:
-        sets[sp] = {ln.strip() for ln in read_text(sp).splitlines()
+        sets[sp] = {ln.strip() for ln in read_text(sp, root).splitlines()
                     if ln.strip() and not ln.strip().startswith("#")}
     pairs: list[tuple[str, str, float]] = []
     names = list(sets.keys())
@@ -613,14 +706,14 @@ def block_denylist_in_build(root: Path) -> None:
     targets = (list(root.glob("scripts/package*.sh"))
                + list(root.glob("scripts/release*.sh"))
                + [root / "Makefile", root / "Justfile"])
-    real_targets = [p for p in targets if p.is_file()]
+    real_targets = [p for p in targets if is_repo_file(p, root)]
     if not real_targets:
         print("(no build scripts present)")
         status("N/A")
         return
     hits: list[tuple[str, int, str]] = []
     for path in real_targets:
-        text = read_text(path, 100_000)
+        text = read_text(path, root, 100_000)
         for i, line in enumerate(text.splitlines(), start=1):
             if DENYLIST_HINT_RE.search(line):
                 hits.append((rel(path, root), i, line.strip()[:80]))
@@ -642,10 +735,13 @@ def main() -> int:
     args = parser.parse_args()
     root = args.root.resolve()
     if not root.is_dir():
-        print(f"audit_signals: not a directory: {root}", file=sys.stderr)
+        print(
+            f"audit_signals: not a directory: {safe_label(root.as_posix())}",
+            file=sys.stderr,
+        )
         return 2
     files = iter_files(root)
-    print(f"project_root: {root}")
+    print(f"project_root: {safe_label(root.as_posix())}")
     print(f"files_scanned: {len(files)}")
     print()
     block_hotspots(files, root); print()
