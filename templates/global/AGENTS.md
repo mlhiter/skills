@@ -1,22 +1,10 @@
 # Global Instructions
 
-## Repository Rules
-
-- This repository is the durable source of truth for public, installable skills.
-- Keep published instructions public-safe: no credentials, private registry URLs, private cluster names, or personal machine paths.
-- Put skills under `skills/<skill-name>/SKILL.md`; keep bundled references, scripts, and assets inside the owning skill directory.
-- Update `README.md` and `skills.sh.json` whenever a skill is added, removed, or renamed.
-- Shared reusable rules must be bundled inside each skill that needs them unless single-skill installation is proven to include root-level shared files; do not move one-off project facts into shared rules.
-
 - Never execute database write operations unless the user explicitly asks for a database modification.
 - For production deployments, always build and publish container images for `linux/amd64` by default. Do not publish ARM images unless the user explicitly asks for ARM.
 - For test-time cloud image builds that need to be pushed to a remote registry, default to `<configured-private-registry>` because local push permissions are already configured there. Use a different registry only if the user explicitly asks for it.
 - When browser automation or webpage interaction is needed, use the Codex app's built-in Browser Use / in-app browser. Do not use Computer Use to control an external browser unless the user explicitly asks for that.
 - When the `check` skill is used for direct conversation with the user, default findings, summaries, status updates, and sign-offs to Simplified Chinese unless the user explicitly requests another language. Public issue/PR/release comments should still follow the thread language and project rules.
-
-## Response Style
-
-- When the user asks for code logic, PR logic, architecture, or workflow explanation, prefer a Markdown diagram first when it makes the answer clearer. Use Mermaid sequence diagrams for interactions, flowcharts for branching logic, state diagrams for lifecycle, and component diagrams for architecture. Keep prose concise and use it to supplement the diagram, not replace it.
 
 ## Outcome-First Execution
 
@@ -33,12 +21,6 @@
 - Keep work local for small tasks, urgent critical-path blockers, tightly coupled changes, overlapping write scopes, sensitive context, or cases where subagent tools are unavailable.
 - When using subagents for code changes, assign disjoint file/module ownership and integrate the results before final verification.
 
-## First-Principles and Adversarial Review
-
-- For non-trivial bugs, architecture choices, production-impacting changes, ambiguous fixes, or major plans, start from first principles: identify the invariant, source of truth, ownership boundary, causal chain, and smallest mechanism-level fix.
-- After implementation or before a risky decision ships, review adversarially: malformed or oversized input, time skew, retries, concurrency, auth or tenant boundary mistakes, path/shell/network sinks, cache/fallback behavior, package or generated-artifact drift, deploy failure, and rollback paths.
-- Let `think`/`hunt` carry first-principles planning or diagnosis, and let `check` carry the functional acceptance and adversarial review gate.
-
 ## Automatic Task Closeout
 
 When a task, feature implementation, bug fix, documentation update, or deploy-affecting change is complete and the session changed project files, automatically run the closeout flow before the final response. Do not wait for the user to ask for this follow-through unless they explicitly said not to commit, not to sync docs/memory, or only wanted analysis/planning/review.
@@ -54,7 +36,7 @@ Stop the closeout flow and report the blocker instead of guessing when ownership
 The final response after closeout should include the verification performed, documentation/memory sync result, commit hash(es), and any intentionally uncommitted or out-of-scope changes.
 
 <!-- context7 -->
-Use the `ctx7` CLI to fetch current documentation whenever the user asks about a library, framework, SDK, API, CLI tool, or cloud service -- even well-known ones like React, Next.js, Prisma, Express, Tailwind, Django, or Spring Boot. This includes API syntax, configuration, version migration, library-specific debugging, setup instructions, and CLI tool usage. Use even when you think you know the answer -- your training data may not reflect recent changes. Prefer this over web search for library docs.
+Use the `ctx7` CLI to fetch current documentation whenever the user asks about a library, framework, SDK, API, CLI tool, or cloud service -- even well-known ones like React, Next.js, Prisma, Express, Tailwind, Django, or Spring Boot. This includes API syntax, configuration, version migration, library-specific debugging, setup instructions, and CLI tool usage. Use even when you think you know the answer -- your training data may not reflect recent changes. Prefer this over web search.
 
 Do not use for: refactoring, writing scripts from scratch, debugging business logic, code review, or general programming concepts.
 
@@ -73,9 +55,26 @@ If a command fails with a quota error, inform the user and suggest `npx ctx7@lat
 Run Context7 CLI requests outside Codex's default sandbox. If a Context7 CLI command fails with DNS or network errors such as ENOTFOUND, host resolution failures, or fetch failed, rerun it outside the sandbox instead of retrying inside the sandbox.
 <!-- context7 -->
 
+## Project Knowledge Baseline
+
+Use a documentation baseline that matches the repository's real shape. Do not force every active repository into the same software-product template.
+
+First classify the repository:
+
+- Application, service, library, product UI, deployable system, or operational tool: maintain the normal project knowledge set when there is enough concrete code or product direction: `README.md`, `AGENTS.md`, `PRODUCT.md`, `DESIGN.md`, `ROADMAP.md`, `docs/architecture.md`, `docs/ia.md`, `docs/references.md`, and `docs/runbook.md`.
+- Skill catalog, prompt/rules repository, template bundle, or other instruction-only repository: do not create or maintain `PRODUCT.md`, `DESIGN.md`, `ROADMAP.md`, or a top-level `docs/` folder merely to satisfy a generic baseline. Keep durable context in the catalog README, publish metadata, and the owning skill/rule/template directories unless the user explicitly asks for broader docs or the repository has a concrete reason for them.
+- Scratch, research, or early exploratory repository: keep documentation minimal and useful. Prefer `README.md` and local agent guidance only when they reduce future confusion.
+
+When invoking the `neat-freak` skill, treat repo-local instructions as authoritative. During the inventory, check what documentation the repository already declares as its source of truth, then sync that surface instead of mechanically creating missing baseline files. If the repository explicitly says not to maintain a class of docs, honor that rule.
+
+For app/product repositories, `PRODUCT.md`, `DESIGN.md`, and `README.md` are not generic Markdown chores. If `impeccable` is available, use its context expectations and relevant commands (`teach` for product context, `document` for design context) to draft or refine `PRODUCT.md` and `DESIGN.md`; if `create-readme` is available, use it to create or substantially rewrite `README.md` after reviewing the project. For instruction-only repositories, use those skills only when their output is genuinely relevant to that repository's published surface.
+
 <!-- test-cluster-setup:start -->
+
 
 ## Test Cluster Access
 - Cluster A kubeconfig: `<cluster-a-kubeconfig>`; access it with `kubectl --kubeconfig <cluster-a-kubeconfig> ...`.
 - Cluster B kubeconfig: `<cluster-b-kubeconfig>`; access it with `kubectl --kubeconfig <cluster-b-kubeconfig> ...`.
+- Cluster C kubeconfig: `<cluster-c-kubeconfig>`; access it with `kubectl --kubeconfig <cluster-c-kubeconfig> ...`.
+- Cluster D kubeconfig: `<cluster-d-kubeconfig>`; access it with `kubectl --kubeconfig <cluster-d-kubeconfig> ...`.
 <!-- test-cluster-setup:end -->
