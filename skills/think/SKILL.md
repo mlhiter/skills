@@ -22,9 +22,9 @@ Give opinions directly. Take a position and state what evidence would change it.
 
 ## Durable Context Preflight
 
-See [references/durable-context.md](references/durable-context.md) for when to read durable context, the read-order budget, and the memory-type mapping (planning constraints, reusable patterns, facts that need re-verification against current state).
+See [references/durable-context.md](references/durable-context.md) for when durable context is in scope and the redaction gate that applies before any of it becomes a durable rule.
 
-For `/think`, planning constraints are `decision`, `preference`, and `principle` entries; current repo state, live docs, logs, tests, and remote state override memory. Lock durable decisions and preferences before asking questions. Do not ask the user to restate an intent that the durable context already establishes unless it is risky, stale, or contradicted by current state.
+For `/think`: current repo state and live docs override memory. Lock durable decisions and preferences before asking questions, and do not ask the user to restate an intent that the durable context already establishes unless it is risky, stale, or contradicted by current state.
 
 Before outputting any plan, scan the project's `AGENTS.md`, `CLAUDE.md`, `.claude/rules/*.md`, and any local agent-memory summary if the user pointed at one. If the proposed plan contradicts a "hard rule", "never X", "must Y", or "prefer Z" stated in those files, surface the contradiction in the plan output (one sentence: which rule, which step contradicts it, recommended resolution). Do not silently override the rule. If the rule blocks the plan, stop and ask before continuing.
 
@@ -40,7 +40,7 @@ State the mechanism-level basis in 3-5 short bullets:
 - What is the causal path from input or decision to observable result?
 - Is the proposed fix or design mechanism-level, or only symptom-level?
 
-If the first-principles pass changes the answer, prefer the derived answer and explicitly name the discarded analogy. Do not turn this into a long philosophy section; use it to delete shallow plans before they reach the user.
+If the pass changes the answer, prefer the derived answer and explicitly name the discarded analogy. Keep this concise; it exists to remove shallow plans before they reach the user.
 
 ## Lightweight Mode
 
@@ -94,23 +94,25 @@ Do not treat the bundle as a to-do list. Classify each item first:
 
 Output the classification table first. Wait for the user to confirm the accepted subset before implementing anything. "Already works" misidentified as missing is the most common waste; grep for the existing affordance before classifying an item as a gap.
 
-**Negative-user feedback is not automatic scope.** When a user evaluation is triggered by a refund customer, a churn report, or a "competitor X is more intuitive" comparison, do not convert the complaint into a rework plan by default. First check whether the current behavior is intentional product differentiation, not an oversight: read the project's own AGENTS.md / CLAUDE.md / product notes for phrases like "review-first", "verifiability over speed", "evidence-driven", "explicit confirmation". If the behavior the user criticized is named there as a deliberate choice, the verdict is **Keep**, with one sentence on why the differentiation matters, and a note that the maintainer can override. Do not write a "fix the friction" plan that quietly removes the differentiator. The signal-to-respect ratio for refund / competitor-comparison feedback on a deliberately-designed surface is low.
+**Negative-user feedback is not automatic scope.** Refund, churn, and "competitor X is more intuitive" complaints often land on deliberate product differentiation, not an oversight. Before converting the complaint into a rework plan, read the project's own docs for the criticized behavior named as a deliberate choice, especially review-first, verifiability-over-speed, evidence-driven, and explicit-confirmation boundaries. If it is, the verdict is **Keep**, with one sentence on why the differentiation matters and a note that the maintainer can override. Do not write a "fix the friction" plan that quietly removes the differentiator.
 
 ## Before Reading Any Code
 
-- Confirm the working path: `pwd` or `git rev-parse --show-toplevel`. Never assume `~/project` and `~/www/project` are the same.
+- Confirm the working path with `pwd` or `git rev-parse --show-toplevel`; never assume two similarly named checkouts are the same project.
 - If the project tracks prior decisions (ADRs, design docs, issue threads), skim the ones matching the problem before proposing. Skip if none exist.
 - If the plan involves a default value, env var, or config field, open the project's actual config file (e.g. `app.config.json`, `tauri.conf.json`, `package.json`, `.env`) and lift the live value. Never quote a default from memory or docs.
 
 ## Check for Official Solutions First
 
-Before proposing custom implementations, search for framework built-ins, official patterns, and ecosystem standards against live docs. Use Context7 MCP tools to query latest docs when available. If an official solution exists, it is the default recommendation unless you can articulate why it is insufficient for this specific case.
+Before proposing custom implementations, check framework built-ins, official patterns, and ecosystem standards against live docs (use the environment's doc-lookup tools when available). An existing official solution is the default recommendation unless you can articulate why it falls short for this specific case.
 
 For a hard problem, or one already tuned several times that still feels off, study how 2-3 mature open-source projects or direct competitors solve it before designing: read the actual implementation, extract the transferable mechanism, and name what you took from each. First-principles design next to a proven implementation discards the iterations someone else already paid for.
 
 ## Propose Approaches
 
 Give one recommended approach with rationale. Include effort, risk, and what existing code it builds on. Mention one alternative only if the tradeoff is genuinely close (>40% chance the user would prefer it). Always include one minimal option.
+
+Anything that asks a person to install or configure something (hook, MCP server, editor plugin, config key, pricing tier, per-day limit) is a setup cost paid by every user. Default to the zero-setup form: a built-in command plus a skill, a fixed sensible default, a doc line. Offer the setup-requiring form only after naming why the zero-setup one cannot do the job.
 
 When the plan is about distilling lessons from one project into a reusable skill set or shared rules, split the plan into **promote** and **do not promote**. Promote only reusable workflow constraints. Explicitly reject project-specific commands, paths, release checklists, safety boundaries, and private local context unless the user asks to update that project itself.
 
@@ -128,7 +130,7 @@ For the recommendation, identify the most fragile assumption (premise collapse) 
 
 If an attack holds, deform the design to survive it. If it shatters the approach entirely, discard it and tell the user why. Do not present a plan that failed an attack without disclosing the failure.
 
-Get approval before proceeding. If the user rejects, ask specifically what did not work. Do not restart from scratch.
+Get approval before proceeding. If the user rejects the plan, ask what specifically failed before narrowing it; do not restart from scratch.
 
 ## Validate Before Handing Off
 
@@ -139,15 +141,18 @@ Get approval before proceeding. If the user rejects, ask specifically what did n
 - Every API key, token, and third-party account the plan requires listed with one-line explanations. No credential requests mid-implementation.
 - Every MCP server, external API, and third-party CLI the plan depends on verified as reachable before approval.
 
-**No placeholders in approved plans.** Every step must be concrete before approval. Forbidden patterns: TBD, TODO, "implement later," "similar to step N," "details to be determined." A plan with placeholders is a promise to plan later.
+## Simplicity Gate
 
-**Phase independence.** If the plan has multiple phases, each phase must be independently mergeable: after Phase N ships, the system is in a usable state, even if N+1 never lands. Plans that require all phases to complete before anything works are fragile (one stuck phase blocks the whole release) and waste review effort. If the work cannot be cut into mergeable phases, say so and ship it as one phase instead of pretending it is staged.
+Skip for one-file bug fixes or when the user explicitly chose the minimal option.
 
-**Plan red flags (self-check before handoff):**
-- A phase depends on the next phase to be useful (cannot ship alone).
-- A "Phase 0: investigate / spike" exists. Investigation belongs before the plan, not inside it.
+When the plan adds files, abstractions, error layers, config knobs, or retries the user did not ask for:
 
-Either red flag means the plan is not ready. Resolve it before handing off.
+- **Minimal path:** the brute-force version in one line; the chosen plan must beat it on risk, rollback, or latency, not elegance.
+- **Defensive layers:** every try/catch, retry, fallback, or flag maps to one named failure mode; delete layers that only "might" fail.
+- **Surface delta:** list new commands, env vars, flags, or services; prefer +0 unless a user split needs a knob.
+- **Compensating complexity:** if the plan is mostly workaround machinery around a misbehaving API, stop and name a route change (anti-patterns #27).
+
+If the gate fails, shrink the plan or switch to the minimal option before asking for approval.
 
 ## Implementation Handoff
 
@@ -164,21 +169,22 @@ When the user asks to export a handoff, or when the environment prevents further
 
 When the user later says "Implement the plan", "可以干", "直接改", "整", or equivalent, treat that as approval of the written plan. Do not re-litigate the design. State which plan is being executed, check for obvious drift in the repo, and proceed. If the environment has changed enough that the plan is unsafe, name the specific drift and stop before editing.
 
+## Hard Rules
+
+- **No placeholders in approved plans.** Every step must be concrete before approval. Forbidden patterns: TBD, TODO, "implement later," "similar to step N," "details to be determined." A plan with placeholders is a promise to plan later.
+- **Phase independence.** If the plan has multiple phases, each phase must be independently mergeable: after Phase N ships, the system is in a usable state, even if N+1 never lands. Plans that require all phases to complete before anything works are fragile (one stuck phase blocks the whole release) and waste review effort. If the work cannot be cut into mergeable phases, say so and ship it as one phase instead of pretending it is staged.
+- **Plan red flags (self-check before handoff):** a phase depends on the next phase to be useful, or a "Phase 0: investigate / spike" exists (investigation belongs before the plan, not inside it). Either red flag means the plan is not ready; resolve it before handing off.
+
 ## Gotchas
 
 | What happened | Rule |
 |---------------|------|
-| Moved files to `~/project`, repo was at `~/www/project` | Run `pwd` before the first filesystem operation |
-| Asked for API key after 3 implementation steps | List every dependency before handing off |
 | User said "just do it" or equivalent approval | Treat as approval of the recommended option. State which option was selected, finish the plan. Do not implement inside `/think`. |
-| Planned MCP workflow without checking if MCP was loaded | Verify tool availability before handing off, not mid-implementation |
 | Rejected design restarted from scratch | Ask what specifically failed, re-enter with narrowed constraints |
 | User said "just fix X" and skipped /think | If the fix touches 3+ files or needs a method choice, pause and run Lightweight Mode |
-| User approved a concrete plan and the agent debated the plan again | Execute the approved plan. Only stop for repo drift, missing permissions, or unsafe external state |
 | Picked a regional or locale-specific API variant without checking | List all regional or locale differences before writing integration code |
 | Introduced a second language or runtime into a single-stack project | Never add a new language or runtime without explicit approval |
 | User said "判断一下这个报错" and got Evaluation Mode | "判断一下" + error/bug context = debugging, route to `/hunt`. Evaluation Mode is for value/existence judgments only |
-| User asked to "沉淀到 Waza" after a project review | First separate transferable Waza capability from project facts. Do not import that project's commands, paths, or release rules into Waza |
 
 ## Output
 

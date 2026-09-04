@@ -1,11 +1,7 @@
 #!/usr/bin/env bash
 # Auto-detect and run project verification (lint + typecheck + tests).
-# Usage: run-tests.sh [project-root]
-# Exits non-zero on failure.
+# Run from the project root. Exits non-zero on failure.
 set -euo pipefail
-
-project_root="${1:-.}"
-cd "$project_root"
 
 if [ -f Cargo.toml ]; then
   cargo check && cargo test

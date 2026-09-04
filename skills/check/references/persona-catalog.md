@@ -15,15 +15,6 @@ The base /check skill runs as always-on. Specialist reviewers are additive.
 
 Activate when the diff changes code an attacker could reach or influence: trust-boundary input, auth or crypto, credentials, or query/shell/path construction.
 
-Activate when the diff touches:
-- Authentication or authorization logic (middleware, guards, JWT handling, session management)
-- Cryptographic operations (hashing, signing, encryption)
-- Input handling at trust boundaries (form fields, API request bodies, URL parameters)
-- File system operations on user-controlled paths
-- Shell or subprocess execution
-- Third-party credential or API key handling
-- SQL queries or raw database access
-
 **Do not activate** for: pure UI changes, config file updates, test-only changes, documentation.
 
 ### Architecture Reviewer
@@ -32,14 +23,6 @@ Activate when the diff touches:
 **Activate at:** Standard or Deep depth
 
 Activate when the diff changes how modules relate: boundaries, public APIs or signatures, cross-module dependencies, or a major dependency, rather than logic inside one module.
-
-Activate when the diff:
-- Adds a new module, package, or service boundary
-- Changes a public API, exported type, or function signature
-- Introduces a cross-module import that did not exist before
-- Modifies more than 10 files across different directories
-- Adds or removes a major dependency
-- Restructures how components call each other
 
 **Do not activate** for: single-file bug fixes, test additions, style changes, documentation updates.
 

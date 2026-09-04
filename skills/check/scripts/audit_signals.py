@@ -29,8 +29,8 @@ EXCLUDED_DIRS = {
     ".ruff_cache", "Pods", "Carthage", ".swiftpm", ".gradle",
 }
 
-# Source suffixes that this standalone check auditor treats as inspectable
-# project text. Keep this list local to the check skill's runtime surface.
+# Kept identical with skills/health/scripts/check_maintainability.py by
+# tests/python/test_auditor_alignment.py (thresholds stay per-product).
 SOURCE_EXTS = {
     ".bash", ".c", ".cc", ".cpp", ".cs", ".css", ".go", ".h", ".hpp",
     ".html", ".java", ".js", ".jsx", ".kt", ".lua", ".m", ".mjs", ".mm",
@@ -89,9 +89,12 @@ CLI_CORE_BUCKETS = (
 )
 
 
-# The file-walk helpers below stay in this script because the check skill
-# ships as a standalone runtime bundle and must run inside arbitrary target
-# projects with only the Python stdlib available.
+# The file-walk helpers below are deliberately duplicated in
+# skills/health/scripts/check_maintainability.py. Both scripts ship
+# standalone (see packaging.allowlist) and run inside an arbitrary target
+# project, so they import only stdlib. Do not hoist them into a shared
+# scripts/ module: it is dev-only, not on the ship allowlist, and would
+# couple a standalone tool to the install layout.
 def is_excluded(path: Path, root: Path) -> bool:
     try:
         parts = path.relative_to(root).parts
