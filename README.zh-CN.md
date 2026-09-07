@@ -60,6 +60,7 @@ npx skills add mlhiter/skills --skill check
 | :--- | :--- | :--- |
 | 写作 | [`logseq-writer`](skills/logseq-writer/SKILL.md) | 把主题、草稿和笔记写成实用的 Logseq 风格教程文章。 |
 | 写作 | [`intern-learning-recap`](skills/intern-learning-recap/SKILL.md) | 把已完成的工作讲成适合实习生理解的技术学习复盘。 |
+| 产品 | [`product-discovery-prd`](skills/product-discovery-prd/SKILL.md) | 通过第一性原理引导，把产品想法或原型收敛为决策完整、可验收的需求文档。 |
 | 规划 | [`think`](skills/think/SKILL.md) | 在编码前，把粗糙想法整理成决策完整的方案。 |
 | 调试 | [`hunt`](skills/hunt/SKILL.md) | 在修复错误、回归、崩溃和异常行为前先找到根因。 |
 | 审查 | [`check`](skills/check/SKILL.md) | 用功能意图建模、功能验收、对抗性审查、Sealos 部署审计、发布门禁和安装包运行时一致性检查来审查已完成的工作。 |
@@ -131,6 +132,7 @@ npx skills add mlhiter/skills --skill check
 | `hunt` | 改编自 [`tw93/Waza`](https://github.com/tw93/Waza) 的 `hunt` 工作流，并加入根因门禁和运行时证据路径。 |
 | `check` | 改编自 [`tw93/Waza`](https://github.com/tw93/Waza) 的 `check` 工作流，并扩展了功能意图风险建模、验收门禁、Sealos 部署审计、发布检查和安装包/运行时一致性检查。 |
 | `logseq-writer` | 原创个人写作工作流，用于输出实用的 Logseq 教程文章。 |
+| `product-discovery-prd` | 原创的产品探索与 PRD 共创工作流，以第一性原理引导和可观察验收标准为核心。 |
 | `workflow-packager` | 原创工作流挖掘 playbook，用于把重复工作转成可复用资产。 |
 | `quarterly-work-dashboard` | 原创季度面板生成工作流，用于基于只读 GitHub 和飞书证据生成工作总结。 |
 | `codex-goal-builder` | 原创 Codex Goal 起草工作流。 |

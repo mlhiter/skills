@@ -60,6 +60,7 @@ The second and third prompts are credited to Khazix.
 | :--- | :--- | :--- |
 | Writing | [`logseq-writer`](skills/logseq-writer/SKILL.md) | Turning topics, drafts, and notes into practical Logseq-style tutorial articles. |
 | Writing | [`intern-learning-recap`](skills/intern-learning-recap/SKILL.md) | Explaining completed work as an intern-friendly technical learning recap. |
+| Product | [`product-discovery-prd`](skills/product-discovery-prd/SKILL.md) | Turning a product idea or prototype into a decision-complete, testable requirements document through first-principles coaching. |
 | Planning | [`think`](skills/think/SKILL.md) | Turning rough ideas into decision-complete plans before coding. |
 | Debugging | [`hunt`](skills/hunt/SKILL.md) | Finding root cause before fixing errors, regressions, crashes, and broken behavior. |
 | Review | [`check`](skills/check/SKILL.md) | Reviewing completed work with feature-intent modeling, functional acceptance, adversarial review, Sealos deployment audits, release gates, and packaged install surface checks. |
@@ -131,6 +132,7 @@ Some assets are original playbooks from personal workflows. Some are adapted fro
 | `hunt` | Adapted from [`tw93/Waza`](https://github.com/tw93/Waza)'s `hunt` workflow, then extended with root-cause gates and runtime evidence ladders. |
 | `check` | Adapted from [`tw93/Waza`](https://github.com/tw93/Waza)'s `check` workflow, then extended with feature-intent risk modeling, acceptance gates, Sealos deployment audits, release checks, and packaged install/runtime parity checks. |
 | `logseq-writer` | Original personal writing workflow for practical Logseq tutorial articles. |
+| `product-discovery-prd` | Original product-discovery and PRD co-writing workflow built around first-principles coaching and observable acceptance criteria. |
 | `workflow-packager` | Original workflow-mining playbook for turning repeated agent work into reusable assets. |
 | `quarterly-work-dashboard` | Original dashboard-generation workflow for read-only GitHub and Feishu quarterly evidence. |
 | `codex-goal-builder` | Original Codex Goal drafting workflow. |

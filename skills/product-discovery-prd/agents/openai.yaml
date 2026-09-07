@@ -1,0 +1,4 @@
+interface:
+  display_name: "产品探索与 PRD 共创"
+  short_description: "用追问把想法收敛为可验收产品文档"
+  default_prompt: "Use $product-discovery-prd to guide me through a product idea and co-write the requirements document."

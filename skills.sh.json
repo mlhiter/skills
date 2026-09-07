@@ -11,6 +11,13 @@
       ]
     },
     {
+      "title": "Product",
+      "description": "Skills for product discovery and decision-complete requirement documents.",
+      "skills": [
+        "product-discovery-prd"
+      ]
+    },
+    {
       "title": "Codex",
       "description": "Skills for Codex goals, local run actions, dynamic workflows, dashboard reporting, and reusable workflow packaging.",
       "skills": [
