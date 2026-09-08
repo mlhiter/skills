@@ -3,7 +3,7 @@
 - Never execute database write operations unless the user explicitly asks for a database modification.
 - For production deployments, always build and publish container images for `linux/amd64` by default. Do not publish ARM images unless the user explicitly asks for ARM.
 - For test-time cloud image builds that need to be pushed to a remote registry, default to `<configured-private-registry>` because local push permissions are already configured there. Use a different registry only if the user explicitly asks for it.
-- When browser automation or webpage interaction is needed, use the Codex app's built-in Browser Use / in-app browser. Do not use Computer Use to control an external browser unless the user explicitly asks for that.
+- When browser automation or webpage interaction is needed, use the Codex app's built-in Browser Use / in-app browser when it is available. When running in a third-party Codex host, or when the in-app browser is unavailable, use the `agent-browser` skill/CLI or Codex's supported browser control for Chrome and existing Chrome sessions. Do not use generic Computer Use to control an external browser unless the user explicitly asks for that.
 - When the `check` skill is used for direct conversation with the user, default findings, summaries, status updates, and sign-offs to Simplified Chinese unless the user explicitly requests another language. Public issue/PR/release comments should still follow the thread language and project rules.
 
 ## Outcome-First Execution
