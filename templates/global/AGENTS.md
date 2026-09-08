@@ -6,21 +6,6 @@
 - When browser automation or webpage interaction is needed, use the Codex app's built-in Browser Use / in-app browser when it is available. When running in a third-party Codex host, or when the in-app browser is unavailable, use the `agent-browser` skill/CLI or Codex's supported browser control for Chrome and existing Chrome sessions. Do not use generic Computer Use to control an external browser unless the user explicitly asks for that.
 - When the `check` skill is used for direct conversation with the user, default findings, summaries, status updates, and sign-offs to Simplified Chinese unless the user explicitly requests another language. Public issue/PR/release comments should still follow the thread language and project rules.
 
-## Outcome-First Execution
-
-- When the user's goal is clear and no explicit time/token/budget limit is given, prioritize completing the task end-to-end over minimizing time or token usage.
-- Do not stop early, skip necessary verification, or hand back partial work merely to save time or tokens.
-- Treat time and token cost as secondary operational signals, not primary decision criteria.
-- Still obey explicit user limits, system/tool constraints, safety rules, approval requirements, and cases where the user only asked for discussion, planning, or analysis.
-- For simple tasks, stay concise and avoid unnecessary expansion; "outcome-first" means fit-for-purpose, not overbuilding.
-
-## Subagent Delegation
-
-- The user explicitly authorizes Codex to use subagents without asking first when a task can benefit from parallel work.
-- Prefer subagents for well-scoped, independent exploration, implementation, or verification tasks that materially advance the main goal.
-- Keep work local for small tasks, urgent critical-path blockers, tightly coupled changes, overlapping write scopes, sensitive context, or cases where subagent tools are unavailable.
-- When using subagents for code changes, assign disjoint file/module ownership and integrate the results before final verification.
-
 ## Automatic Task Closeout
 
 When a task, feature implementation, bug fix, documentation update, or deploy-affecting change is complete and the session changed project files, automatically run the closeout flow before the final response. Do not wait for the user to ask for this follow-through unless they explicitly said not to commit, not to sync docs/memory, or only wanted analysis/planning/review.
@@ -28,8 +13,7 @@ When a task, feature implementation, bug fix, documentation update, or deploy-af
 Closeout order is mandatory:
 
 1. Invoke the `check` skill to verify the work is complete, look for regressions or missed requirements, and run the appropriate project verification commands. If `check` finds a real issue, fix it and rerun the relevant verification before continuing.
-2. Invoke the `neat-freak` skill to sync project docs, runbooks, agent guidance, and memory-relevant knowledge with the completed change. If the change produced no durable knowledge or documentation impact, record that explicitly in the final summary rather than inventing placeholder docs.
-3. Invoke the `git-commit-push` skill to stage and commit only the changes attributable to the current session, then push the new commit(s) when the repository has a clear upstream and the safe-push checks pass. Preserve unrelated dirty work, split independent changes into logical commits, and stop instead of pushing when publication would require force, ambiguous remotes, protected-branch workarounds, or other unsafe git operations.
+2. Invoke the `git-commit-push` skill to stage and commit only the changes attributable to the current session, then push the new commit(s) when the repository has a clear upstream and the safe-push checks pass. Preserve unrelated dirty work, split independent changes into logical commits, and stop instead of pushing when publication would require force, ambiguous remotes, protected-branch workarounds, or other unsafe git operations.
 
 Stop the closeout flow and report the blocker instead of guessing when ownership of dirty files is ambiguous, verification fails repeatedly, a commit would include secrets or credentials, the worktree is not a Git repository, or the next step requires a database write, production mutation, force push, destructive cleanup, or other action that these global rules require explicit user approval for.
 
