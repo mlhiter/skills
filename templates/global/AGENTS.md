@@ -1,23 +1,10 @@
 # Global Instructions
 
 - Never execute database write operations unless the user explicitly asks for a database modification.
-- For production deployments, always build and publish container images for `linux/amd64` by default. Do not publish ARM images unless the user explicitly asks for ARM.
-- For test-time cloud image builds that need to be pushed to a remote registry, default to `<configured-private-registry>` because local push permissions are already configured there. Use a different registry only if the user explicitly asks for it.
-- When browser automation or webpage interaction is needed, use the Codex app's built-in Browser Use / in-app browser when it is available. When running in a third-party Codex host, or when the in-app browser is unavailable, use the `agent-browser` skill/CLI or Codex's supported browser control for Chrome and existing Chrome sessions. Do not use generic Computer Use to control an external browser unless the user explicitly asks for that.
+- For container image builds and production deployments, always build and publish multi-platform container images for `linux/amd64` and `linux/arm64` by default. Do not publish other architectures unless the user explicitly asks for them.
+- For test-time cloud image builds that need to be pushed to a remote registry, build and publish `linux/amd64` and `linux/arm64` images by default and use `<configured-private-registry>` when it is configured for local push access. Use a different registry only if the user explicitly asks for it.
+- When browser automation or webpage interaction is needed, use the Codex app's built-in Browser Use / in-app browser when it is available. When running in a third-party Codex host (such as Conductor), or when the in-app browser is unavailable, use the `agent-browser` skill/CLI or Codex's supported browser control for Chrome and existing Chrome sessions. Do not use generic Computer Use to control an external browser unless the user explicitly asks for that.
 - When the `check` skill is used for direct conversation with the user, default findings, summaries, status updates, and sign-offs to Simplified Chinese unless the user explicitly requests another language. Public issue/PR/release comments should still follow the thread language and project rules.
-
-## Automatic Task Closeout
-
-When a task, feature implementation, bug fix, documentation update, or deploy-affecting change is complete and the session changed project files, automatically run the closeout flow before the final response. Do not wait for the user to ask for this follow-through unless they explicitly said not to commit, not to sync docs/memory, or only wanted analysis/planning/review.
-
-Closeout order is mandatory:
-
-1. Invoke the `check` skill to verify the work is complete, look for regressions or missed requirements, and run the appropriate project verification commands. If `check` finds a real issue, fix it and rerun the relevant verification before continuing.
-2. Invoke the `git-commit-push` skill to stage and commit only the changes attributable to the current session, then push the new commit(s) when the repository has a clear upstream and the safe-push checks pass. Preserve unrelated dirty work, split independent changes into logical commits, and stop instead of pushing when publication would require force, ambiguous remotes, protected-branch workarounds, or other unsafe git operations.
-
-Stop the closeout flow and report the blocker instead of guessing when ownership of dirty files is ambiguous, verification fails repeatedly, a commit would include secrets or credentials, the worktree is not a Git repository, or the next step requires a database write, production mutation, force push, destructive cleanup, or other action that these global rules require explicit user approval for.
-
-The final response after closeout should include the verification performed, documentation/memory sync result, commit hash(es), and any intentionally uncommitted or out-of-scope changes.
 
 <!-- context7 -->
 Use the `ctx7` CLI to fetch current documentation whenever the user asks about a library, framework, SDK, API, CLI tool, or cloud service -- even well-known ones like React, Next.js, Prisma, Express, Tailwind, Django, or Spring Boot. This includes API syntax, configuration, version migration, library-specific debugging, setup instructions, and CLI tool usage. Use even when you think you know the answer -- your training data may not reflect recent changes. Prefer this over web search.
